@@ -1,0 +1,33 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: skenna_db
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: skenna
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: skenna_backend
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: mysql+pymysql://root:root@db:3306/skenna
+      MYSQL_AUTO_CREATE_DB: "true"
+      MYSQL_ADMIN_DATABASE: mysql
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+
+volumes:
+  mysql_data:

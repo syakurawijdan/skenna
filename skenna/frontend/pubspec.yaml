@@ -1,0 +1,32 @@
+name: skenna
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  device_preview: ^1.2.0
+  flutter_svg: ^2.2.3
+  google_fonts: ^6.3.2
+  http: ^1.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/home.svg
+    - assets/icons/scan.svg
+    - assets/icons/receipt-search.svg
+    - assets/illustrations/group_55.svg
+    - assets/illustrations/edukasi_1_2.svg
+    - assets/illustrations/edukasi_2_1.svg
+    - assets/illustrations/skenny_mascot.png
+    - assets/illustrations/daily_limit_blob.svg

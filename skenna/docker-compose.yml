@@ -13,7 +13,7 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: ./skenna_backend
       dockerfile: Dockerfile
     container_name: skenna_backend
     env_file:
@@ -27,7 +27,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./backend:/app
+      - ./skenna_backend:/app
 
 volumes:
   mysql_data:

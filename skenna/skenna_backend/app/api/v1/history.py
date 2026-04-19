@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.deps import get_db
 from app.repositories.chat_repository import ChatRepository
@@ -10,7 +11,10 @@ router = APIRouter()
 
 @router.get("/intake")
 def get_intake_history(user_id: int = Query(default=1), db: Session = Depends(get_db)) -> list[dict]:
-	data = HistoryRepository.list_intake(db, user_id)
+	try:
+		data = HistoryRepository.list_intake(db, user_id)
+	except SQLAlchemyError:
+		return []
 	return [
 		{
 			"id": item.id,
@@ -26,7 +30,10 @@ def get_intake_history(user_id: int = Query(default=1), db: Session = Depends(ge
 
 @router.get("/chat")
 def get_chat_history(user_id: int = Query(default=1), db: Session = Depends(get_db)) -> list[dict]:
-	data = ChatRepository.list_chat(db, user_id)
+	try:
+		data = ChatRepository.list_chat(db, user_id)
+	except SQLAlchemyError:
+		return []
 	return [
 		{
 			"id": item.id,

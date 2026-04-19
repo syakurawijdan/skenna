@@ -6,6 +6,13 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $frontendPath = Join-Path $root "frontend"
 $backendPath = Join-Path $root "skenna_backend"
 $pythonExe = Join-Path $root ".venv\Scripts\python.exe"
+$pubCachePath = Join-Path $root ".pub-cache"
+
+$env:PUB_CACHE = $pubCachePath
+
+if (-not (Test-Path $pubCachePath)) {
+    New-Item -ItemType Directory -Path $pubCachePath | Out-Null
+}
 
 if (-not (Test-Path $pythonExe)) {
     Write-Error "Python environment not found at $pythonExe. Run: python -m venv .venv"
@@ -21,7 +28,7 @@ Start-Process powershell -ArgumentList @(
 Start-Process powershell -ArgumentList @(
     "-NoExit",
     "-Command",
-    "Set-Location '$frontendPath'; flutter run --dart-define=API_BASE_URL=$ApiBaseUrl"
+    "Set-Location '$frontendPath'; `$env:PUB_CACHE='$pubCachePath'; flutter run --dart-define=API_BASE_URL=$ApiBaseUrl"
 )
 
 Write-Host "Started backend and frontend."

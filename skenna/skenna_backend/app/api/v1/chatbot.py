@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.deps import get_db
 from app.repositories.chat_repository import ChatRepository
@@ -12,8 +13,16 @@ router = APIRouter()
 
 @router.post("/ask", response_model=ChatAskResponse)
 def ask_chatbot(payload: ChatAskRequest, db: Session = Depends(get_db)) -> ChatAskResponse:
-	user = UserRepository.get_or_create_by_id(db, payload.user_id)
+	user = None
+	try:
+		user = UserRepository.get_or_create_by_id(db, payload.user_id)
+	except SQLAlchemyError:
+		user = None
 	answer, sources = ChatbotService.answer(payload.question)
-	ChatRepository.create_chat(db, user.id, payload.question, answer, sources)
+	if user is not None:
+		try:
+			ChatRepository.create_chat(db, user.id, payload.question, answer, sources)
+		except SQLAlchemyError:
+			pass
 	return ChatAskResponse(answer=answer, sources=sources)
 

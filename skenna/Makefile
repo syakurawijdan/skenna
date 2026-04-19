@@ -1,7 +1,8 @@
 API_BASE_URL ?= http://127.0.0.1:8000
+PUB_CACHE ?= $(CURDIR)/.pub-cache
 
 run-frontend:
-	cd frontend && flutter run --dart-define=API_BASE_URL=$(API_BASE_URL)
+	cd frontend && PUB_CACHE=$(PUB_CACHE) flutter run --dart-define=API_BASE_URL=$(API_BASE_URL)
 
 run-backend:
 	cd skenna_backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000

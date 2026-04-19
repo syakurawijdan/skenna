@@ -1,4 +1,9 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+ROOT_DIR = Path(__file__).resolve().parents[3]
 
 
 class Settings(BaseSettings):
@@ -14,7 +19,8 @@ class Settings(BaseSettings):
 	mysql_admin_database: str = "mysql"
 	llm_provider: str = "stub"
 	llm_api_key: str = ""
-	vector_db_path: str = "../skenna_python/rag/index"
+	llm_model: str = "gemini-flash-latest"
+	vector_db_path: str = str(ROOT_DIR / "skenna_python" / "rag" / "index")
 
 
 settings = Settings()

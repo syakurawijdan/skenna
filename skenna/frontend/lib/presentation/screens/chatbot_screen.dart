@@ -25,6 +25,7 @@ class ChatbotScreen extends StatefulWidget {
 
 class _ChatbotScreenState extends State<ChatbotScreen> {
   final _controller = TextEditingController();
+  final _scrollController = ScrollController();
   final List<_ChatItem> _messages = <_ChatItem>[
     const _ChatItem(
       text:
@@ -46,8 +47,31 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   bool _loading = false;
 
   @override
+  void initState() {
+    super.initState();
+    _scrollToBottom(jump: true);
+  }
+
+  void _scrollToBottom({bool jump = false}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      final target = _scrollController.position.maxScrollExtent;
+      if (jump) {
+        _scrollController.jumpTo(target);
+      } else {
+        _scrollController.animateTo(
+          target,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -62,6 +86,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       _loading = true;
       _controller.clear();
     });
+    _scrollToBottom();
 
     try {
       final data = await widget.apiClient.askChatbot(
@@ -72,12 +97,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       setState(() {
         _messages.add(_ChatItem(text: answer, isUser: false, showAvatar: true));
       });
+      _scrollToBottom();
     } catch (e) {
       setState(() {
         _messages.add(
           _ChatItem(text: 'Error: $e', isUser: false, showAvatar: true),
         );
       });
+      _scrollToBottom();
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -164,6 +191,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               const SizedBox(height: 14),
               Expanded(
                 child: ListView.separated(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.only(bottom: 120),
                   itemCount: _messages.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (_, i) {

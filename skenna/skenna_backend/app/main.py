@@ -1,5 +1,14 @@
+import logging
+from pathlib import Path
+import sys
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+
+BACKEND_ROOT = Path(__file__).resolve().parents[1]
+if str(BACKEND_ROOT) not in sys.path:
+	sys.path.insert(0, str(BACKEND_ROOT))
 
 from app.api.v1.router import api_router
 from app.core.config import settings
@@ -22,8 +31,11 @@ def create_app() -> FastAPI:
 
 	@app.on_event("startup")
 	def on_startup() -> None:
-		ensure_mysql_database_exists()
-		Base.metadata.create_all(bind=engine)
+		try:
+			ensure_mysql_database_exists()
+			Base.metadata.create_all(bind=engine)
+		except Exception as exc:
+			logging.getLogger(__name__).warning("Database unavailable at startup: %s", exc)
 
 	@app.get("/health", tags=["health"])
 	def health() -> dict[str, str]:

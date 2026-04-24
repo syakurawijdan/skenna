@@ -15,7 +15,7 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.db.base import Base
 from app.db.session import engine, ensure_mysql_database_exists
-from app.models import chat_session, food_label_scan, intake_history, user  # noqa: F401
+from app.models import chat_session, food_label_scan, intake_history, user, user_profile  # noqa: F401
 
 
 def create_app() -> FastAPI:

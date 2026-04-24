@@ -59,6 +59,37 @@ class ApiClient {
     return _decodeMap(res);
   }
 
+  Future<Map<String, dynamic>> upsertUserProfile({
+    required int userId,
+    required String fullName,
+    required String gender,
+    required DateTime birthDate,
+    required double heightCm,
+    required double weightKg,
+    required bool hasHypertension,
+    required int systolicPressure,
+    required int diastolicPressure,
+    required bool isPregnant,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/v1/users/$userId/profile');
+    final res = await _client.put(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'full_name': fullName,
+        'gender': gender,
+        'birth_date': birthDate.toIso8601String().split('T').first,
+        'height_cm': heightCm,
+        'weight_kg': weightKg,
+        'has_hypertension': hasHypertension,
+        'systolic_pressure': systolicPressure,
+        'diastolic_pressure': diastolicPressure,
+        'is_pregnant': isPregnant,
+      }),
+    );
+    return _decodeMap(res);
+  }
+
   Future<List<dynamic>> getIntakeHistory(int userId) async {
     final uri = Uri.parse('$baseUrl/api/v1/history/intake?user_id=$userId');
     final res = await _client.get(uri);

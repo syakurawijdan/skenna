@@ -15,9 +15,14 @@ class _ChatItem {
 }
 
 class ChatbotScreen extends StatefulWidget {
-  const ChatbotScreen({super.key, required this.apiClient});
+  const ChatbotScreen({
+    super.key,
+    required this.apiClient,
+    this.initialQuestion,
+  });
 
   final ApiClient apiClient;
+  final String? initialQuestion;
 
   @override
   State<ChatbotScreen> createState() => _ChatbotScreenState();
@@ -32,16 +37,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           "Hello, I'm Skenny! I'm your personal sport assistant. How can I help you?",
       isUser: false,
     ),
-    const _ChatItem(text: 'Show me other options', isUser: true),
-    const _ChatItem(
-      text: 'Ok, how about these?',
-      isUser: false,
-      showAvatar: true,
-    ),
-    const _ChatItem(
-      text: 'Show me other options, Show me other options Ok, how about these?',
-      isUser: true,
-    ),
   ];
 
   bool _loading = false;
@@ -50,6 +45,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   void initState() {
     super.initState();
     _scrollToBottom(jump: true);
+    final shortcut = widget.initialQuestion?.trim();
+    if (shortcut != null && shortcut.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _sendQuestion(shortcut);
+      });
+    }
   }
 
   void _scrollToBottom({bool jump = false}) {
@@ -77,6 +79,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   Future<void> _ask() async {
     final question = _controller.text.trim();
+    await _sendQuestion(question);
+  }
+
+  Future<void> _sendQuestion(String question) async {
     if (question.isEmpty) {
       return;
     }

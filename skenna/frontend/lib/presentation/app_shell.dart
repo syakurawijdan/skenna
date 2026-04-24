@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../data/api_client.dart';
-import 'screens/chatbot_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/history_screen.dart';
+import 'screens/profile_wizard/profile_wizard_store.dart';
+import 'screens/scan_screen.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -17,11 +18,28 @@ class _AppShellState extends State<AppShell> {
   int _index = 0;
   final ApiClient _apiClient = ApiClient();
 
+  DashboardGender _resolveDashboardGender(String rawGender) {
+    final normalized = rawGender.trim().toLowerCase();
+    if (normalized == 'female' ||
+        normalized == 'perempuan' ||
+        normalized == 'wanita') {
+      return DashboardGender.female;
+    }
+    return DashboardGender.male;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final draft = ProfileWizardStore.instance.draft;
+    final trimmedName = draft.fullName.trim();
+
     final screens = <Widget>[
-      DashboardScreen(apiClient: _apiClient),
-      ChatbotScreen(apiClient: _apiClient),
+      DashboardScreen(
+        apiClient: _apiClient,
+        userName: trimmedName.isEmpty ? null : trimmedName,
+        gender: _resolveDashboardGender(draft.gender),
+      ),
+      ScanScreen(apiClient: _apiClient),
       HistoryScreen(apiClient: _apiClient),
     ];
 
@@ -53,6 +71,7 @@ class _AppShellState extends State<AppShell> {
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     _NavButton(
                       active: _index == 0,
@@ -64,7 +83,7 @@ class _AppShellState extends State<AppShell> {
                     _NavButton(
                       active: _index == 1,
                       iconAsset: 'assets/icons/scan.svg',
-                      label: 'Chat',
+                      label: 'Scan',
                       onTap: () => setState(() => _index = 1),
                     ),
                     const SizedBox(width: 12),
@@ -108,8 +127,8 @@ class _NavButton extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: EdgeInsets.symmetric(
-          horizontal: active ? 16 : 12,
-          vertical: 10,
+          horizontal: active ? 13 : 10,
+          vertical: 9,
         ),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -118,15 +137,15 @@ class _NavButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset(iconAsset, width: 22, height: 22),
+            SvgPicture.asset(iconAsset, width: 19, height: 19),
             if (active) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: 5),
               Text(
                 label,
                 style: const TextStyle(
                   color: navy,
                   fontWeight: FontWeight.w700,
-                  fontSize: 16,
+                  fontSize: 14,
                 ),
               ),
             ],

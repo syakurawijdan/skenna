@@ -48,7 +48,7 @@ Aturan sederhana:
 4. Script membersihkan teks dan memecah chunk.
 4. Hasil chunk disimpan ke `chunks/hipertensi/`.
 5. Rebuild index supaya chatbot membaca chunk terbaru:
-
-	`python scripts/rebuild_index.py --topic hipertensi`
+z
+ 	`python scripts/rebuild_index.py --topic hipertensi`
 
 6. Data dimasukkan ke `index/` untuk dipakai chatbot.

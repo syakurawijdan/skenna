@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../navigation/app_routes.dart';
 
@@ -26,27 +27,54 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFDCEFE8), Color(0xFFF7FBF9)],
-          ),
-        ),
-        child: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.favorite, size: 64, color: Color(0xFF0A8F6A)),
-            SizedBox(height: 16),
-            Text(
-              'Skenna Sodium',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+      backgroundColor: const Color(0xFF2C4A8A),
+      body: SizedBox.expand(
+        child: Align(
+          alignment: const Alignment(0, -0.09),
+          child: SizedBox(
+            width: 185,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'Sken',
+                        style: GoogleFonts.poppins(
+                          fontSize: 45,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -1.125,
+                          color: Colors.white,
+                        ),
+                      ),
+                      TextSpan(
+                        text: '.Na',
+                        style: GoogleFonts.poppins(
+                          fontSize: 45,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -1.125,
+                          color: const Color(0xFFBEC7DB),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Track Your Sodium',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white,
+                    height: 1,
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 8),
-            Text('Aplikasi monitoring natrium harian'),
-          ],
+          ),
         ),
       ),
     );

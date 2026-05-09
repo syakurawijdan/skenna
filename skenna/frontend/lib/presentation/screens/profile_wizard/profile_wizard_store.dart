@@ -2,9 +2,6 @@ class ProfileWizardDraft {
   String fullName = '';
   String gender = '';
   DateTime? birthDate;
-  double? heightCm;
-  double? weightKg;
-  double? bmi;
   bool? hasHypertension;
   int? systolicPressure;
   int? diastolicPressure;

@@ -1,4 +1,3 @@
-export 'profile_wizard/profile_bmi_screen.dart';
 export 'profile_wizard/profile_birth_date_screen.dart';
 export 'profile_wizard/profile_blood_pressure_screen.dart';
 export 'profile_wizard/profile_gender_screen.dart';

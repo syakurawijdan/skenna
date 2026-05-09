@@ -22,16 +22,12 @@ def upsert_user_profile(
 ) -> UserProfileUpsertResponse:
 	user = UserRepository.get_or_create_by_id(db, user_id)
 	user.full_name = payload.full_name.strip()
-	bmi = round(payload.weight_kg / ((payload.height_cm / 100) ** 2), 2)
 
 	UserRepository.upsert_profile(
 		db,
 		user_id=user.id,
 		gender=payload.gender,
 		birth_date=payload.birth_date,
-		height_cm=payload.height_cm,
-		weight_kg=payload.weight_kg,
-		bmi=bmi,
 		has_hypertension=payload.has_hypertension,
 		systolic_pressure=payload.systolic_pressure,
 		diastolic_pressure=payload.diastolic_pressure,
@@ -43,7 +39,6 @@ def upsert_user_profile(
 	return UserProfileUpsertResponse(
 		user_id=user.id,
 		full_name=user.full_name,
-		bmi=bmi,
 		message="Profile saved",
 	)
 

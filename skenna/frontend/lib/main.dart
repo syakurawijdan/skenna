@@ -36,7 +36,6 @@ class MainApp extends StatelessWidget {
     AppRoutes.profileForm: (_) => const ProfileFormScreen(),
     AppRoutes.profileGender: (_) => const ProfileGenderScreen(),
     AppRoutes.profileBirthDate: (_) => const ProfileBirthDateScreen(),
-    AppRoutes.profileBmi: (_) => const ProfileBmiScreen(),
     AppRoutes.profileHypertension: (_) => const ProfileHypertensionScreen(),
     AppRoutes.profileBloodPressure: (_) => const ProfileBloodPressureScreen(),
     AppRoutes.profilePregnancy: (_) => const ProfilePregnancyScreen(),

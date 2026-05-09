@@ -6,7 +6,6 @@ class AppRoutes {
   static const profileForm = '/profile-form';
   static const profileGender = '/profile-gender';
   static const profileBirthDate = '/profile-birth-date';
-  static const profileBmi = '/profile-bmi';
   static const profileHypertension = '/profile-hypertension';
   static const profileBloodPressure = '/profile-blood-pressure';
   static const profilePregnancy = '/profile-pregnancy';

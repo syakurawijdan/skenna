@@ -20,41 +20,28 @@ class _ProfilePregnancyScreenState extends State<ProfilePregnancyScreen> {
   @override
   void initState() {
     super.initState();
-    _isPregnant = ProfileWizardStore.instance.draft.isPregnant;
+    final draft = ProfileWizardStore.instance.draft;
+    _isPregnant = draft.isPregnant;
+
+    // Jika laki-laki, langsung submit dan ke sodium screen
+    final gender = draft.gender.toLowerCase();
+    if (gender == 'laki-laki' || gender == 'male') {
+      _submitProfile(isPregnant: false);
+    }
   }
 
-  Future<void> _submit() async {
+  Future<void> _submitProfile({required bool isPregnant}) async {
     final draft = ProfileWizardStore.instance.draft;
+
     if (draft.birthDate == null ||
         draft.gender.isEmpty ||
-        draft.heightCm == null ||
-        draft.weightKg == null ||
         draft.hasHypertension == null ||
         draft.systolicPressure == null ||
-        draft.diastolicPressure == null ||
-        _isPregnant == null) {
+        draft.diastolicPressure == null) {
       _showMessage('Data belum lengkap, kembali ke langkah sebelumnya.');
-      return;
-    }
-
-    final height = draft.heightCm!;
-    final weight = draft.weightKg!;
-    final systolic = draft.systolicPressure!;
-    final diastolic = draft.diastolicPressure!;
-    if (height < 50 || height > 300) {
-      _showMessage('Tinggi badan harus di antara 50-300 cm.');
-      return;
-    }
-    if (weight < 20 || weight > 500) {
-      _showMessage('Berat badan harus di antara 20-500 kg.');
-      return;
-    }
-    if (systolic < 50 || systolic > 300) {
-      _showMessage('Sistolik harus di antara 50-300 mmHg.');
-      return;
-    }
-    if (diastolic < 30 || diastolic > 200) {
-      _showMessage('Diastolik harus di antara 30-200 mmHg.');
+      if (mounted) {
+        Navigator.pop(context);
+      }
       return;
     }
 
@@ -63,18 +50,16 @@ class _ProfilePregnancyScreenState extends State<ProfilePregnancyScreen> {
     });
 
     try {
-      draft.isPregnant = _isPregnant;
+      draft.isPregnant = isPregnant;
       await _apiClient.upsertUserProfile(
         userId: 1,
         fullName: draft.fullName,
         gender: draft.gender,
         birthDate: draft.birthDate!,
-        heightCm: draft.heightCm!,
-        weightKg: draft.weightKg!,
         hasHypertension: draft.hasHypertension!,
         systolicPressure: draft.systolicPressure!,
         diastolicPressure: draft.diastolicPressure!,
-        isPregnant: draft.isPregnant!,
+        isPregnant: isPregnant,
       );
 
       if (!mounted) {
@@ -96,6 +81,15 @@ class _ProfilePregnancyScreenState extends State<ProfilePregnancyScreen> {
     }
   }
 
+  Future<void> _submit() async {
+    if (_isPregnant == null) {
+      _showMessage('Pilih apakah sedang hamil atau tidak');
+      return;
+    }
+
+    await _submitProfile(isPregnant: _isPregnant!);
+  }
+
   String _resolveSodiumRoute(ProfileWizardDraft draft) {
     if (draft.isPregnant == true) {
       return AppRoutes.sodiumPregnant;
@@ -103,12 +97,11 @@ class _ProfilePregnancyScreenState extends State<ProfilePregnancyScreen> {
 
     final systolic = draft.systolicPressure ?? 0;
     final diastolic = draft.diastolicPressure ?? 0;
-    final bmi = draft.bmi ?? 0;
+
     final hasHypertensionRisk =
         draft.hasHypertension == true || systolic >= 130 || diastolic >= 80;
-    final hasBmiRisk = bmi >= 25;
 
-    if (hasHypertensionRisk || hasBmiRisk) {
+    if (hasHypertensionRisk) {
       return AppRoutes.sodiumUnsafe;
     }
     return AppRoutes.sodiumSafe;
@@ -167,7 +160,23 @@ class _ProfilePregnancyScreenState extends State<ProfilePregnancyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isFormValid = _isPregnant != null && !_isSubmitting;
+    final gender = ProfileWizardStore.instance.draft.gender;
+    final isFemale =
+        gender.toLowerCase() == 'perempuan' || gender.toLowerCase() == 'female';
+    final isFormValid =
+        !_isSubmitting && (isFemale ? _isPregnant != null : false);
+
+    // Untuk laki-laki, tampilkan loading screen saat proses submit
+    if (!isFemale) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: const SafeArea(
+          child: Center(
+            child: CircularProgressIndicator(color: Color(0xFF2C4A8A)),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -336,9 +345,9 @@ class _ProfilePregnancyScreenState extends State<ProfilePregnancyScreen> {
                         ),
                       ),
                     ],
-                    ),
                   ),
                 ),
+              ),
             ],
           ),
         ),

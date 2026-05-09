@@ -40,9 +40,6 @@ class UserRepository:
 		user_id: int,
 		gender: str,
 		birth_date,
-		height_cm: float,
-		weight_kg: float,
-		bmi: float,
 		has_hypertension: bool,
 		systolic_pressure: int,
 		diastolic_pressure: int,
@@ -55,9 +52,6 @@ class UserRepository:
 
 		profile.gender = gender
 		profile.birth_date = birth_date
-		profile.height_cm = height_cm
-		profile.weight_kg = weight_kg
-		profile.bmi = bmi
 		profile.has_hypertension = has_hypertension
 		profile.systolic_pressure = systolic_pressure
 		profile.diastolic_pressure = diastolic_pressure

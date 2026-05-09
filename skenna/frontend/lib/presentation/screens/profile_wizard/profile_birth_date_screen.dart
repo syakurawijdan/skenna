@@ -45,7 +45,7 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
     final month = _month!;
     final day = _day!;
     ProfileWizardStore.instance.draft.birthDate = DateTime(year, month, day);
-    Navigator.pushNamed(context, AppRoutes.profileBmi);
+    Navigator.pushNamed(context, AppRoutes.profileHypertension);
   }
 
   InputDecoration _dateFieldDecoration(String hintText) {

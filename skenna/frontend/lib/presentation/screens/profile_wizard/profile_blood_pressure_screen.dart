@@ -54,7 +54,7 @@ class _ProfileBloodPressureScreenState
     final draft = ProfileWizardStore.instance.draft;
     draft.systolicPressure = systolic;
     draft.diastolicPressure = diastolic;
-    Navigator.pushNamed(context, AppRoutes.profilePregnancy);
+    _navigateToNextScreen();
   }
 
   void _skip() {
@@ -65,6 +65,10 @@ class _ProfileBloodPressureScreenState
     // Default normal blood pressure when user has no hypertension history and skips this step.
     draft.systolicPressure = 120;
     draft.diastolicPressure = 80;
+    _navigateToNextScreen();
+  }
+
+  void _navigateToNextScreen() {
     Navigator.pushNamed(context, AppRoutes.profilePregnancy);
   }
 

@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.028665+00:00"
+  },
+  "document": {
+    "id": "S016",
+    "tipe": "pengetahuan_klinis",
+    "kategori": "Daftar Makanan yang Dianjurkan & Dihindari",
+    "tahun": "2024-2025",
+    "judul": "Makanan yang Dianjurkan untuk Menurunkan Tekanan Darah",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "makanan sehat hipertensi",
+      "kalium",
+      "magnesium",
+      "sayuran",
+      "buah",
+      "whole grain",
+      "pisang",
+      "bayam"
+    ],
+    "ringkasan": "Pola makan yang terbukti menurunkan tekanan darah mengutamakan buah dan sayuran kaya kalium, biji-bijian utuh, protein tanpa lemak, dan produk susu rendah lemak. Kalium adalah mineral kunci yang membantu menyeimbangkan efek natrium — konsumsi 3500-4700 mg kalium per hari dianjurkan. Sumber kalium terbaik: pisang, kentang, bayam, alpukat, tomat, kacang-kacangan, dan ikan. Magnesium (kacang-kacangan, biji-bijian, sayuran hijau) dan kalsium (susu rendah lemak, yogurt) juga berperan penting. Bawang putih mengandung allicin yang terbukti menurunkan tekanan darah ringan.",
+    "abstrak_ringkas": "Pola makan yang terbukti menurunkan tekanan darah mengutamakan buah dan sayuran kaya kalium, biji-bijian utuh, protein tanpa lemak, dan produk susu rendah lemak. Kalium adalah mineral kunci yang membantu menyeimbangkan efek natrium — konsumsi 3500-4700 mg kalium per hari dianjurkan. Sumber kalium terbaik: pisang, kentang, bayam, alpukat, tomat, kacang-kacangan, dan ikan. Magnesium (kacang-kacangan, biji-bijian, sayuran hijau) dan kalsium (susu rendah lemak, yogurt) juga berperan penting. Bawang putih mengandung allicin yang terbukti menurunkan tekanan darah ringan.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Pola makan yang terbukti menurunkan tekanan darah mengutamakan buah dan sayuran kaya kalium, biji-bijian utuh, protein tanpa lemak, dan produk susu rendah lemak. Kalium adalah mineral kunci yang membantu menyeimbangkan efek natrium — konsumsi 3500-4700 mg kalium per hari dianjurkan. Sumber kalium terbaik: pisang, kentang, bayam, alpukat, tomat, kacang-kacangan, dan ikan. Magnesium (kacang-kacangan, biji-bijian, sayuran hijau) dan kalsium (susu rendah lemak, yogurt) juga berperan penting. Bawang putih mengandung allicin yang terbukti menurunkan tekanan darah ringan.",
+    "poin_kunci": [
+      "Pisang: sumber kalium tinggi (~422 mg per buah), mudah didapat dan terjangkau",
+      "Bayam dan sayuran hijau: kaya kalium, magnesium, dan nitrat alami yang vasodilatasi",
+      "Oat/oatmeal: serat beta-glucan membantu turunkan tekanan darah dan kolesterol",
+      "Ikan berlemak (salmon, sarden, makarel): omega-3 menurunkan tekanan darah",
+      "Bawang putih: allicin memiliki efek antihipertensi ringan",
+      "Cokelat hitam (dark chocolate ≥70%): flavonoid membantu relaksasi pembuluh darah",
+      "Bit (beetroot): tinggi nitrat alami yang diubah menjadi nitric oxide — vasodilator"
+    ],
+    "relevansi_rag": [
+      "Makanan apa yang bisa menurunkan tekanan darah?",
+      "Apakah pisang baik untuk hipertensi?",
+      "Apakah bawang putih bisa menurunkan tekanan darah?",
+      "Buah apa yang baik untuk penderita hipertensi?",
+      "Apakah cokelat hitam baik untuk tekanan darah?",
+      "Sayuran apa yang bagus untuk hipertensi?",
+      "Apakah makan bit bisa menurunkan tekanan darah?"
+    ],
+    "resep": null
+  },
+  "text": "ID:\nS016\n\nJudul:\nMakanan yang Dianjurkan untuk Menurunkan Tekanan Darah\n\nKategori:\nDaftar Makanan yang Dianjurkan & Dihindari\n\nTahun:\n2024-2025\n\nTipe:\npengetahuan_klinis\n\nPenulis:\nTim Medis\n\nRingkasan:\nPola makan yang terbukti menurunkan tekanan darah mengutamakan buah dan sayuran kaya kalium, biji-bijian utuh, protein tanpa lemak, dan produk susu rendah lemak. Kalium adalah mineral kunci yang membantu menyeimbangkan efek natrium — konsumsi 3500-4700 mg kalium per hari dianjurkan. Sumber kalium terbaik: pisang, kentang, bayam, alpukat, tomat, kacang-kacangan, dan ikan. Magnesium (kacang-kacangan, biji-bijian, sayuran hijau) dan kalsium (susu rendah lemak, yogurt) juga berperan penting. Bawang putih mengandung allicin yang terbukti menurunkan tekanan darah ringan.\n\nAbstrak ringkas:\nPola makan yang terbukti menurunkan tekanan darah mengutamakan buah dan sayuran kaya kalium, biji-bijian utuh, protein tanpa lemak, dan produk susu rendah lemak. Kalium adalah mineral kunci yang membantu menyeimbangkan efek natrium — konsumsi 3500-4700 mg kalium per hari dianjurkan. Sumber kalium terbaik: pisang, kentang, bayam, alpukat, tomat, kacang-kacangan, dan ikan. Magnesium (kacang-kacangan, biji-bijian, sayuran hijau) dan kalsium (susu rendah lemak, yogurt) juga berperan penting. Bawang putih mengandung allicin yang terbukti menurunkan tekanan darah ringan.\n\nKesimpulan:\nPola makan yang terbukti menurunkan tekanan darah mengutamakan buah dan sayuran kaya kalium, biji-bijian utuh, protein tanpa lemak, dan produk susu rendah lemak. Kalium adalah mineral kunci yang membantu menyeimbangkan efek natrium — konsumsi 3500-4700 mg kalium per hari dianjurkan. Sumber kalium terbaik: pisang, kentang, bayam, alpukat, tomat, kacang-kacangan, dan ikan. Magnesium (kacang-kacangan, biji-bijian, sayuran hijau) dan kalsium (susu rendah lemak, yogurt) juga berperan penting. Bawang putih mengandung allicin yang terbukti menurunkan tekanan darah ringan.\n\nKeywords:\n- makanan sehat hipertensi\n- kalium\n- magnesium\n- sayuran\n- buah\n- whole grain\n- pisang\n- bayam\n\nPoin kunci:\n- Pisang: sumber kalium tinggi (~422 mg per buah), mudah didapat dan terjangkau\n- Bayam dan sayuran hijau: kaya kalium, magnesium, dan nitrat alami yang vasodilatasi\n- Oat/oatmeal: serat beta-glucan membantu turunkan tekanan darah dan kolesterol\n- Ikan berlemak (salmon, sarden, makarel): omega-3 menurunkan tekanan darah\n- Bawang putih: allicin memiliki efek antihipertensi ringan\n- Cokelat hitam (dark chocolate ≥70%): flavonoid membantu relaksasi pembuluh darah\n- Bit (beetroot): tinggi nitrat alami yang diubah menjadi nitric oxide — vasodilator\n\nRelevansi RAG:\n- Makanan apa yang bisa menurunkan tekanan darah?\n- Apakah pisang baik untuk hipertensi?\n- Apakah bawang putih bisa menurunkan tekanan darah?\n- Buah apa yang baik untuk penderita hipertensi?\n- Apakah cokelat hitam baik untuk tekanan darah?\n- Sayuran apa yang bagus untuk hipertensi?\n- Apakah makan bit bisa menurunkan tekanan darah?"
+}

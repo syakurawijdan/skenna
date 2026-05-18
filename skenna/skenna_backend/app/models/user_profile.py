@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import Optional
 
 from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -14,9 +15,12 @@ class UserProfile(Base):
 	gender: Mapped[str] = mapped_column(String(20))
 	birth_date: Mapped[date] = mapped_column(Date)
 	has_hypertension: Mapped[bool] = mapped_column(Boolean, default=False)
-	systolic_pressure: Mapped[int] = mapped_column(Integer)
-	diastolic_pressure: Mapped[int] = mapped_column(Integer)
-	is_pregnant: Mapped[bool] = mapped_column(Boolean, default=False)
+	# Kondisi hipertensi: "history_only", "controlled", "uncontrolled"
+	hypertension_condition: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+	systolic_pressure: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+	diastolic_pressure: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+	# Pregnancy status: "pregnant", "breastfeeding", "none"
+	pregnancy_status: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 	updated_at: Mapped[datetime] = mapped_column(
 		DateTime,
 		default=datetime.utcnow,

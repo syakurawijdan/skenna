@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.004666+00:00"
+  },
+  "document": {
+    "id": "S001",
+    "tipe": "pengetahuan_klinis",
+    "kategori": "Definisi & Klasifikasi Hipertensi",
+    "tahun": "2024-2025",
+    "judul": "Definisi, Klasifikasi, dan Angka Normal Tekanan Darah",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "definisi hipertensi",
+      "tekanan darah normal",
+      "klasifikasi",
+      "sistolik",
+      "diastolik",
+      "WHO",
+      "ACC/AHA"
+    ],
+    "ringkasan": "Hipertensi adalah kondisi di mana tekanan darah secara konsisten berada di atas batas normal. Menurut WHO dan panduan ESC 2024, hipertensi didefinisikan sebagai tekanan darah ≥140/90 mmHg yang diukur di klinik. Panduan ACC/AHA Amerika menggunakan batas lebih ketat yaitu ≥130/80 mmHg. Hipertensi dibagi menjadi Hipertensi Grade 1 (140-159/90-99 mmHg), Grade 2 (160-179/100-109 mmHg), dan Grade 3 atau berat (≥180/110 mmHg). Pre-hipertensi atau elevated blood pressure adalah tekanan darah 120-139/80-89 mmHg yang perlu diwaspadai.",
+    "abstrak_ringkas": "Hipertensi adalah kondisi di mana tekanan darah secara konsisten berada di atas batas normal. Menurut WHO dan panduan ESC 2024, hipertensi didefinisikan sebagai tekanan darah ≥140/90 mmHg yang diukur di klinik. Panduan ACC/AHA Amerika menggunakan batas lebih ketat yaitu ≥130/80 mmHg. Hipertensi dibagi menjadi Hipertensi Grade 1 (140-159/90-99 mmHg), Grade 2 (160-179/100-109 mmHg), dan Grade 3 atau berat (≥180/110 mmHg). Pre-hipertensi atau elevated blood pressure adalah tekanan darah 120-139/80-89 mmHg yang perlu diwaspadai.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Hipertensi adalah kondisi di mana tekanan darah secara konsisten berada di atas batas normal. Menurut WHO dan panduan ESC 2024, hipertensi didefinisikan sebagai tekanan darah ≥140/90 mmHg yang diukur di klinik. Panduan ACC/AHA Amerika menggunakan batas lebih ketat yaitu ≥130/80 mmHg. Hipertensi dibagi menjadi Hipertensi Grade 1 (140-159/90-99 mmHg), Grade 2 (160-179/100-109 mmHg), dan Grade 3 atau berat (≥180/110 mmHg). Pre-hipertensi atau elevated blood pressure adalah tekanan darah 120-139/80-89 mmHg yang perlu diwaspadai.",
+    "poin_kunci": [
+      "Normal: <120/80 mmHg",
+      "Elevated (pre-hipertensi): 120-139/80-89 mmHg",
+      "Hipertensi Grade 1: 140-159/90-99 mmHg",
+      "Hipertensi Grade 2: 160-179/100-109 mmHg",
+      "Hipertensi Grade 3 (berat): ≥180/110 mmHg",
+      "Hipertensi sistolik terisolasi: sistolik ≥140 mmHg dengan diastolik <90 mmHg (umum pada lansia)",
+      "Diagnosis memerlukan minimal 2 kali pengukuran pada 2 kunjungan berbeda"
+    ],
+    "relevansi_rag": [
+      "Berapa tekanan darah normal?",
+      "Apa itu hipertensi?",
+      "Tekanan darah saya 150/90 apakah termasuk hipertensi?",
+      "Apa perbedaan hipertensi grade 1 dan grade 2?",
+      "Berapa batas tekanan darah yang dianggap berbahaya?",
+      "Apakah tekanan darah 130/80 sudah hipertensi?",
+      "Apa itu pre-hipertensi?"
+    ],
+    "resep": null
+  },
+  "text": "ID:\nS001\n\nJudul:\nDefinisi, Klasifikasi, dan Angka Normal Tekanan Darah\n\nKategori:\nDefinisi & Klasifikasi Hipertensi\n\nTahun:\n2024-2025\n\nTipe:\npengetahuan_klinis\n\nPenulis:\nTim Medis\n\nRingkasan:\nHipertensi adalah kondisi di mana tekanan darah secara konsisten berada di atas batas normal. Menurut WHO dan panduan ESC 2024, hipertensi didefinisikan sebagai tekanan darah ≥140/90 mmHg yang diukur di klinik. Panduan ACC/AHA Amerika menggunakan batas lebih ketat yaitu ≥130/80 mmHg. Hipertensi dibagi menjadi Hipertensi Grade 1 (140-159/90-99 mmHg), Grade 2 (160-179/100-109 mmHg), dan Grade 3 atau berat (≥180/110 mmHg). Pre-hipertensi atau elevated blood pressure adalah tekanan darah 120-139/80-89 mmHg yang perlu diwaspadai.\n\nAbstrak ringkas:\nHipertensi adalah kondisi di mana tekanan darah secara konsisten berada di atas batas normal. Menurut WHO dan panduan ESC 2024, hipertensi didefinisikan sebagai tekanan darah ≥140/90 mmHg yang diukur di klinik. Panduan ACC/AHA Amerika menggunakan batas lebih ketat yaitu ≥130/80 mmHg. Hipertensi dibagi menjadi Hipertensi Grade 1 (140-159/90-99 mmHg), Grade 2 (160-179/100-109 mmHg), dan Grade 3 atau berat (≥180/110 mmHg). Pre-hipertensi atau elevated blood pressure adalah tekanan darah 120-139/80-89 mmHg yang perlu diwaspadai.\n\nKesimpulan:\nHipertensi adalah kondisi di mana tekanan darah secara konsisten berada di atas batas normal. Menurut WHO dan panduan ESC 2024, hipertensi didefinisikan sebagai tekanan darah ≥140/90 mmHg yang diukur di klinik. Panduan ACC/AHA Amerika menggunakan batas lebih ketat yaitu ≥130/80 mmHg. Hipertensi dibagi menjadi Hipertensi Grade 1 (140-159/90-99 mmHg), Grade 2 (160-179/100-109 mmHg), dan Grade 3 atau berat (≥180/110 mmHg). Pre-hipertensi atau elevated blood pressure adalah tekanan darah 120-139/80-89 mmHg yang perlu diwaspadai.\n\nKeywords:\n- definisi hipertensi\n- tekanan darah normal\n- klasifikasi\n- sistolik\n- diastolik\n- WHO\n- ACC/AHA\n\nPoin kunci:\n- Normal: <120/80 mmHg\n- Elevated (pre-hipertensi): 120-139/80-89 mmHg\n- Hipertensi Grade 1: 140-159/90-99 mmHg\n- Hipertensi Grade 2: 160-179/100-109 mmHg\n- Hipertensi Grade 3 (berat): ≥180/110 mmHg\n- Hipertensi sistolik terisolasi: sistolik ≥140 mmHg dengan diastolik <90 mmHg (umum pada lansia)\n- Diagnosis memerlukan minimal 2 kali pengukuran pada 2 kunjungan berbeda\n\nRelevansi RAG:\n- Berapa tekanan darah normal?\n- Apa itu hipertensi?\n- Tekanan darah saya 150/90 apakah termasuk hipertensi?\n- Apa perbedaan hipertensi grade 1 dan grade 2?\n- Berapa batas tekanan darah yang dianggap berbahaya?\n- Apakah tekanan darah 130/80 sudah hipertensi?\n- Apa itu pre-hipertensi?"
+}

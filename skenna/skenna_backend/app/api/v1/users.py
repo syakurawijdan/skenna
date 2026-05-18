@@ -29,9 +29,10 @@ def upsert_user_profile(
 		gender=payload.gender,
 		birth_date=payload.birth_date,
 		has_hypertension=payload.has_hypertension,
+		hypertension_condition=payload.hypertension_condition,
 		systolic_pressure=payload.systolic_pressure,
 		diastolic_pressure=payload.diastolic_pressure,
-		is_pregnant=payload.is_pregnant,
+		pregnancy_status=payload.pregnancy_status,
 	)
 
 	db.commit()

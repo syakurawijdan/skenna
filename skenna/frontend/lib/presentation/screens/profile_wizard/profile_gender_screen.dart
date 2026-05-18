@@ -62,6 +62,9 @@ class _ProfileGenderScreenState extends State<ProfileGenderScreen> {
   @override
   Widget build(BuildContext context) {
     final isFormValid = _gender != null;
+    final progress = ProfileWizardStore.instance.progressForStep(
+      ProfileWizardStep.gender,
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -106,12 +109,14 @@ class _ProfileGenderScreenState extends State<ProfileGenderScreen> {
                                 borderRadius: BorderRadius.circular(100),
                               ),
                             ),
-                            Container(
-                              width: 92,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF2C4A8A),
-                                borderRadius: BorderRadius.circular(100),
+                            FractionallySizedBox(
+                              widthFactor: progress,
+                              child: Container(
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2C4A8A),
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
                               ),
                             ),
                           ],
@@ -199,7 +204,7 @@ class _ProfileGenderScreenState extends State<ProfileGenderScreen> {
                   ),
                 ),
               ),
-              const Spacer(),
+              SizedBox(height: 32),
               Center(
                 child: SizedBox(
                   width: 344,
@@ -256,9 +261,9 @@ class _ProfileGenderScreenState extends State<ProfileGenderScreen> {
                         ),
                       ),
                     ],
-                    ),
                   ),
                 ),
+              ),
             ],
           ),
         ),

@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.037756+00:00"
+  },
+  "document": {
+    "id": "S022",
+    "tipe": "resep",
+    "kategori": "Resep Makanan Sehat",
+    "tahun": "2024-2025",
+    "judul": "Menu Harian Lengkap Rendah Garam untuk Penderita Hipertensi",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "menu harian hipertensi",
+      "meal plan",
+      "rencana makan",
+      "diet hipertensi",
+      "contoh menu sehari"
+    ],
+    "ringkasan": "Contoh menu harian lengkap yang memenuhi kebutuhan nutrisi sekaligus mendukung kontrol tekanan darah. Total natrium target <2000 mg/hari, kalium ≥3500 mg/hari, serat ≥25g/hari.",
+    "abstrak_ringkas": "Contoh menu harian lengkap yang memenuhi kebutuhan nutrisi sekaligus mendukung kontrol tekanan darah. Total natrium target <2000 mg/hari, kalium ≥3500 mg/hari, serat ≥25g/hari.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Contoh menu harian lengkap yang memenuhi kebutuhan nutrisi sekaligus mendukung kontrol tekanan darah. Total natrium target <2000 mg/hari, kalium ≥3500 mg/hari, serat ≥25g/hari.",
+    "poin_kunci": [
+      "Target harian: natrium <2000 mg, kalium >3500 mg, serat >25g",
+      "Ganti nasi putih dengan nasi merah untuk serat dan nutrisi lebih tinggi",
+      "Protein dari ikan, ayam tanpa kulit, tempe, dan tahu — bukan daging olahan",
+      "Snack sehat: buah segar, kacang tanpa garam, yogurt plain",
+      "Hindari minuman bersoda, jus kemasan, dan minuman manis berlebih"
+    ],
+    "relevansi_rag": [
+      "Contoh menu makan sehari untuk hipertensi?",
+      "Apa yang boleh dimakan penderita hipertensi?",
+      "Bagaimana meal plan untuk tekanan darah tinggi?",
+      "Berapa kalori yang baik untuk penderita hipertensi?",
+      "Apakah penderita hipertensi boleh makan nasi?"
+    ],
+    "resep": {
+      "waktu_masak": "Meal plan harian",
+      "porsi": "1 orang",
+      "bahan": [],
+      "cara_membuat": [
+        "SARAPAN (07:00): Oatmeal 50g + pisang 1 buah + susu rendah lemak 200ml | Natrium: ~100mg",
+        "SNACK PAGI (10:00): Apel 1 buah + segenggam kacang almond tanpa garam | Natrium: ~5mg",
+        "MAKAN SIANG (12:00): Nasi merah 150g + ayam kukus 100g + tumis bayam bawang putih + sup tomat | Natrium: ~400mg",
+        "SNACK SORE (15:00): Yogurt plain rendah lemak 150g + buah segar | Natrium: ~70mg",
+        "MAKAN MALAM (18:00): Nasi merah 100g + ikan panggang 100g + lalapan + tempe rebus | Natrium: ~300mg",
+        "MINUMAN sepanjang hari: Air putih 8 gelas, boleh 1 gelas jus buah tanpa gula tambahan"
+      ],
+      "nilai_gizi_per_porsi": "Total Natrium: ~875 mg (jauh di bawah batas 2000mg) | Kalium: ~4000 mg | Kalori: ~1800 kkal"
+    }
+  },
+  "text": "ID:\nS022\n\nJudul:\nMenu Harian Lengkap Rendah Garam untuk Penderita Hipertensi\n\nKategori:\nResep Makanan Sehat\n\nTahun:\n2024-2025\n\nTipe:\nresep\n\nPenulis:\nTim Medis\n\nRingkasan:\nContoh menu harian lengkap yang memenuhi kebutuhan nutrisi sekaligus mendukung kontrol tekanan darah. Total natrium target <2000 mg/hari, kalium ≥3500 mg/hari, serat ≥25g/hari.\n\nAbstrak ringkas:\nContoh menu harian lengkap yang memenuhi kebutuhan nutrisi sekaligus mendukung kontrol tekanan darah. Total natrium target <2000 mg/hari, kalium ≥3500 mg/hari, serat ≥25g/hari.\n\nKesimpulan:\nContoh menu harian lengkap yang memenuhi kebutuhan nutrisi sekaligus mendukung kontrol tekanan darah. Total natrium target <2000 mg/hari, kalium ≥3500 mg/hari, serat ≥25g/hari.\n\nKeywords:\n- menu harian hipertensi\n- meal plan\n- rencana makan\n- diet hipertensi\n- contoh menu sehari\n\nPoin kunci:\n- Target harian: natrium <2000 mg, kalium >3500 mg, serat >25g\n- Ganti nasi putih dengan nasi merah untuk serat dan nutrisi lebih tinggi\n- Protein dari ikan, ayam tanpa kulit, tempe, dan tahu — bukan daging olahan\n- Snack sehat: buah segar, kacang tanpa garam, yogurt plain\n- Hindari minuman bersoda, jus kemasan, dan minuman manis berlebih\n\nRelevansi RAG:\n- Contoh menu makan sehari untuk hipertensi?\n- Apa yang boleh dimakan penderita hipertensi?\n- Bagaimana meal plan untuk tekanan darah tinggi?\n- Berapa kalori yang baik untuk penderita hipertensi?\n- Apakah penderita hipertensi boleh makan nasi?"
+}

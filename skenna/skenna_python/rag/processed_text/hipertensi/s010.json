@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.018666+00:00"
+  },
+  "document": {
+    "id": "S010",
+    "tipe": "pengetahuan_klinis",
+    "kategori": "Pengobatan Hipertensi",
+    "tahun": "2024-2025",
+    "judul": "Obat-obatan Hipertensi — Jenis, Cara Kerja, dan Efek Samping",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "obat hipertensi",
+      "ACE inhibitor",
+      "ARB",
+      "CCB",
+      "diuretik",
+      "beta blocker",
+      "amlodipine",
+      "captopril",
+      "losartan"
+    ],
+    "ringkasan": "Ada 5 kelas utama obat antihipertensi. ACE inhibitor (captopril, ramipril, lisinopril) menghambat pembentukan angiotensin II, efektif pada diabetes dan gagal jantung, efek samping utama batuk kering. ARB (losartan, valsartan, candesartan) mirip ACE inhibitor tapi jarang batuk. Calcium Channel Blocker/CCB (amlodipine, nifedipine) merelaksasi pembuluh darah, efek samping bengkak di kaki. Diuretik (hidroklorotiazid, furosemid) mengurangi volume cairan. Beta blocker (bisoprolol, atenolol) memperlambat denyut jantung, digunakan pada pasien dengan penyakit jantung. Kombinasi 2 obat sering diperlukan untuk kontrol optimal.",
+    "abstrak_ringkas": "Ada 5 kelas utama obat antihipertensi. ACE inhibitor (captopril, ramipril, lisinopril) menghambat pembentukan angiotensin II, efektif pada diabetes dan gagal jantung, efek samping utama batuk kering. ARB (losartan, valsartan, candesartan) mirip ACE inhibitor tapi jarang batuk. Calcium Channel Blocker/CCB (amlodipine, nifedipine) merelaksasi pembuluh darah, efek samping bengkak di kaki. Diuretik (hidroklorotiazid, furosemid) mengurangi volume cairan. Beta blocker (bisoprolol, atenolol) memperlambat denyut jantung, digunakan pada pasien dengan penyakit jantung. Kombinasi 2 obat sering diperlukan untuk kontrol optimal.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Ada 5 kelas utama obat antihipertensi. ACE inhibitor (captopril, ramipril, lisinopril) menghambat pembentukan angiotensin II, efektif pada diabetes dan gagal jantung, efek samping utama batuk kering. ARB (losartan, valsartan, candesartan) mirip ACE inhibitor tapi jarang batuk. Calcium Channel Blocker/CCB (amlodipine, nifedipine) merelaksasi pembuluh darah, efek samping bengkak di kaki. Diuretik (hidroklorotiazid, furosemid) mengurangi volume cairan. Beta blocker (bisoprolol, atenolol) memperlambat denyut jantung, digunakan pada pasien dengan penyakit jantung. Kombinasi 2 obat sering diperlukan untuk kontrol optimal.",
+    "poin_kunci": [
+      "ACE inhibitor: captopril, ramipril, lisinopril — sering batuk kering sebagai efek samping",
+      "ARB: losartan, valsartan — pilihan jika ACE inhibitor menyebabkan batuk",
+      "Amlodipine (CCB): efektif, aman, efek samping bengkak kaki pada beberapa pasien",
+      "Diuretik: membantu buang kelebihan garam dan air, cocok dikombinasikan",
+      "Beta blocker: cocok untuk pasien hipertensi + penyakit jantung atau aritmia",
+      "Sebagian besar pasien butuh 2 atau lebih obat untuk kontrol optimal",
+      "Jangan berhenti obat tiba-tiba tanpa konsultasi dokter"
+    ],
+    "relevansi_rag": [
+      "Apa perbedaan amlodipine dan captopril?",
+      "Kenapa obat hipertensi menyebabkan batuk?",
+      "Apa obat hipertensi yang paling umum digunakan?",
+      "Bolehkah berhenti minum obat hipertensi jika tekanan darah sudah normal?",
+      "Apakah obat hipertensi harus diminum seumur hidup?",
+      "Apa efek samping obat hipertensi?",
+      "Kenapa dokter meresepkan 2 obat hipertensi sekaligus?"
+    ],
+    "resep": null
+  },
+  "text": "ID:\nS010\n\nJudul:\nObat-obatan Hipertensi — Jenis, Cara Kerja, dan Efek Samping\n\nKategori:\nPengobatan Hipertensi\n\nTahun:\n2024-2025\n\nTipe:\npengetahuan_klinis\n\nPenulis:\nTim Medis\n\nRingkasan:\nAda 5 kelas utama obat antihipertensi. ACE inhibitor (captopril, ramipril, lisinopril) menghambat pembentukan angiotensin II, efektif pada diabetes dan gagal jantung, efek samping utama batuk kering. ARB (losartan, valsartan, candesartan) mirip ACE inhibitor tapi jarang batuk. Calcium Channel Blocker/CCB (amlodipine, nifedipine) merelaksasi pembuluh darah, efek samping bengkak di kaki. Diuretik (hidroklorotiazid, furosemid) mengurangi volume cairan. Beta blocker (bisoprolol, atenolol) memperlambat denyut jantung, digunakan pada pasien dengan penyakit jantung. Kombinasi 2 obat sering diperlukan untuk kontrol optimal.\n\nAbstrak ringkas:\nAda 5 kelas utama obat antihipertensi. ACE inhibitor (captopril, ramipril, lisinopril) menghambat pembentukan angiotensin II, efektif pada diabetes dan gagal jantung, efek samping utama batuk kering. ARB (losartan, valsartan, candesartan) mirip ACE inhibitor tapi jarang batuk. Calcium Channel Blocker/CCB (amlodipine, nifedipine) merelaksasi pembuluh darah, efek samping bengkak di kaki. Diuretik (hidroklorotiazid, furosemid) mengurangi volume cairan. Beta blocker (bisoprolol, atenolol) memperlambat denyut jantung, digunakan pada pasien dengan penyakit jantung. Kombinasi 2 obat sering diperlukan untuk kontrol optimal.\n\nKesimpulan:\nAda 5 kelas utama obat antihipertensi. ACE inhibitor (captopril, ramipril, lisinopril) menghambat pembentukan angiotensin II, efektif pada diabetes dan gagal jantung, efek samping utama batuk kering. ARB (losartan, valsartan, candesartan) mirip ACE inhibitor tapi jarang batuk. Calcium Channel Blocker/CCB (amlodipine, nifedipine) merelaksasi pembuluh darah, efek samping bengkak di kaki. Diuretik (hidroklorotiazid, furosemid) mengurangi volume cairan. Beta blocker (bisoprolol, atenolol) memperlambat denyut jantung, digunakan pada pasien dengan penyakit jantung. Kombinasi 2 obat sering diperlukan untuk kontrol optimal.\n\nKeywords:\n- obat hipertensi\n- ACE inhibitor\n- ARB\n- CCB\n- diuretik\n- beta blocker\n- amlodipine\n- captopril\n- losartan\n\nPoin kunci:\n- ACE inhibitor: captopril, ramipril, lisinopril — sering batuk kering sebagai efek samping\n- ARB: losartan, valsartan — pilihan jika ACE inhibitor menyebabkan batuk\n- Amlodipine (CCB): efektif, aman, efek samping bengkak kaki pada beberapa pasien\n- Diuretik: membantu buang kelebihan garam dan air, cocok dikombinasikan\n- Beta blocker: cocok untuk pasien hipertensi + penyakit jantung atau aritmia\n- Sebagian besar pasien butuh 2 atau lebih obat untuk kontrol optimal\n- Jangan berhenti obat tiba-tiba tanpa konsultasi dokter\n\nRelevansi RAG:\n- Apa perbedaan amlodipine dan captopril?\n- Kenapa obat hipertensi menyebabkan batuk?\n- Apa obat hipertensi yang paling umum digunakan?\n- Bolehkah berhenti minum obat hipertensi jika tekanan darah sudah normal?\n- Apakah obat hipertensi harus diminum seumur hidup?\n- Apa efek samping obat hipertensi?\n- Kenapa dokter meresepkan 2 obat hipertensi sekaligus?"
+}

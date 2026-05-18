@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../domain/natrium_classifier.dart';
 import '../../navigation/app_routes.dart';
 import 'profile_wizard_store.dart';
 
@@ -36,49 +37,14 @@ class _ProfileBloodPressureScreenState
     super.dispose();
   }
 
-  void _next() {
-    final systolic = int.tryParse(_systolicController.text);
-    final diastolic = int.tryParse(_diastolicController.text);
-    if (systolic == null || diastolic == null) {
-      _showValidation('Isi sistolik dan diastolik dengan angka');
-      return;
-    }
-    if (systolic < 50 || systolic > 300) {
-      _showValidation('Sistolik harus di antara 50-300 mmHg');
-      return;
-    }
-    if (diastolic < 30 || diastolic > 200) {
-      _showValidation('Diastolik harus di antara 30-200 mmHg');
-      return;
-    }
-    final draft = ProfileWizardStore.instance.draft;
-    draft.systolicPressure = systolic;
-    draft.diastolicPressure = diastolic;
-    _navigateToNextScreen();
+  bool get _isMale {
+    final gender = ProfileWizardStore.instance.draft.gender
+        .trim()
+        .toLowerCase();
+    return gender == 'laki-laki' || gender == 'laki_laki' || gender == 'male';
   }
 
-  void _skip() {
-    if (!_canSkipBloodPressureInput) {
-      return;
-    }
-    final draft = ProfileWizardStore.instance.draft;
-    // Default normal blood pressure when user has no hypertension history and skips this step.
-    draft.systolicPressure = 120;
-    draft.diastolicPressure = 80;
-    _navigateToNextScreen();
-  }
-
-  void _navigateToNextScreen() {
-    Navigator.pushNamed(context, AppRoutes.profilePregnancy);
-  }
-
-  void _showValidation(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
-    );
-  }
-
-  InputDecoration _fieldDecoration(String hintText) {
+  InputDecoration _inputDecoration(String hintText) {
     return InputDecoration(
       hintText: hintText,
       hintStyle: GoogleFonts.plusJakartaSans(
@@ -88,7 +54,7 @@ class _ProfileBloodPressureScreenState
       ),
       filled: true,
       fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(6),
         borderSide: const BorderSide(color: Color(0xFFBEC7DB)),
@@ -104,26 +70,66 @@ class _ProfileBloodPressureScreenState
     );
   }
 
-  bool get _isFormValid {
-    final systolic = int.tryParse(_systolicController.text);
-    final diastolic = int.tryParse(_diastolicController.text);
-    return systolic != null &&
-        diastolic != null &&
-        systolic >= 50 &&
-        systolic <= 300 &&
-        diastolic >= 30 &&
-        diastolic <= 200;
+  Future<void> _goNext() async {
+    final systolic = int.tryParse(_systolicController.text.trim());
+    final diastolic = int.tryParse(_diastolicController.text.trim());
+
+    ProfileWizardStore.instance.draft.systolicPressure = systolic;
+    ProfileWizardStore.instance.draft.diastolicPressure = diastolic;
+
+    if (_isMale) {
+      final draft = ProfileWizardStore.instance.draft;
+      final hasil = await klasifikasiNatriumDariDraft(
+        birthDate: draft.birthDate!,
+        gender: draft.gender,
+        hasHypertension: draft.hasHypertension,
+        hypertensionCondition: draft.hypertensionCondition,
+        systolicPressure: systolic,
+        diastolicPressure: diastolic,
+      );
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        routeUntukKategori(hasil.kategori),
+        (route) => false,
+        arguments: hasil,
+      );
+      return;
+    }
+
+    Navigator.pushNamed(context, AppRoutes.profilePregnancy);
   }
 
-  bool get _canSkipBloodPressureInput {
-    return ProfileWizardStore.instance.draft.hasHypertension == false;
+  Future<void> _skip() async {
+    ProfileWizardStore.instance.draft.systolicPressure = null;
+    ProfileWizardStore.instance.draft.diastolicPressure = null;
+
+    if (_isMale) {
+      final draft = ProfileWizardStore.instance.draft;
+      final hasil = await klasifikasiNatriumDariDraft(
+        birthDate: draft.birthDate!,
+        gender: draft.gender,
+        hasHypertension: draft.hasHypertension,
+        hypertensionCondition: draft.hypertensionCondition,
+      );
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        routeUntukKategori(hasil.kategori),
+        (route) => false,
+        arguments: hasil,
+      );
+      return;
+    }
+
+    Navigator.pushNamed(context, AppRoutes.profilePregnancy);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isFormValid = _isFormValid;
-    final canSkip = _canSkipBloodPressureInput;
-
+    final progress = ProfileWizardStore.instance.progressForStep(
+      ProfileWizardStep.bloodPressure,
+    );
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -167,12 +173,14 @@ class _ProfileBloodPressureScreenState
                                 borderRadius: BorderRadius.circular(100),
                               ),
                             ),
-                            Container(
-                              width: 235,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF2C4A8A),
-                                borderRadius: BorderRadius.circular(100),
+                            FractionallySizedBox(
+                              widthFactor: progress,
+                              child: Container(
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2C4A8A),
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
                               ),
                             ),
                           ],
@@ -186,8 +194,8 @@ class _ProfileBloodPressureScreenState
               Center(
                 child: Image.asset(
                   'assets/illustrations/tensi.png',
-                  width: 304,
-                  height: 304,
+                  width: 302,
+                  height: 302,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -230,14 +238,13 @@ class _ProfileBloodPressureScreenState
                               height: 55,
                               child: TextField(
                                 controller: _systolicController,
-                                onChanged: (_) => setState(() {}),
                                 keyboardType: TextInputType.number,
                                 style: GoogleFonts.plusJakartaSans(
                                   color: const Color(0xFF2C4A8A),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w400,
                                 ),
-                                decoration: _fieldDecoration('Isi sistolik'),
+                                decoration: _inputDecoration('Isi sistolik'),
                               ),
                             ),
                           ],
@@ -261,14 +268,13 @@ class _ProfileBloodPressureScreenState
                               height: 55,
                               child: TextField(
                                 controller: _diastolicController,
-                                onChanged: (_) => setState(() {}),
                                 keyboardType: TextInputType.number,
                                 style: GoogleFonts.plusJakartaSans(
                                   color: const Color(0xFF2C4A8A),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w400,
                                 ),
-                                decoration: _fieldDecoration('Isi diastolik'),
+                                decoration: _inputDecoration('Isi diastolik'),
                               ),
                             ),
                           ],
@@ -278,7 +284,7 @@ class _ProfileBloodPressureScreenState
                   ),
                 ),
               ),
-              const Spacer(),
+              SizedBox(height: 32),
               Center(
                 child: SizedBox(
                   width: 344,
@@ -288,10 +294,9 @@ class _ProfileBloodPressureScreenState
                         width: 344,
                         height: 55,
                         child: FilledButton(
-                          onPressed: isFormValid ? _next : null,
+                          onPressed: _goNext,
                           style: FilledButton.styleFrom(
                             backgroundColor: const Color(0xFF2C4A8A),
-                            disabledBackgroundColor: const Color(0xFFB0B0B0),
                             elevation: 4,
                             shadowColor: const Color(0x40000000),
                             shape: RoundedRectangleBorder(
@@ -314,17 +319,14 @@ class _ProfileBloodPressureScreenState
                         width: 344,
                         height: 55,
                         child: GestureDetector(
-                          onTap: canSkip ? _skip : null,
+                          onTap: _skip,
                           child: Center(
                             child: Text(
                               'Lewati',
                               style: GoogleFonts.plusJakartaSans(
-                                color: canSkip
-                                    ? const Color(0xFF2C4A8A)
-                                    : const Color(0xFFB0B0B0),
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                height: 1,
+                                color: const Color(0xFF2C4A8A),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),

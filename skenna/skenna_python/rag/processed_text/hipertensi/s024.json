@@ -1,0 +1,45 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.041751+00:00"
+  },
+  "document": {
+    "id": "S024",
+    "tipe": "pengetahuan_klinis",
+    "kategori": "FAQ & Disclaimer Medis",
+    "tahun": "2024-2025",
+    "judul": "Pertanyaan Umum Tentang Hipertensi (FAQ)",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "FAQ hipertensi",
+      "mitos hipertensi",
+      "pertanyaan umum",
+      "edukasi pasien"
+    ],
+    "ringkasan": "Kumpulan jawaban atas pertanyaan paling sering diajukan tentang hipertensi oleh masyarakat umum.",
+    "abstrak_ringkas": "Kumpulan jawaban atas pertanyaan paling sering diajukan tentang hipertensi oleh masyarakat umum.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Kumpulan jawaban atas pertanyaan paling sering diajukan tentang hipertensi oleh masyarakat umum.",
+    "poin_kunci": [
+      "Q: Apakah hipertensi bisa sembuh total? A: Hipertensi primer umumnya tidak bisa disembuhkan, tapi bisa dikontrol dengan baik sehingga tidak menimbulkan komplikasi",
+      "Q: Bolehkah minum kopi jika hipertensi? A: Kafein menyebabkan lonjakan tekanan darah sementara. Batas aman: 1-2 cangkir/hari untuk penderita hipertensi yang sudah terkontrol",
+      "Q: Apakah tekanan darah bisa normal tanpa obat? A: Pada beberapa kasus grade 1 dengan perubahan gaya hidup agresif, ya. Namun harus dipantau ketat oleh dokter",
+      "Q: Mengapa tekanan darah naik di malam hari? A: Normal, tekanan darah biasanya lebih rendah malam hari. Jika tidak turun (non-dipper), risiko kardiovaskular lebih tinggi",
+      "Q: Apakah tekanan darah berfluktuasi normal? A: Ya, tekanan darah berubah sepanjang hari. Yang didiagnosis hipertensi adalah yang konsisten tinggi",
+      "Q: Apakah anak muda bisa hipertensi? A: Ya, hipertensi bisa terjadi di semua usia termasuk remaja dan dewasa muda",
+      "Q: Apakah boleh makan durian jika hipertensi? A: Durian tinggi kalori dan bisa memicu lonjakan tekanan darah — sebaiknya dibatasi, tidak lebih dari 2-3 biji"
+    ],
+    "relevansi_rag": [
+      "Apakah penderita hipertensi boleh minum kopi?",
+      "Bolehkah makan durian jika tekanan darah tinggi?",
+      "Apakah anak muda bisa kena hipertensi?",
+      "Kenapa tekanan darah naik turun sepanjang hari?",
+      "Apakah hipertensi bisa sembuh?",
+      "Bolehkah olahraga saat hipertensi?"
+    ],
+    "resep": null
+  },
+  "text": "ID:\nS024\n\nJudul:\nPertanyaan Umum Tentang Hipertensi (FAQ)\n\nKategori:\nFAQ & Disclaimer Medis\n\nTahun:\n2024-2025\n\nTipe:\npengetahuan_klinis\n\nPenulis:\nTim Medis\n\nRingkasan:\nKumpulan jawaban atas pertanyaan paling sering diajukan tentang hipertensi oleh masyarakat umum.\n\nAbstrak ringkas:\nKumpulan jawaban atas pertanyaan paling sering diajukan tentang hipertensi oleh masyarakat umum.\n\nKesimpulan:\nKumpulan jawaban atas pertanyaan paling sering diajukan tentang hipertensi oleh masyarakat umum.\n\nKeywords:\n- FAQ hipertensi\n- mitos hipertensi\n- pertanyaan umum\n- edukasi pasien\n\nPoin kunci:\n- Q: Apakah hipertensi bisa sembuh total? A: Hipertensi primer umumnya tidak bisa disembuhkan, tapi bisa dikontrol dengan baik sehingga tidak menimbulkan komplikasi\n- Q: Bolehkah minum kopi jika hipertensi? A: Kafein menyebabkan lonjakan tekanan darah sementara. Batas aman: 1-2 cangkir/hari untuk penderita hipertensi yang sudah terkontrol\n- Q: Apakah tekanan darah bisa normal tanpa obat? A: Pada beberapa kasus grade 1 dengan perubahan gaya hidup agresif, ya. Namun harus dipantau ketat oleh dokter\n- Q: Mengapa tekanan darah naik di malam hari? A: Normal, tekanan darah biasanya lebih rendah malam hari. Jika tidak turun (non-dipper), risiko kardiovaskular lebih tinggi\n- Q: Apakah tekanan darah berfluktuasi normal? A: Ya, tekanan darah berubah sepanjang hari. Yang didiagnosis hipertensi adalah yang konsisten tinggi\n- Q: Apakah anak muda bisa hipertensi? A: Ya, hipertensi bisa terjadi di semua usia termasuk remaja dan dewasa muda\n- Q: Apakah boleh makan durian jika hipertensi? A: Durian tinggi kalori dan bisa memicu lonjakan tekanan darah — sebaiknya dibatasi, tidak lebih dari 2-3 biji\n\nRelevansi RAG:\n- Apakah penderita hipertensi boleh minum kopi?\n- Bolehkah makan durian jika tekanan darah tinggi?\n- Apakah anak muda bisa kena hipertensi?\n- Kenapa tekanan darah naik turun sepanjang hari?\n- Apakah hipertensi bisa sembuh?\n- Bolehkah olahraga saat hipertensi?"
+}

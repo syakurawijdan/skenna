@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.006671+00:00"
+  },
+  "document": {
+    "id": "S002",
+    "tipe": "pengetahuan_klinis",
+    "kategori": "Definisi & Klasifikasi Hipertensi",
+    "tahun": "2024-2025",
+    "judul": "Hipertensi Primer vs Sekunder — Perbedaan dan Penyebab",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "hipertensi primer",
+      "hipertensi sekunder",
+      "hipertensi esensial",
+      "penyebab"
+    ],
+    "ringkasan": "Hipertensi primer (esensial) adalah hipertensi tanpa penyebab tunggal yang jelas, mencakup 90-95% kasus. Faktor risikonya meliputi genetik, pola makan tinggi garam, obesitas, kurang aktivitas fisik, dan stres. Hipertensi sekunder (5-10% kasus) disebabkan oleh kondisi medis spesifik seperti penyakit ginjal kronis, sleep apnea, penyakit tiroid, aldosteronisme primer, atau efek samping obat (kontrasepsi hormonal, NSAID, dekongestan). Hipertensi sekunder penting diidentifikasi karena bisa sembuh jika penyebab dasarnya diobati.",
+    "abstrak_ringkas": "Hipertensi primer (esensial) adalah hipertensi tanpa penyebab tunggal yang jelas, mencakup 90-95% kasus. Faktor risikonya meliputi genetik, pola makan tinggi garam, obesitas, kurang aktivitas fisik, dan stres. Hipertensi sekunder (5-10% kasus) disebabkan oleh kondisi medis spesifik seperti penyakit ginjal kronis, sleep apnea, penyakit tiroid, aldosteronisme primer, atau efek samping obat (kontrasepsi hormonal, NSAID, dekongestan). Hipertensi sekunder penting diidentifikasi karena bisa sembuh jika penyebab dasarnya diobati.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Hipertensi primer (esensial) adalah hipertensi tanpa penyebab tunggal yang jelas, mencakup 90-95% kasus. Faktor risikonya meliputi genetik, pola makan tinggi garam, obesitas, kurang aktivitas fisik, dan stres. Hipertensi sekunder (5-10% kasus) disebabkan oleh kondisi medis spesifik seperti penyakit ginjal kronis, sleep apnea, penyakit tiroid, aldosteronisme primer, atau efek samping obat (kontrasepsi hormonal, NSAID, dekongestan). Hipertensi sekunder penting diidentifikasi karena bisa sembuh jika penyebab dasarnya diobati.",
+    "poin_kunci": [
+      "Hipertensi primer: 90-95% kasus, multifaktor, tidak ada penyebab tunggal",
+      "Hipertensi sekunder: 5-10% kasus, ada penyebab spesifik yang bisa diobati",
+      "Penyebab sekunder tersering: penyakit ginjal, sleep apnea, gangguan tiroid",
+      "Obat yang bisa memicu hipertensi: pil KB, NSAID (ibuprofen), dekongestan",
+      "Curiga hipertensi sekunder jika: usia muda, resisten terhadap 3 obat, onset tiba-tiba"
+    ],
+    "relevansi_rag": [
+      "Apa perbedaan hipertensi primer dan sekunder?",
+      "Apakah hipertensi bisa disebabkan obat-obatan?",
+      "Apakah pil KB menyebabkan hipertensi?",
+      "Apa penyebab hipertensi pada usia muda?",
+      "Bisakah hipertensi sembuh total jika penyebabnya diobati?"
+    ],
+    "resep": null
+  },
+  "text": "ID:\nS002\n\nJudul:\nHipertensi Primer vs Sekunder — Perbedaan dan Penyebab\n\nKategori:\nDefinisi & Klasifikasi Hipertensi\n\nTahun:\n2024-2025\n\nTipe:\npengetahuan_klinis\n\nPenulis:\nTim Medis\n\nRingkasan:\nHipertensi primer (esensial) adalah hipertensi tanpa penyebab tunggal yang jelas, mencakup 90-95% kasus. Faktor risikonya meliputi genetik, pola makan tinggi garam, obesitas, kurang aktivitas fisik, dan stres. Hipertensi sekunder (5-10% kasus) disebabkan oleh kondisi medis spesifik seperti penyakit ginjal kronis, sleep apnea, penyakit tiroid, aldosteronisme primer, atau efek samping obat (kontrasepsi hormonal, NSAID, dekongestan). Hipertensi sekunder penting diidentifikasi karena bisa sembuh jika penyebab dasarnya diobati.\n\nAbstrak ringkas:\nHipertensi primer (esensial) adalah hipertensi tanpa penyebab tunggal yang jelas, mencakup 90-95% kasus. Faktor risikonya meliputi genetik, pola makan tinggi garam, obesitas, kurang aktivitas fisik, dan stres. Hipertensi sekunder (5-10% kasus) disebabkan oleh kondisi medis spesifik seperti penyakit ginjal kronis, sleep apnea, penyakit tiroid, aldosteronisme primer, atau efek samping obat (kontrasepsi hormonal, NSAID, dekongestan). Hipertensi sekunder penting diidentifikasi karena bisa sembuh jika penyebab dasarnya diobati.\n\nKesimpulan:\nHipertensi primer (esensial) adalah hipertensi tanpa penyebab tunggal yang jelas, mencakup 90-95% kasus. Faktor risikonya meliputi genetik, pola makan tinggi garam, obesitas, kurang aktivitas fisik, dan stres. Hipertensi sekunder (5-10% kasus) disebabkan oleh kondisi medis spesifik seperti penyakit ginjal kronis, sleep apnea, penyakit tiroid, aldosteronisme primer, atau efek samping obat (kontrasepsi hormonal, NSAID, dekongestan). Hipertensi sekunder penting diidentifikasi karena bisa sembuh jika penyebab dasarnya diobati.\n\nKeywords:\n- hipertensi primer\n- hipertensi sekunder\n- hipertensi esensial\n- penyebab\n\nPoin kunci:\n- Hipertensi primer: 90-95% kasus, multifaktor, tidak ada penyebab tunggal\n- Hipertensi sekunder: 5-10% kasus, ada penyebab spesifik yang bisa diobati\n- Penyebab sekunder tersering: penyakit ginjal, sleep apnea, gangguan tiroid\n- Obat yang bisa memicu hipertensi: pil KB, NSAID (ibuprofen), dekongestan\n- Curiga hipertensi sekunder jika: usia muda, resisten terhadap 3 obat, onset tiba-tiba\n\nRelevansi RAG:\n- Apa perbedaan hipertensi primer dan sekunder?\n- Apakah hipertensi bisa disebabkan obat-obatan?\n- Apakah pil KB menyebabkan hipertensi?\n- Apa penyebab hipertensi pada usia muda?\n- Bisakah hipertensi sembuh total jika penyebabnya diobati?"
+}

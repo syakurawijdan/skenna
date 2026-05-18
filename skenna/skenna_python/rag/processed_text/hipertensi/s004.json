@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.009668+00:00"
+  },
+  "document": {
+    "id": "S004",
+    "tipe": "pengetahuan_klinis",
+    "kategori": "Penyebab Hipertensi",
+    "tahun": "2024-2025",
+    "judul": "Faktor Risiko Hipertensi yang Bisa dan Tidak Bisa Diubah",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "faktor risiko",
+      "obesitas",
+      "garam",
+      "alkohol",
+      "rokok",
+      "stres",
+      "genetik",
+      "usia",
+      "kurang gerak"
+    ],
+    "ringkasan": "Faktor risiko hipertensi terbagi dua: yang bisa dimodifikasi dan yang tidak. Faktor yang tidak bisa diubah meliputi usia (risiko meningkat seiring usia), jenis kelamin (pria lebih berisiko sebelum menopause, perempuan lebih berisiko setelah menopause), ras/etnis, dan riwayat keluarga/genetik. Faktor yang bisa dimodifikasi adalah konsumsi garam berlebihan, obesitas (terutama lemak perut), kurang aktivitas fisik, merokok, konsumsi alkohol berlebihan, stres kronis, kurang tidur, dan pola makan tidak sehat. Mengatasi faktor risiko yang bisa diubah dapat menurunkan tekanan darah secara signifikan.",
+    "abstrak_ringkas": "Faktor risiko hipertensi terbagi dua: yang bisa dimodifikasi dan yang tidak. Faktor yang tidak bisa diubah meliputi usia (risiko meningkat seiring usia), jenis kelamin (pria lebih berisiko sebelum menopause, perempuan lebih berisiko setelah menopause), ras/etnis, dan riwayat keluarga/genetik. Faktor yang bisa dimodifikasi adalah konsumsi garam berlebihan, obesitas (terutama lemak perut), kurang aktivitas fisik, merokok, konsumsi alkohol berlebihan, stres kronis, kurang tidur, dan pola makan tidak sehat. Mengatasi faktor risiko yang bisa diubah dapat menurunkan tekanan darah secara signifikan.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Faktor risiko hipertensi terbagi dua: yang bisa dimodifikasi dan yang tidak. Faktor yang tidak bisa diubah meliputi usia (risiko meningkat seiring usia), jenis kelamin (pria lebih berisiko sebelum menopause, perempuan lebih berisiko setelah menopause), ras/etnis, dan riwayat keluarga/genetik. Faktor yang bisa dimodifikasi adalah konsumsi garam berlebihan, obesitas (terutama lemak perut), kurang aktivitas fisik, merokok, konsumsi alkohol berlebihan, stres kronis, kurang tidur, dan pola makan tidak sehat. Mengatasi faktor risiko yang bisa diubah dapat menurunkan tekanan darah secara signifikan.",
+    "poin_kunci": [
+      "Faktor risiko tidak dapat diubah: usia, jenis kelamin, genetik, ras",
+      "Faktor risiko dapat diubah: garam, berat badan, aktivitas fisik, rokok, alkohol, stres",
+      "Konsumsi garam >5 gram/hari meningkatkan risiko hipertensi secara bermakna",
+      "Obesitas (BMI >30) meningkatkan risiko hipertensi 2-3 kali lipat",
+      "Merokok menyebabkan vasokonstriksi dan kerusakan pembuluh darah",
+      "Stres kronis mengaktifkan sistem saraf simpatik yang menaikkan tekanan darah",
+      "Kurang tidur (<6 jam/malam) dikaitkan dengan peningkatan tekanan darah"
+    ],
+    "relevansi_rag": [
+      "Apa penyebab tekanan darah tinggi?",
+      "Apakah stres bisa menyebabkan hipertensi?",
+      "Apakah orang gemuk lebih mudah kena hipertensi?",
+      "Apakah merokok menyebabkan hipertensi?",
+      "Apakah hipertensi bisa diturunkan dari orang tua?",
+      "Apakah kurang tidur menyebabkan tekanan darah tinggi?",
+      "Mengapa orang tua lebih rentan hipertensi?"
+    ],
+    "resep": null
+  },
+  "text": "ID:\nS004\n\nJudul:\nFaktor Risiko Hipertensi yang Bisa dan Tidak Bisa Diubah\n\nKategori:\nPenyebab Hipertensi\n\nTahun:\n2024-2025\n\nTipe:\npengetahuan_klinis\n\nPenulis:\nTim Medis\n\nRingkasan:\nFaktor risiko hipertensi terbagi dua: yang bisa dimodifikasi dan yang tidak. Faktor yang tidak bisa diubah meliputi usia (risiko meningkat seiring usia), jenis kelamin (pria lebih berisiko sebelum menopause, perempuan lebih berisiko setelah menopause), ras/etnis, dan riwayat keluarga/genetik. Faktor yang bisa dimodifikasi adalah konsumsi garam berlebihan, obesitas (terutama lemak perut), kurang aktivitas fisik, merokok, konsumsi alkohol berlebihan, stres kronis, kurang tidur, dan pola makan tidak sehat. Mengatasi faktor risiko yang bisa diubah dapat menurunkan tekanan darah secara signifikan.\n\nAbstrak ringkas:\nFaktor risiko hipertensi terbagi dua: yang bisa dimodifikasi dan yang tidak. Faktor yang tidak bisa diubah meliputi usia (risiko meningkat seiring usia), jenis kelamin (pria lebih berisiko sebelum menopause, perempuan lebih berisiko setelah menopause), ras/etnis, dan riwayat keluarga/genetik. Faktor yang bisa dimodifikasi adalah konsumsi garam berlebihan, obesitas (terutama lemak perut), kurang aktivitas fisik, merokok, konsumsi alkohol berlebihan, stres kronis, kurang tidur, dan pola makan tidak sehat. Mengatasi faktor risiko yang bisa diubah dapat menurunkan tekanan darah secara signifikan.\n\nKesimpulan:\nFaktor risiko hipertensi terbagi dua: yang bisa dimodifikasi dan yang tidak. Faktor yang tidak bisa diubah meliputi usia (risiko meningkat seiring usia), jenis kelamin (pria lebih berisiko sebelum menopause, perempuan lebih berisiko setelah menopause), ras/etnis, dan riwayat keluarga/genetik. Faktor yang bisa dimodifikasi adalah konsumsi garam berlebihan, obesitas (terutama lemak perut), kurang aktivitas fisik, merokok, konsumsi alkohol berlebihan, stres kronis, kurang tidur, dan pola makan tidak sehat. Mengatasi faktor risiko yang bisa diubah dapat menurunkan tekanan darah secara signifikan.\n\nKeywords:\n- faktor risiko\n- obesitas\n- garam\n- alkohol\n- rokok\n- stres\n- genetik\n- usia\n- kurang gerak\n\nPoin kunci:\n- Faktor risiko tidak dapat diubah: usia, jenis kelamin, genetik, ras\n- Faktor risiko dapat diubah: garam, berat badan, aktivitas fisik, rokok, alkohol, stres\n- Konsumsi garam >5 gram/hari meningkatkan risiko hipertensi secara bermakna\n- Obesitas (BMI >30) meningkatkan risiko hipertensi 2-3 kali lipat\n- Merokok menyebabkan vasokonstriksi dan kerusakan pembuluh darah\n- Stres kronis mengaktifkan sistem saraf simpatik yang menaikkan tekanan darah\n- Kurang tidur (<6 jam/malam) dikaitkan dengan peningkatan tekanan darah\n\nRelevansi RAG:\n- Apa penyebab tekanan darah tinggi?\n- Apakah stres bisa menyebabkan hipertensi?\n- Apakah orang gemuk lebih mudah kena hipertensi?\n- Apakah merokok menyebabkan hipertensi?\n- Apakah hipertensi bisa diturunkan dari orang tua?\n- Apakah kurang tidur menyebabkan tekanan darah tinggi?\n- Mengapa orang tua lebih rentan hipertensi?"
+}

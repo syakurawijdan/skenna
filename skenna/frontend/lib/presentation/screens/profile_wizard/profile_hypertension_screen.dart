@@ -25,22 +25,49 @@ class _ProfileHypertensionScreenState extends State<ProfileHypertensionScreen> {
     if (_hasHypertension == null) {
       return;
     }
-    ProfileWizardStore.instance.draft.hasHypertension = _hasHypertension;
-    Navigator.pushNamed(context, AppRoutes.profileBloodPressure);
+    ProfileWizardStore.instance.draft.hasHypertension = _hasHypertension!;
+
+    if (_hasHypertension!) {
+      Navigator.pushNamed(context, AppRoutes.profileHypertensionCondition);
+      return;
+    }
+
+    final gender = ProfileWizardStore.instance.draft.gender
+        .trim()
+        .toLowerCase();
+    if (gender == 'perempuan') {
+      Navigator.pushNamed(context, AppRoutes.profilePregnancy);
+    } else {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.dashboard,
+        (route) => false,
+      );
+    }
   }
 
-  Widget _radioOption({
+  Widget _optionCard({
     required bool selected,
     required String label,
+    required String description,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: selected ? const Color(0xFF2C4A8A) : const Color(0xFFBEC7DB),
+            width: selected ? 2 : 1,
+          ),
+        ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               width: 25,
@@ -63,12 +90,29 @@ class _ProfileHypertensionScreenState extends State<ProfileHypertensionScreen> {
                   : null,
             ),
             const SizedBox(width: 16),
-            Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                color: const Color(0xFF2C4A8A),
-                fontSize: 32 / 2,
-                fontWeight: FontWeight.w400,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.plusJakartaSans(
+                      color: const Color(0xFF2C4A8A),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: GoogleFonts.plusJakartaSans(
+                      color: const Color(0xFF5E6B84),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -153,7 +197,7 @@ class _ProfileHypertensionScreenState extends State<ProfileHypertensionScreen> {
                 child: SizedBox(
                   width: 380,
                   child: Text(
-                    'Punya hipertensi?',
+                    'Riwayat hipertensi',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.montserrat(
                       color: const Color(0xFF2C4A8A),
@@ -165,31 +209,29 @@ class _ProfileHypertensionScreenState extends State<ProfileHypertensionScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              SizedBox(
-                width: 263,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: 159,
-                      child: _radioOption(
+              Center(
+                child: SizedBox(
+                  width: 320,
+                  child: Column(
+                    children: [
+                      _optionCard(
                         selected: _hasHypertension == true,
-                        label: 'Ya, saya punya',
+                        label: 'Ya',
+                        description: 'Saya punya riwayat hipertensi.',
                         onTap: () => setState(() => _hasHypertension = true),
                       ),
-                    ),
-                    SizedBox(
-                      width: 88,
-                      child: _radioOption(
+                      const SizedBox(height: 12),
+                      _optionCard(
                         selected: _hasHypertension == false,
                         label: 'Tidak',
+                        description: 'Saya tidak punya riwayat hipertensi.',
                         onTap: () => setState(() => _hasHypertension = false),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              const Spacer(),
+              SizedBox(height: 32),
               Center(
                 child: SizedBox(
                   width: 344,
@@ -246,9 +288,9 @@ class _ProfileHypertensionScreenState extends State<ProfileHypertensionScreen> {
                         ),
                       ),
                     ],
-                    ),
                   ),
                 ),
+              ),
             ],
           ),
         ),

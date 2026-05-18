@@ -36,6 +36,20 @@ class ApiClient {
     return _decodeMap(res);
   }
 
+  Future<Map<String, dynamic>> createDemoUser() async {
+    final uri = Uri.parse('$baseUrl/api/v1/users/demo');
+    final res = await _client.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (res.statusCode >= 400) {
+      throw Exception(
+        'Failed to create demo user: ${res.statusCode} ${res.body}',
+      );
+    }
+    return _decodeMap(res);
+  }
+
   Future<Map<String, dynamic>> scanLabel(String imageUrl) async {
     final uri = Uri.parse('$baseUrl/api/v1/cv/scan');
     final res = await _client.post(
@@ -65,24 +79,35 @@ class ApiClient {
     required String gender,
     required DateTime birthDate,
     required bool hasHypertension,
-    required int systolicPressure,
-    required int diastolicPressure,
-    required bool isPregnant,
+    String? hypertensionCondition,
+    int? systolicPressure,
+    int? diastolicPressure,
+    String? pregnancyStatus,
   }) async {
     final uri = Uri.parse('$baseUrl/api/v1/users/$userId/profile');
+
+    final body = {
+      'full_name': fullName,
+      'gender': gender,
+      'birth_date': birthDate.toIso8601String().split('T').first,
+      'has_hypertension': hasHypertension,
+      if (hypertensionCondition != null)
+        'hypertension_condition': hypertensionCondition,
+      if (systolicPressure != null) 'systolic_pressure': systolicPressure,
+      if (diastolicPressure != null) 'diastolic_pressure': diastolicPressure,
+      if (pregnancyStatus != null) 'pregnancy_status': pregnancyStatus,
+    };
+
     final res = await _client.put(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'full_name': fullName,
-        'gender': gender,
-        'birth_date': birthDate.toIso8601String().split('T').first,
-        'has_hypertension': hasHypertension,
-        'systolic_pressure': systolicPressure,
-        'diastolic_pressure': diastolicPressure,
-        'is_pregnant': isPregnant,
-      }),
+      body: jsonEncode(body),
     );
+
+    if (res.statusCode >= 400) {
+      throw Exception('Failed to save profile: ${res.statusCode} ${res.body}');
+    }
+
     return _decodeMap(res);
   }
 

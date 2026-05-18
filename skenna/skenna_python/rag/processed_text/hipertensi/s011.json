@@ -1,0 +1,44 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.019667+00:00"
+  },
+  "document": {
+    "id": "S011",
+    "tipe": "pengetahuan_klinis",
+    "kategori": "Pengobatan Hipertensi",
+    "tahun": "2024-2025",
+    "judul": "Kapan Harus Minum Obat dan Dapatkah Hipertensi Sembuh Tanpa Obat",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "kapan mulai obat",
+      "hipertensi tanpa obat",
+      "lifestyle only",
+      "target tekanan darah",
+      "berhenti obat"
+    ],
+    "ringkasan": "Keputusan memulai obat hipertensi didasarkan pada tingkat tekanan darah dan faktor risiko kardiovaskular total. Untuk hipertensi grade 1 (140-159/90-99) dengan risiko kardiovaskular rendah, perubahan gaya hidup selama 3-6 bulan dahulu bisa dicoba. Namun jika ada diabetes, penyakit ginjal, riwayat stroke/serangan jantung, atau tekanan darah ≥160/100, obat harus segera dimulai. Hipertensi primer umumnya tidak bisa sembuh total, tapi bisa dikontrol dengan baik. Pada kasus tertentu, pasien yang berhasil menurunkan berat badan signifikan dan mengubah gaya hidup bisa mengurangi dosis obat atau bahkan menghentikan dengan pengawasan dokter.",
+    "abstrak_ringkas": "Keputusan memulai obat hipertensi didasarkan pada tingkat tekanan darah dan faktor risiko kardiovaskular total. Untuk hipertensi grade 1 (140-159/90-99) dengan risiko kardiovaskular rendah, perubahan gaya hidup selama 3-6 bulan dahulu bisa dicoba. Namun jika ada diabetes, penyakit ginjal, riwayat stroke/serangan jantung, atau tekanan darah ≥160/100, obat harus segera dimulai. Hipertensi primer umumnya tidak bisa sembuh total, tapi bisa dikontrol dengan baik. Pada kasus tertentu, pasien yang berhasil menurunkan berat badan signifikan dan mengubah gaya hidup bisa mengurangi dosis obat atau bahkan menghentikan dengan pengawasan dokter.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Keputusan memulai obat hipertensi didasarkan pada tingkat tekanan darah dan faktor risiko kardiovaskular total. Untuk hipertensi grade 1 (140-159/90-99) dengan risiko kardiovaskular rendah, perubahan gaya hidup selama 3-6 bulan dahulu bisa dicoba. Namun jika ada diabetes, penyakit ginjal, riwayat stroke/serangan jantung, atau tekanan darah ≥160/100, obat harus segera dimulai. Hipertensi primer umumnya tidak bisa sembuh total, tapi bisa dikontrol dengan baik. Pada kasus tertentu, pasien yang berhasil menurunkan berat badan signifikan dan mengubah gaya hidup bisa mengurangi dosis obat atau bahkan menghentikan dengan pengawasan dokter.",
+    "poin_kunci": [
+      "Tekanan darah ≥160/100 mmHg: obat langsung dimulai, tidak perlu tunggu",
+      "Grade 1 risiko rendah: coba gaya hidup 3-6 bulan dulu",
+      "Ada DM, penyakit ginjal, atau riwayat jantung: obat segera meski grade 1",
+      "Hipertensi primer umumnya memerlukan pengobatan jangka panjang/seumur hidup",
+      "JANGAN berhenti obat sendiri — bisa menyebabkan rebound hypertension",
+      "Penurunan BB ≥10 kg bisa menurunkan TD 10-15 mmHg dan mungkin kurangi dosis obat"
+    ],
+    "relevansi_rag": [
+      "Apakah hipertensi bisa sembuh tanpa obat?",
+      "Kapan harus mulai minum obat hipertensi?",
+      "Bolehkah berhenti obat jika tekanan darah sudah normal?",
+      "Apakah minum obat hipertensi seumur hidup?",
+      "Bisakah turun berat badan mengurangi kebutuhan obat hipertensi?"
+    ],
+    "resep": null
+  },
+  "text": "ID:\nS011\n\nJudul:\nKapan Harus Minum Obat dan Dapatkah Hipertensi Sembuh Tanpa Obat\n\nKategori:\nPengobatan Hipertensi\n\nTahun:\n2024-2025\n\nTipe:\npengetahuan_klinis\n\nPenulis:\nTim Medis\n\nRingkasan:\nKeputusan memulai obat hipertensi didasarkan pada tingkat tekanan darah dan faktor risiko kardiovaskular total. Untuk hipertensi grade 1 (140-159/90-99) dengan risiko kardiovaskular rendah, perubahan gaya hidup selama 3-6 bulan dahulu bisa dicoba. Namun jika ada diabetes, penyakit ginjal, riwayat stroke/serangan jantung, atau tekanan darah ≥160/100, obat harus segera dimulai. Hipertensi primer umumnya tidak bisa sembuh total, tapi bisa dikontrol dengan baik. Pada kasus tertentu, pasien yang berhasil menurunkan berat badan signifikan dan mengubah gaya hidup bisa mengurangi dosis obat atau bahkan menghentikan dengan pengawasan dokter.\n\nAbstrak ringkas:\nKeputusan memulai obat hipertensi didasarkan pada tingkat tekanan darah dan faktor risiko kardiovaskular total. Untuk hipertensi grade 1 (140-159/90-99) dengan risiko kardiovaskular rendah, perubahan gaya hidup selama 3-6 bulan dahulu bisa dicoba. Namun jika ada diabetes, penyakit ginjal, riwayat stroke/serangan jantung, atau tekanan darah ≥160/100, obat harus segera dimulai. Hipertensi primer umumnya tidak bisa sembuh total, tapi bisa dikontrol dengan baik. Pada kasus tertentu, pasien yang berhasil menurunkan berat badan signifikan dan mengubah gaya hidup bisa mengurangi dosis obat atau bahkan menghentikan dengan pengawasan dokter.\n\nKesimpulan:\nKeputusan memulai obat hipertensi didasarkan pada tingkat tekanan darah dan faktor risiko kardiovaskular total. Untuk hipertensi grade 1 (140-159/90-99) dengan risiko kardiovaskular rendah, perubahan gaya hidup selama 3-6 bulan dahulu bisa dicoba. Namun jika ada diabetes, penyakit ginjal, riwayat stroke/serangan jantung, atau tekanan darah ≥160/100, obat harus segera dimulai. Hipertensi primer umumnya tidak bisa sembuh total, tapi bisa dikontrol dengan baik. Pada kasus tertentu, pasien yang berhasil menurunkan berat badan signifikan dan mengubah gaya hidup bisa mengurangi dosis obat atau bahkan menghentikan dengan pengawasan dokter.\n\nKeywords:\n- kapan mulai obat\n- hipertensi tanpa obat\n- lifestyle only\n- target tekanan darah\n- berhenti obat\n\nPoin kunci:\n- Tekanan darah ≥160/100 mmHg: obat langsung dimulai, tidak perlu tunggu\n- Grade 1 risiko rendah: coba gaya hidup 3-6 bulan dulu\n- Ada DM, penyakit ginjal, atau riwayat jantung: obat segera meski grade 1\n- Hipertensi primer umumnya memerlukan pengobatan jangka panjang/seumur hidup\n- JANGAN berhenti obat sendiri — bisa menyebabkan rebound hypertension\n- Penurunan BB ≥10 kg bisa menurunkan TD 10-15 mmHg dan mungkin kurangi dosis obat\n\nRelevansi RAG:\n- Apakah hipertensi bisa sembuh tanpa obat?\n- Kapan harus mulai minum obat hipertensi?\n- Bolehkah berhenti obat jika tekanan darah sudah normal?\n- Apakah minum obat hipertensi seumur hidup?\n- Bisakah turun berat badan mengurangi kebutuhan obat hipertensi?"
+}

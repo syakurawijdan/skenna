@@ -1,0 +1,44 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.039749+00:00"
+  },
+  "document": {
+    "id": "S023",
+    "tipe": "pengetahuan_klinis",
+    "kategori": "Panduan Darurat Hipertensi",
+    "tahun": "2024-2025",
+    "judul": "Apa yang Harus Dilakukan Saat Tekanan Darah Sangat Tinggi",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "hipertensi darurat",
+      "tekanan darah tinggi mendadak",
+      "krisis hipertensi",
+      "pertolongan pertama"
+    ],
+    "ringkasan": "Jika tekanan darah sangat tinggi (≥180/120 mmHg), langkah yang harus diambil tergantung ada tidaknya gejala. Jika TIDAK ada gejala berat (sakit kepala hebat, nyeri dada, sesak, gangguan penglihatan, kelemahan anggota gerak, bicara pelo) — ini disebut hypertensive urgency. Istirahat tenang, minum obat hipertensi yang biasa dikonsumsi, ukur ulang 30 menit kemudian, dan segera ke dokter hari itu. Jika ADA gejala berat — ini adalah hypertensive emergency. SEGERA ke UGD rumah sakit terdekat tanpa menunggu. Jangan makan/minum obat tambahan sembarangan tanpa instruksi dokter.",
+    "abstrak_ringkas": "Jika tekanan darah sangat tinggi (≥180/120 mmHg), langkah yang harus diambil tergantung ada tidaknya gejala. Jika TIDAK ada gejala berat (sakit kepala hebat, nyeri dada, sesak, gangguan penglihatan, kelemahan anggota gerak, bicara pelo) — ini disebut hypertensive urgency. Istirahat tenang, minum obat hipertensi yang biasa dikonsumsi, ukur ulang 30 menit kemudian, dan segera ke dokter hari itu. Jika ADA gejala berat — ini adalah hypertensive emergency. SEGERA ke UGD rumah sakit terdekat tanpa menunggu. Jangan makan/minum obat tambahan sembarangan tanpa instruksi dokter.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Jika tekanan darah sangat tinggi (≥180/120 mmHg), langkah yang harus diambil tergantung ada tidaknya gejala. Jika TIDAK ada gejala berat (sakit kepala hebat, nyeri dada, sesak, gangguan penglihatan, kelemahan anggota gerak, bicara pelo) — ini disebut hypertensive urgency. Istirahat tenang, minum obat hipertensi yang biasa dikonsumsi, ukur ulang 30 menit kemudian, dan segera ke dokter hari itu. Jika ADA gejala berat — ini adalah hypertensive emergency. SEGERA ke UGD rumah sakit terdekat tanpa menunggu. Jangan makan/minum obat tambahan sembarangan tanpa instruksi dokter.",
+    "poin_kunci": [
+      "TANPA gejala berat: istirahat, minum obat rutin, ukur ulang 30 menit, segera ke dokter",
+      "DENGAN gejala berat: SEGERA ke UGD — ini kondisi darurat mengancam jiwa",
+      "Gejala bahaya: sakit kepala sangat hebat, nyeri dada, sesak napas, penglihatan ganda/kabur, bicara pelo, lemas sebelah",
+      "JANGAN: panik berlebihan, minum obat ekstra sembarangan, atau diabaikan",
+      "Target penurunan tekanan darah darurat: bertahap, tidak boleh drastis tiba-tiba",
+      "Hubungi 119 (IGD) atau minta bantuan orang terdekat untuk ke RS"
+    ],
+    "relevansi_rag": [
+      "Apa yang harus dilakukan jika tekanan darah 200/120?",
+      "Kapan harus ke UGD karena hipertensi?",
+      "Pertolongan pertama tekanan darah sangat tinggi?",
+      "Apakah tekanan darah 180 berbahaya?",
+      "Gejala apa yang harus segera ke rumah sakit?",
+      "Apa yang harus dilakukan saat hipertensi kambuh?"
+    ],
+    "resep": null
+  },
+  "text": "ID:\nS023\n\nJudul:\nApa yang Harus Dilakukan Saat Tekanan Darah Sangat Tinggi\n\nKategori:\nPanduan Darurat Hipertensi\n\nTahun:\n2024-2025\n\nTipe:\npengetahuan_klinis\n\nPenulis:\nTim Medis\n\nRingkasan:\nJika tekanan darah sangat tinggi (≥180/120 mmHg), langkah yang harus diambil tergantung ada tidaknya gejala. Jika TIDAK ada gejala berat (sakit kepala hebat, nyeri dada, sesak, gangguan penglihatan, kelemahan anggota gerak, bicara pelo) — ini disebut hypertensive urgency. Istirahat tenang, minum obat hipertensi yang biasa dikonsumsi, ukur ulang 30 menit kemudian, dan segera ke dokter hari itu. Jika ADA gejala berat — ini adalah hypertensive emergency. SEGERA ke UGD rumah sakit terdekat tanpa menunggu. Jangan makan/minum obat tambahan sembarangan tanpa instruksi dokter.\n\nAbstrak ringkas:\nJika tekanan darah sangat tinggi (≥180/120 mmHg), langkah yang harus diambil tergantung ada tidaknya gejala. Jika TIDAK ada gejala berat (sakit kepala hebat, nyeri dada, sesak, gangguan penglihatan, kelemahan anggota gerak, bicara pelo) — ini disebut hypertensive urgency. Istirahat tenang, minum obat hipertensi yang biasa dikonsumsi, ukur ulang 30 menit kemudian, dan segera ke dokter hari itu. Jika ADA gejala berat — ini adalah hypertensive emergency. SEGERA ke UGD rumah sakit terdekat tanpa menunggu. Jangan makan/minum obat tambahan sembarangan tanpa instruksi dokter.\n\nKesimpulan:\nJika tekanan darah sangat tinggi (≥180/120 mmHg), langkah yang harus diambil tergantung ada tidaknya gejala. Jika TIDAK ada gejala berat (sakit kepala hebat, nyeri dada, sesak, gangguan penglihatan, kelemahan anggota gerak, bicara pelo) — ini disebut hypertensive urgency. Istirahat tenang, minum obat hipertensi yang biasa dikonsumsi, ukur ulang 30 menit kemudian, dan segera ke dokter hari itu. Jika ADA gejala berat — ini adalah hypertensive emergency. SEGERA ke UGD rumah sakit terdekat tanpa menunggu. Jangan makan/minum obat tambahan sembarangan tanpa instruksi dokter.\n\nKeywords:\n- hipertensi darurat\n- tekanan darah tinggi mendadak\n- krisis hipertensi\n- pertolongan pertama\n\nPoin kunci:\n- TANPA gejala berat: istirahat, minum obat rutin, ukur ulang 30 menit, segera ke dokter\n- DENGAN gejala berat: SEGERA ke UGD — ini kondisi darurat mengancam jiwa\n- Gejala bahaya: sakit kepala sangat hebat, nyeri dada, sesak napas, penglihatan ganda/kabur, bicara pelo, lemas sebelah\n- JANGAN: panik berlebihan, minum obat ekstra sembarangan, atau diabaikan\n- Target penurunan tekanan darah darurat: bertahap, tidak boleh drastis tiba-tiba\n- Hubungi 119 (IGD) atau minta bantuan orang terdekat untuk ke RS\n\nRelevansi RAG:\n- Apa yang harus dilakukan jika tekanan darah 200/120?\n- Kapan harus ke UGD karena hipertensi?\n- Pertolongan pertama tekanan darah sangat tinggi?\n- Apakah tekanan darah 180 berbahaya?\n- Gejala apa yang harus segera ke rumah sakit?\n- Apa yang harus dilakukan saat hipertensi kambuh?"
+}

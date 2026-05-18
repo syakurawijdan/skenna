@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.007668+00:00"
+  },
+  "document": {
+    "id": "S003",
+    "tipe": "pengetahuan_klinis",
+    "kategori": "Gejala Hipertensi",
+    "tahun": "2024-2025",
+    "judul": "Gejala Hipertensi dan Mengapa Disebut Silent Killer",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "gejala hipertensi",
+      "silent killer",
+      "sakit kepala",
+      "pusing",
+      "mimisan",
+      "tanpa gejala"
+    ],
+    "ringkasan": "Hipertensi sering disebut 'silent killer' karena mayoritas penderita tidak merasakan gejala apapun meskipun tekanan darahnya tinggi. Inilah yang membuatnya berbahaya — kerusakan organ berlangsung diam-diam selama bertahun-tahun. Ketika gejala muncul, biasanya sudah ada komplikasi serius. Gejala yang sering dikaitkan dengan hipertensi meliputi sakit kepala (terutama di bagian belakang kepala pagi hari), pusing, penglihatan kabur, sesak napas, nyeri dada, dan mimisan. Namun gejala-gejala ini tidak spesifik dan baru muncul saat tekanan darah sangat tinggi (>180/120 mmHg).",
+    "abstrak_ringkas": "Hipertensi sering disebut 'silent killer' karena mayoritas penderita tidak merasakan gejala apapun meskipun tekanan darahnya tinggi. Inilah yang membuatnya berbahaya — kerusakan organ berlangsung diam-diam selama bertahun-tahun. Ketika gejala muncul, biasanya sudah ada komplikasi serius. Gejala yang sering dikaitkan dengan hipertensi meliputi sakit kepala (terutama di bagian belakang kepala pagi hari), pusing, penglihatan kabur, sesak napas, nyeri dada, dan mimisan. Namun gejala-gejala ini tidak spesifik dan baru muncul saat tekanan darah sangat tinggi (>180/120 mmHg).",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Hipertensi sering disebut 'silent killer' karena mayoritas penderita tidak merasakan gejala apapun meskipun tekanan darahnya tinggi. Inilah yang membuatnya berbahaya — kerusakan organ berlangsung diam-diam selama bertahun-tahun. Ketika gejala muncul, biasanya sudah ada komplikasi serius. Gejala yang sering dikaitkan dengan hipertensi meliputi sakit kepala (terutama di bagian belakang kepala pagi hari), pusing, penglihatan kabur, sesak napas, nyeri dada, dan mimisan. Namun gejala-gejala ini tidak spesifik dan baru muncul saat tekanan darah sangat tinggi (>180/120 mmHg).",
+    "poin_kunci": [
+      "Mayoritas penderita hipertensi TIDAK merasakan gejala apapun",
+      "Hipertensi disebut silent killer karena merusak organ tanpa gejala",
+      "Sakit kepala belakang di pagi hari bisa jadi tanda tekanan darah tinggi",
+      "Mimisan bisa terjadi saat tekanan darah sangat tinggi",
+      "Penglihatan kabur atau berkunang-kunang perlu diwaspadai",
+      "Satu-satunya cara mengetahui hipertensi adalah mengukur tekanan darah secara rutin",
+      "Gejala berat (nyeri kepala hebat, sesak, nyeri dada) = segera ke UGD"
+    ],
+    "relevansi_rag": [
+      "Apa gejala hipertensi?",
+      "Kenapa hipertensi disebut silent killer?",
+      "Apakah hipertensi selalu sakit kepala?",
+      "Mimisan apakah tanda tekanan darah tinggi?",
+      "Bagaimana cara tahu apakah saya punya hipertensi?",
+      "Apakah pusing selalu berarti tekanan darah tinggi?",
+      "Gejala apa yang harus segera ke dokter?"
+    ],
+    "resep": null
+  },
+  "text": "ID:\nS003\n\nJudul:\nGejala Hipertensi dan Mengapa Disebut Silent Killer\n\nKategori:\nGejala Hipertensi\n\nTahun:\n2024-2025\n\nTipe:\npengetahuan_klinis\n\nPenulis:\nTim Medis\n\nRingkasan:\nHipertensi sering disebut 'silent killer' karena mayoritas penderita tidak merasakan gejala apapun meskipun tekanan darahnya tinggi. Inilah yang membuatnya berbahaya — kerusakan organ berlangsung diam-diam selama bertahun-tahun. Ketika gejala muncul, biasanya sudah ada komplikasi serius. Gejala yang sering dikaitkan dengan hipertensi meliputi sakit kepala (terutama di bagian belakang kepala pagi hari), pusing, penglihatan kabur, sesak napas, nyeri dada, dan mimisan. Namun gejala-gejala ini tidak spesifik dan baru muncul saat tekanan darah sangat tinggi (>180/120 mmHg).\n\nAbstrak ringkas:\nHipertensi sering disebut 'silent killer' karena mayoritas penderita tidak merasakan gejala apapun meskipun tekanan darahnya tinggi. Inilah yang membuatnya berbahaya — kerusakan organ berlangsung diam-diam selama bertahun-tahun. Ketika gejala muncul, biasanya sudah ada komplikasi serius. Gejala yang sering dikaitkan dengan hipertensi meliputi sakit kepala (terutama di bagian belakang kepala pagi hari), pusing, penglihatan kabur, sesak napas, nyeri dada, dan mimisan. Namun gejala-gejala ini tidak spesifik dan baru muncul saat tekanan darah sangat tinggi (>180/120 mmHg).\n\nKesimpulan:\nHipertensi sering disebut 'silent killer' karena mayoritas penderita tidak merasakan gejala apapun meskipun tekanan darahnya tinggi. Inilah yang membuatnya berbahaya — kerusakan organ berlangsung diam-diam selama bertahun-tahun. Ketika gejala muncul, biasanya sudah ada komplikasi serius. Gejala yang sering dikaitkan dengan hipertensi meliputi sakit kepala (terutama di bagian belakang kepala pagi hari), pusing, penglihatan kabur, sesak napas, nyeri dada, dan mimisan. Namun gejala-gejala ini tidak spesifik dan baru muncul saat tekanan darah sangat tinggi (>180/120 mmHg).\n\nKeywords:\n- gejala hipertensi\n- silent killer\n- sakit kepala\n- pusing\n- mimisan\n- tanpa gejala\n\nPoin kunci:\n- Mayoritas penderita hipertensi TIDAK merasakan gejala apapun\n- Hipertensi disebut silent killer karena merusak organ tanpa gejala\n- Sakit kepala belakang di pagi hari bisa jadi tanda tekanan darah tinggi\n- Mimisan bisa terjadi saat tekanan darah sangat tinggi\n- Penglihatan kabur atau berkunang-kunang perlu diwaspadai\n- Satu-satunya cara mengetahui hipertensi adalah mengukur tekanan darah secara rutin\n- Gejala berat (nyeri kepala hebat, sesak, nyeri dada) = segera ke UGD\n\nRelevansi RAG:\n- Apa gejala hipertensi?\n- Kenapa hipertensi disebut silent killer?\n- Apakah hipertensi selalu sakit kepala?\n- Mimisan apakah tanda tekanan darah tinggi?\n- Bagaimana cara tahu apakah saya punya hipertensi?\n- Apakah pusing selalu berarti tekanan darah tinggi?\n- Gejala apa yang harus segera ke dokter?"
+}

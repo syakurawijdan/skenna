@@ -6,7 +6,8 @@ class AppRoutes {
   static const profileForm = '/profile-form';
   static const profileGender = '/profile-gender';
   static const profileBirthDate = '/profile-birth-date';
-  static const profileHypertension = '/profile-hypertension';
+  static const profileHypertensionStatus = '/profile-hypertension-status';
+  static const profileHypertensionCondition = '/profile-hypertension-condition';
   static const profileBloodPressure = '/profile-blood-pressure';
   static const profilePregnancy = '/profile-pregnancy';
   static const sodiumSafe = '/sodium-safe';

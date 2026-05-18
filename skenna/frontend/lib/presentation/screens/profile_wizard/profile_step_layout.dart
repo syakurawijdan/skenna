@@ -24,7 +24,6 @@ class ProfileStepLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const normalBlue = Color(0xFF2C4A8A);
-    const darkBlue = Color(0xFF213868);
     const lightBlue = Color(0xFFDFE4ED);
     const lighterText = Color(0xFFE6E6E6);
 
@@ -110,7 +109,7 @@ class ProfileStepLayout extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               child,
-              const Spacer(),
+              SizedBox(height: 32),
               Text.rich(
                 TextSpan(
                   style: helperStyle,

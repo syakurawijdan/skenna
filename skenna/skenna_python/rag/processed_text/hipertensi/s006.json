@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.012665+00:00"
+  },
+  "document": {
+    "id": "S006",
+    "tipe": "pengetahuan_klinis",
+    "kategori": "Diagnosis Hipertensi",
+    "tahun": "2024-2025",
+    "judul": "Cara Mengukur Tekanan Darah yang Benar di Rumah",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "cara ukur tekanan darah",
+      "tensimeter",
+      "sphygmomanometer",
+      "HBPM",
+      "waktu pengukuran",
+      "posisi"
+    ],
+    "ringkasan": "Pengukuran tekanan darah di rumah (HBPM - Home Blood Pressure Monitoring) sangat dianjurkan untuk memantau hipertensi secara akurat dan menghindari white coat effect. Tekanan darah harus diukur dalam keadaan duduk tenang selama 5 menit, lengan setinggi jantung, tidak merokok atau minum kafein 30 menit sebelumnya. Pengukuran sebaiknya dilakukan pagi hari (sebelum makan dan minum obat) dan malam hari, minimal 2 kali per sesi dengan jeda 1-2 menit. Nilai hipertensi berdasarkan pengukuran rumah adalah ≥135/85 mmHg (lebih rendah dari standar klinik karena tidak ada white coat effect).",
+    "abstrak_ringkas": "Pengukuran tekanan darah di rumah (HBPM - Home Blood Pressure Monitoring) sangat dianjurkan untuk memantau hipertensi secara akurat dan menghindari white coat effect. Tekanan darah harus diukur dalam keadaan duduk tenang selama 5 menit, lengan setinggi jantung, tidak merokok atau minum kafein 30 menit sebelumnya. Pengukuran sebaiknya dilakukan pagi hari (sebelum makan dan minum obat) dan malam hari, minimal 2 kali per sesi dengan jeda 1-2 menit. Nilai hipertensi berdasarkan pengukuran rumah adalah ≥135/85 mmHg (lebih rendah dari standar klinik karena tidak ada white coat effect).",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Pengukuran tekanan darah di rumah (HBPM - Home Blood Pressure Monitoring) sangat dianjurkan untuk memantau hipertensi secara akurat dan menghindari white coat effect. Tekanan darah harus diukur dalam keadaan duduk tenang selama 5 menit, lengan setinggi jantung, tidak merokok atau minum kafein 30 menit sebelumnya. Pengukuran sebaiknya dilakukan pagi hari (sebelum makan dan minum obat) dan malam hari, minimal 2 kali per sesi dengan jeda 1-2 menit. Nilai hipertensi berdasarkan pengukuran rumah adalah ≥135/85 mmHg (lebih rendah dari standar klinik karena tidak ada white coat effect).",
+    "poin_kunci": [
+      "Duduk tenang 5 menit sebelum mengukur",
+      "Lengan tidak boleh menyilang, posisi sejajar jantung",
+      "Jangan mengukur setelah olahraga, makan besar, kopi, atau merokok",
+      "Ukur 2 kali dengan jeda 1-2 menit, ambil rata-rata",
+      "Waktu terbaik: pagi (sebelum makan + obat) dan malam sebelum tidur",
+      "Nilai normal rumah: <135/85 mmHg (lebih ketat dari klinik)",
+      "Catat hasil pengukuran untuk dibawa ke dokter"
+    ],
+    "relevansi_rag": [
+      "Bagaimana cara mengukur tekanan darah yang benar?",
+      "Kapan waktu terbaik mengukur tekanan darah?",
+      "Apakah tensimeter digital akurat?",
+      "Berapa kali sehari harus ukur tekanan darah?",
+      "Kenapa hasil pengukuran di rumah berbeda dengan di klinik?",
+      "Bolehkah ukur tekanan darah setelah makan?",
+      "Bagaimana posisi yang benar saat mengukur tekanan darah?"
+    ],
+    "resep": null
+  },
+  "text": "ID:\nS006\n\nJudul:\nCara Mengukur Tekanan Darah yang Benar di Rumah\n\nKategori:\nDiagnosis Hipertensi\n\nTahun:\n2024-2025\n\nTipe:\npengetahuan_klinis\n\nPenulis:\nTim Medis\n\nRingkasan:\nPengukuran tekanan darah di rumah (HBPM - Home Blood Pressure Monitoring) sangat dianjurkan untuk memantau hipertensi secara akurat dan menghindari white coat effect. Tekanan darah harus diukur dalam keadaan duduk tenang selama 5 menit, lengan setinggi jantung, tidak merokok atau minum kafein 30 menit sebelumnya. Pengukuran sebaiknya dilakukan pagi hari (sebelum makan dan minum obat) dan malam hari, minimal 2 kali per sesi dengan jeda 1-2 menit. Nilai hipertensi berdasarkan pengukuran rumah adalah ≥135/85 mmHg (lebih rendah dari standar klinik karena tidak ada white coat effect).\n\nAbstrak ringkas:\nPengukuran tekanan darah di rumah (HBPM - Home Blood Pressure Monitoring) sangat dianjurkan untuk memantau hipertensi secara akurat dan menghindari white coat effect. Tekanan darah harus diukur dalam keadaan duduk tenang selama 5 menit, lengan setinggi jantung, tidak merokok atau minum kafein 30 menit sebelumnya. Pengukuran sebaiknya dilakukan pagi hari (sebelum makan dan minum obat) dan malam hari, minimal 2 kali per sesi dengan jeda 1-2 menit. Nilai hipertensi berdasarkan pengukuran rumah adalah ≥135/85 mmHg (lebih rendah dari standar klinik karena tidak ada white coat effect).\n\nKesimpulan:\nPengukuran tekanan darah di rumah (HBPM - Home Blood Pressure Monitoring) sangat dianjurkan untuk memantau hipertensi secara akurat dan menghindari white coat effect. Tekanan darah harus diukur dalam keadaan duduk tenang selama 5 menit, lengan setinggi jantung, tidak merokok atau minum kafein 30 menit sebelumnya. Pengukuran sebaiknya dilakukan pagi hari (sebelum makan dan minum obat) dan malam hari, minimal 2 kali per sesi dengan jeda 1-2 menit. Nilai hipertensi berdasarkan pengukuran rumah adalah ≥135/85 mmHg (lebih rendah dari standar klinik karena tidak ada white coat effect).\n\nKeywords:\n- cara ukur tekanan darah\n- tensimeter\n- sphygmomanometer\n- HBPM\n- waktu pengukuran\n- posisi\n\nPoin kunci:\n- Duduk tenang 5 menit sebelum mengukur\n- Lengan tidak boleh menyilang, posisi sejajar jantung\n- Jangan mengukur setelah olahraga, makan besar, kopi, atau merokok\n- Ukur 2 kali dengan jeda 1-2 menit, ambil rata-rata\n- Waktu terbaik: pagi (sebelum makan + obat) dan malam sebelum tidur\n- Nilai normal rumah: <135/85 mmHg (lebih ketat dari klinik)\n- Catat hasil pengukuran untuk dibawa ke dokter\n\nRelevansi RAG:\n- Bagaimana cara mengukur tekanan darah yang benar?\n- Kapan waktu terbaik mengukur tekanan darah?\n- Apakah tensimeter digital akurat?\n- Berapa kali sehari harus ukur tekanan darah?\n- Kenapa hasil pengukuran di rumah berbeda dengan di klinik?\n- Bolehkah ukur tekanan darah setelah makan?\n- Bagaimana posisi yang benar saat mengukur tekanan darah?"
+}

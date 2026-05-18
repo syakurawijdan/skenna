@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.027666+00:00"
+  },
+  "document": {
+    "id": "S015",
+    "tipe": "pengetahuan_klinis",
+    "kategori": "Daftar Makanan yang Dianjurkan & Dihindari",
+    "tahun": "2024-2025",
+    "judul": "Makanan yang Harus Dihindari Penderita Hipertensi",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "makanan pantangan",
+      "garam",
+      "natrium",
+      "makanan olahan",
+      "fast food",
+      "keripik",
+      "kecap",
+      "MSG"
+    ],
+    "ringkasan": "Penderita hipertensi harus membatasi asupan natrium (garam) maksimal 2000 mg per hari (sekitar 1 sendok teh garam). Makanan tinggi natrium yang harus dihindari meliputi makanan olahan (sosis, nugget, kornet), makanan kaleng, mie instan, keripik dan camilan kemasan, saus botolan (kecap, saus tomat, saus tiram), makanan cepat saji, ikan asin, dan acar. Selain garam, penderita juga perlu membatasi lemak jenuh (jeroan, kulit ayam, gorengan berlebihan) dan gula berlebihan karena berkontribusi pada obesitas. Makanan tinggi kolesterol seperti santan kental dalam jumlah besar juga perlu dibatasi.",
+    "abstrak_ringkas": "Penderita hipertensi harus membatasi asupan natrium (garam) maksimal 2000 mg per hari (sekitar 1 sendok teh garam). Makanan tinggi natrium yang harus dihindari meliputi makanan olahan (sosis, nugget, kornet), makanan kaleng, mie instan, keripik dan camilan kemasan, saus botolan (kecap, saus tomat, saus tiram), makanan cepat saji, ikan asin, dan acar. Selain garam, penderita juga perlu membatasi lemak jenuh (jeroan, kulit ayam, gorengan berlebihan) dan gula berlebihan karena berkontribusi pada obesitas. Makanan tinggi kolesterol seperti santan kental dalam jumlah besar juga perlu dibatasi.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Penderita hipertensi harus membatasi asupan natrium (garam) maksimal 2000 mg per hari (sekitar 1 sendok teh garam). Makanan tinggi natrium yang harus dihindari meliputi makanan olahan (sosis, nugget, kornet), makanan kaleng, mie instan, keripik dan camilan kemasan, saus botolan (kecap, saus tomat, saus tiram), makanan cepat saji, ikan asin, dan acar. Selain garam, penderita juga perlu membatasi lemak jenuh (jeroan, kulit ayam, gorengan berlebihan) dan gula berlebihan karena berkontribusi pada obesitas. Makanan tinggi kolesterol seperti santan kental dalam jumlah besar juga perlu dibatasi.",
+    "poin_kunci": [
+      "Batas garam harian: maksimal 2000 mg natrium = ±1 sendok teh garam per hari",
+      "Mie instan 1 bungkus bisa mengandung 1000-1500 mg natrium — hampir memenuhi batas harian",
+      "Saus kecap, saus tiram, dan kecap ikan sangat tinggi natrium",
+      "Ikan asin, telur asin, dan makanan fermentasi bergaram harus dibatasi",
+      "Fast food mengandung natrium sangat tinggi — 1 burger bisa 800-1200 mg natrium",
+      "MSG (monosodium glutamate) juga sumber natrium — batasi penggunaannya",
+      "Baca label gizi: perhatikan kandungan 'Sodium' atau 'Natrium' per sajian"
+    ],
+    "relevansi_rag": [
+      "Makanan apa yang dilarang untuk hipertensi?",
+      "Apakah penderita hipertensi boleh makan mie instan?",
+      "Berapa batas konsumsi garam per hari?",
+      "Apakah kecap manis boleh untuk hipertensi?",
+      "Makanan apa yang harus dihindari saat tekanan darah tinggi?",
+      "Apakah santan boleh dimakan oleh penderita hipertensi?",
+      "Apakah jeroan berbahaya untuk hipertensi?"
+    ],
+    "resep": null
+  },
+  "text": "ID:\nS015\n\nJudul:\nMakanan yang Harus Dihindari Penderita Hipertensi\n\nKategori:\nDaftar Makanan yang Dianjurkan & Dihindari\n\nTahun:\n2024-2025\n\nTipe:\npengetahuan_klinis\n\nPenulis:\nTim Medis\n\nRingkasan:\nPenderita hipertensi harus membatasi asupan natrium (garam) maksimal 2000 mg per hari (sekitar 1 sendok teh garam). Makanan tinggi natrium yang harus dihindari meliputi makanan olahan (sosis, nugget, kornet), makanan kaleng, mie instan, keripik dan camilan kemasan, saus botolan (kecap, saus tomat, saus tiram), makanan cepat saji, ikan asin, dan acar. Selain garam, penderita juga perlu membatasi lemak jenuh (jeroan, kulit ayam, gorengan berlebihan) dan gula berlebihan karena berkontribusi pada obesitas. Makanan tinggi kolesterol seperti santan kental dalam jumlah besar juga perlu dibatasi.\n\nAbstrak ringkas:\nPenderita hipertensi harus membatasi asupan natrium (garam) maksimal 2000 mg per hari (sekitar 1 sendok teh garam). Makanan tinggi natrium yang harus dihindari meliputi makanan olahan (sosis, nugget, kornet), makanan kaleng, mie instan, keripik dan camilan kemasan, saus botolan (kecap, saus tomat, saus tiram), makanan cepat saji, ikan asin, dan acar. Selain garam, penderita juga perlu membatasi lemak jenuh (jeroan, kulit ayam, gorengan berlebihan) dan gula berlebihan karena berkontribusi pada obesitas. Makanan tinggi kolesterol seperti santan kental dalam jumlah besar juga perlu dibatasi.\n\nKesimpulan:\nPenderita hipertensi harus membatasi asupan natrium (garam) maksimal 2000 mg per hari (sekitar 1 sendok teh garam). Makanan tinggi natrium yang harus dihindari meliputi makanan olahan (sosis, nugget, kornet), makanan kaleng, mie instan, keripik dan camilan kemasan, saus botolan (kecap, saus tomat, saus tiram), makanan cepat saji, ikan asin, dan acar. Selain garam, penderita juga perlu membatasi lemak jenuh (jeroan, kulit ayam, gorengan berlebihan) dan gula berlebihan karena berkontribusi pada obesitas. Makanan tinggi kolesterol seperti santan kental dalam jumlah besar juga perlu dibatasi.\n\nKeywords:\n- makanan pantangan\n- garam\n- natrium\n- makanan olahan\n- fast food\n- keripik\n- kecap\n- MSG\n\nPoin kunci:\n- Batas garam harian: maksimal 2000 mg natrium = ±1 sendok teh garam per hari\n- Mie instan 1 bungkus bisa mengandung 1000-1500 mg natrium — hampir memenuhi batas harian\n- Saus kecap, saus tiram, dan kecap ikan sangat tinggi natrium\n- Ikan asin, telur asin, dan makanan fermentasi bergaram harus dibatasi\n- Fast food mengandung natrium sangat tinggi — 1 burger bisa 800-1200 mg natrium\n- MSG (monosodium glutamate) juga sumber natrium — batasi penggunaannya\n- Baca label gizi: perhatikan kandungan 'Sodium' atau 'Natrium' per sajian\n\nRelevansi RAG:\n- Makanan apa yang dilarang untuk hipertensi?\n- Apakah penderita hipertensi boleh makan mie instan?\n- Berapa batas konsumsi garam per hari?\n- Apakah kecap manis boleh untuk hipertensi?\n- Makanan apa yang harus dihindari saat tekanan darah tinggi?\n- Apakah santan boleh dimakan oleh penderita hipertensi?\n- Apakah jeroan berbahaya untuk hipertensi?"
+}

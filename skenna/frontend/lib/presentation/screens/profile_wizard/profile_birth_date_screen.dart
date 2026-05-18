@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../domain/natrium_classifier.dart';
 import '../../navigation/app_routes.dart';
 import 'profile_wizard_store.dart';
 
@@ -37,7 +38,7 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
     return firstOfNextMonth.subtract(const Duration(days: 1)).day;
   }
 
-  void _next() {
+  Future<void> _next() async {
     if (_year == null || _month == null || _day == null) {
       return;
     }
@@ -45,7 +46,40 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
     final month = _month!;
     final day = _day!;
     ProfileWizardStore.instance.draft.birthDate = DateTime(year, month, day);
-    Navigator.pushNamed(context, AppRoutes.profileHypertension);
+
+    // Calculate age
+    final birthDate = DateTime(year, month, day);
+    final today = DateTime.now();
+    int age = today.year - birthDate.year;
+    if (today.month < birthDate.month ||
+        (today.month == birthDate.month && today.day < birthDate.day)) {
+      age--;
+    }
+
+    if (age < 18) {
+      final hasil = await klasifikasiNatriumDariDraft(
+        birthDate: birthDate,
+        gender: ProfileWizardStore.instance.draft.gender,
+        hasHypertension: false,
+      );
+      if (!mounted) return;
+      // Ensure any open dropdowns/overlays are dismissed before navigation
+      FocusScope.of(context).unfocus();
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        routeUntukKategori(hasil.kategori),
+        (route) => false,
+        arguments: hasil,
+      );
+    } else {
+      // Go to hypertension status screen
+      FocusScope.of(context).unfocus();
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      if (!mounted) return;
+      Navigator.pushNamed(context, AppRoutes.profileHypertensionStatus);
+    }
   }
 
   InputDecoration _dateFieldDecoration(String hintText) {
@@ -76,6 +110,9 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final progress = ProfileWizardStore.instance.progressForStep(
+      ProfileWizardStep.birthDate,
+    );
     final selectedYear = _year;
     final selectedMonth = _month;
     final maxDay = (selectedYear != null && selectedMonth != null)
@@ -129,12 +166,14 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
                                 borderRadius: BorderRadius.circular(100),
                               ),
                             ),
-                            Container(
-                              width: 138,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF2C4A8A),
-                                borderRadius: BorderRadius.circular(100),
+                            FractionallySizedBox(
+                              widthFactor: progress,
+                              child: Container(
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2C4A8A),
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
                               ),
                             ),
                           ],
@@ -301,7 +340,7 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
                   ),
                 ),
               ),
-              const Spacer(),
+              SizedBox(height: 32),
               Center(
                 child: SizedBox(
                   width: 344,

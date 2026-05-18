@@ -1,0 +1,44 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.016666+00:00"
+  },
+  "document": {
+    "id": "S009",
+    "tipe": "pengetahuan_klinis",
+    "kategori": "Hipertensi Populasi Khusus",
+    "tahun": "2024-2025",
+    "judul": "Hipertensi pada Penderita Diabetes — Penanganan Terpadu",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "hipertensi diabetes",
+      "ACE inhibitor",
+      "ARB",
+      "target tekanan darah",
+      "penyakit ginjal diabetik"
+    ],
+    "ringkasan": "Hipertensi dan diabetes sering terjadi bersamaan — lebih dari 70% penderita diabetes tipe 2 juga memiliki hipertensi. Kombinasi keduanya sangat meningkatkan risiko penyakit jantung, stroke, dan gagal ginjal. Target tekanan darah pada penderita diabetes adalah <130/80 mmHg, lebih ketat dari populasi umum. Pilihan obat lini pertama untuk hipertensi dengan diabetes adalah ACE inhibitor atau ARB karena selain menurunkan tekanan darah juga melindungi ginjal dari kerusakan diabetik. Modifikasi gaya hidup seperti diet rendah garam, penurunan berat badan, dan olahraga tetap menjadi pilar utama.",
+    "abstrak_ringkas": "Hipertensi dan diabetes sering terjadi bersamaan — lebih dari 70% penderita diabetes tipe 2 juga memiliki hipertensi. Kombinasi keduanya sangat meningkatkan risiko penyakit jantung, stroke, dan gagal ginjal. Target tekanan darah pada penderita diabetes adalah <130/80 mmHg, lebih ketat dari populasi umum. Pilihan obat lini pertama untuk hipertensi dengan diabetes adalah ACE inhibitor atau ARB karena selain menurunkan tekanan darah juga melindungi ginjal dari kerusakan diabetik. Modifikasi gaya hidup seperti diet rendah garam, penurunan berat badan, dan olahraga tetap menjadi pilar utama.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Hipertensi dan diabetes sering terjadi bersamaan — lebih dari 70% penderita diabetes tipe 2 juga memiliki hipertensi. Kombinasi keduanya sangat meningkatkan risiko penyakit jantung, stroke, dan gagal ginjal. Target tekanan darah pada penderita diabetes adalah <130/80 mmHg, lebih ketat dari populasi umum. Pilihan obat lini pertama untuk hipertensi dengan diabetes adalah ACE inhibitor atau ARB karena selain menurunkan tekanan darah juga melindungi ginjal dari kerusakan diabetik. Modifikasi gaya hidup seperti diet rendah garam, penurunan berat badan, dan olahraga tetap menjadi pilar utama.",
+    "poin_kunci": [
+      ">70% penderita diabetes tipe 2 juga mengalami hipertensi",
+      "Target tekanan darah penderita diabetes: <130/80 mmHg",
+      "Lini pertama obat: ACE inhibitor (captopril, ramipril) atau ARB (losartan, valsartan)",
+      "ACE inhibitor/ARB melindungi ginjal dari kerusakan akibat diabetes",
+      "Kontrol gula darah dan tekanan darah harus dilakukan bersamaan",
+      "Risiko gagal ginjal meningkat drastis jika keduanya tidak terkontrol"
+    ],
+    "relevansi_rag": [
+      "Apakah penderita diabetes lebih mudah hipertensi?",
+      "Berapa target tekanan darah untuk penderita diabetes?",
+      "Obat hipertensi apa yang terbaik untuk penderita diabetes?",
+      "Apakah hipertensi memperburuk diabetes?",
+      "Apa hubungan hipertensi dan gagal ginjal pada diabetesi?"
+    ],
+    "resep": null
+  },
+  "text": "ID:\nS009\n\nJudul:\nHipertensi pada Penderita Diabetes — Penanganan Terpadu\n\nKategori:\nHipertensi Populasi Khusus\n\nTahun:\n2024-2025\n\nTipe:\npengetahuan_klinis\n\nPenulis:\nTim Medis\n\nRingkasan:\nHipertensi dan diabetes sering terjadi bersamaan — lebih dari 70% penderita diabetes tipe 2 juga memiliki hipertensi. Kombinasi keduanya sangat meningkatkan risiko penyakit jantung, stroke, dan gagal ginjal. Target tekanan darah pada penderita diabetes adalah <130/80 mmHg, lebih ketat dari populasi umum. Pilihan obat lini pertama untuk hipertensi dengan diabetes adalah ACE inhibitor atau ARB karena selain menurunkan tekanan darah juga melindungi ginjal dari kerusakan diabetik. Modifikasi gaya hidup seperti diet rendah garam, penurunan berat badan, dan olahraga tetap menjadi pilar utama.\n\nAbstrak ringkas:\nHipertensi dan diabetes sering terjadi bersamaan — lebih dari 70% penderita diabetes tipe 2 juga memiliki hipertensi. Kombinasi keduanya sangat meningkatkan risiko penyakit jantung, stroke, dan gagal ginjal. Target tekanan darah pada penderita diabetes adalah <130/80 mmHg, lebih ketat dari populasi umum. Pilihan obat lini pertama untuk hipertensi dengan diabetes adalah ACE inhibitor atau ARB karena selain menurunkan tekanan darah juga melindungi ginjal dari kerusakan diabetik. Modifikasi gaya hidup seperti diet rendah garam, penurunan berat badan, dan olahraga tetap menjadi pilar utama.\n\nKesimpulan:\nHipertensi dan diabetes sering terjadi bersamaan — lebih dari 70% penderita diabetes tipe 2 juga memiliki hipertensi. Kombinasi keduanya sangat meningkatkan risiko penyakit jantung, stroke, dan gagal ginjal. Target tekanan darah pada penderita diabetes adalah <130/80 mmHg, lebih ketat dari populasi umum. Pilihan obat lini pertama untuk hipertensi dengan diabetes adalah ACE inhibitor atau ARB karena selain menurunkan tekanan darah juga melindungi ginjal dari kerusakan diabetik. Modifikasi gaya hidup seperti diet rendah garam, penurunan berat badan, dan olahraga tetap menjadi pilar utama.\n\nKeywords:\n- hipertensi diabetes\n- ACE inhibitor\n- ARB\n- target tekanan darah\n- penyakit ginjal diabetik\n\nPoin kunci:\n- >70% penderita diabetes tipe 2 juga mengalami hipertensi\n- Target tekanan darah penderita diabetes: <130/80 mmHg\n- Lini pertama obat: ACE inhibitor (captopril, ramipril) atau ARB (losartan, valsartan)\n- ACE inhibitor/ARB melindungi ginjal dari kerusakan akibat diabetes\n- Kontrol gula darah dan tekanan darah harus dilakukan bersamaan\n- Risiko gagal ginjal meningkat drastis jika keduanya tidak terkontrol\n\nRelevansi RAG:\n- Apakah penderita diabetes lebih mudah hipertensi?\n- Berapa target tekanan darah untuk penderita diabetes?\n- Obat hipertensi apa yang terbaik untuk penderita diabetes?\n- Apakah hipertensi memperburuk diabetes?\n- Apa hubungan hipertensi dan gagal ginjal pada diabetesi?"
+}

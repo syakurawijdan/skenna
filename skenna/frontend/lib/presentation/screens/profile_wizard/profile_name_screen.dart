@@ -74,6 +74,9 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   @override
   Widget build(BuildContext context) {
     final isFormValid = _nameController.text.trim().isNotEmpty;
+    final progress = ProfileWizardStore.instance.progressForStep(
+      ProfileWizardStep.name,
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -118,12 +121,14 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                                 borderRadius: BorderRadius.circular(100),
                               ),
                             ),
-                            Container(
-                              width: 46,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF2C4A8A),
-                                borderRadius: BorderRadius.circular(100),
+                            FractionallySizedBox(
+                              widthFactor: progress,
+                              child: Container(
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2C4A8A),
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
                               ),
                             ),
                           ],
@@ -192,7 +197,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   ),
                 ),
               ),
-              const Spacer(),
+              SizedBox(height: 32),
               Center(
                 child: SizedBox(
                   width: 344,
@@ -249,9 +254,9 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                         ),
                       ),
                     ],
-                    ),
                   ),
                 ),
+              ),
             ],
           ),
         ),

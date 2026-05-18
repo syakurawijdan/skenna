@@ -1,10 +1,11 @@
 ## RAG Workspace
 
-Folder ini dipakai untuk menyiapkan jurnal mentah, hasil OCR, chunk, dan index untuk chatbot.
+Folder ini dipakai untuk menyiapkan knowledge base hipertensi, baik dari PDF mentah maupun JSON terkurasi, lalu mengubahnya menjadi chunk dan index untuk chatbot.
 
 ### Struktur Folder
 
 - `raw_papers/hipertensi/`: tempat PDF jurnal mentah tentang hipertensi diunggah.
+- `knowledge_base/hipertensi/`: tempat JSON terkurasi sebagai sumber utama knowledge base.
 - `processed_text/hipertensi/`: hasil OCR dan teks yang sudah dibersihkan.
 - `chunks/hipertensi/`: hasil pemotongan teks per dokumen atau per section.
 - `index/`: vector index yang dipakai saat retrieval.
@@ -35,6 +36,24 @@ Aturan sederhana:
 
 ### Alur Pakai
 
+#### Opsi A - JSON knowledge base utama
+
+1. Simpan file JSON terkurasi ke `knowledge_base/hipertensi/` atau siapkan path file JSON di luar repo.
+2. Jalankan ingest JSON:
+
+	`python scripts/ingest_json_kb.py --source-json C:\path\to\hipertensi_jurnal.json --topic hipertensi`
+
+3. Script akan:
+	- membuat salinan JSON yang dinormalisasi ke `knowledge_base/hipertensi/`
+	- menulis teks gabungan ke `processed_text/hipertensi/`
+	- menulis chunk JSONL ke `chunks/hipertensi/`
+	- mengganti output topic lama kecuali Anda menambahkan `--preserve-existing`
+4. Rebuild index supaya chatbot membaca chunk terbaru:
+
+	`python scripts/rebuild_index.py --topic hipertensi`
+
+#### Opsi B - PDF jurnal mentah (fallback lama)
+
 1. Taruh PDF mentah ke `raw_papers/hipertensi/`.
 2. Install dependency Python dari `requirements.txt`.
 	Pastikan juga aplikasi Tesseract OCR sudah terpasang di Windows.
@@ -46,9 +65,9 @@ Aturan sederhana:
 	Jika Anda perlu bahasa OCR lain, tambahkan `--ocr-lang <kode>`.
 
 4. Script membersihkan teks dan memecah chunk.
-4. Hasil chunk disimpan ke `chunks/hipertensi/`.
-5. Rebuild index supaya chatbot membaca chunk terbaru:
-z
- 	`python scripts/rebuild_index.py --topic hipertensi`
+5. Hasil chunk disimpan ke `chunks/hipertensi/`.
+6. Rebuild index supaya chatbot membaca chunk terbaru:
 
-6. Data dimasukkan ke `index/` untuk dipakai chatbot.
+	`python scripts/rebuild_index.py --topic hipertensi`
+
+7. Data dimasukkan ke `index/` untuk dipakai chatbot.

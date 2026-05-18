@@ -1,0 +1,44 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.013665+00:00"
+  },
+  "document": {
+    "id": "S007",
+    "tipe": "pengetahuan_klinis",
+    "kategori": "Hipertensi Populasi Khusus",
+    "tahun": "2024-2025",
+    "judul": "Hipertensi pada Lansia — Penanganan dan Target Tekanan Darah",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "hipertensi lansia",
+      "elderly",
+      "sistolik terisolasi",
+      "ortostatik",
+      "target tekanan darah"
+    ],
+    "ringkasan": "Hipertensi pada lansia (usia ≥65 tahun) memiliki karakteristik khusus. Hipertensi sistolik terisolasi (sistolik tinggi tapi diastolik normal) lebih umum karena kekakuan arteri seiring usia. Target tekanan darah untuk lansia ≥65 tahun umumnya <130/80 mmHg jika ditoleransi, namun pada lansia sangat tua (>80 tahun) target lebih longgar <140/90 mmHg untuk menghindari hipotensi ortostatik. Risiko jatuh akibat tekanan darah terlalu rendah menjadi perhatian utama. Pengobatan dimulai dari dosis rendah dan ditingkatkan perlahan ('start low, go slow'). Perubahan gaya hidup tetap efektif dan dianjurkan.",
+    "abstrak_ringkas": "Hipertensi pada lansia (usia ≥65 tahun) memiliki karakteristik khusus. Hipertensi sistolik terisolasi (sistolik tinggi tapi diastolik normal) lebih umum karena kekakuan arteri seiring usia. Target tekanan darah untuk lansia ≥65 tahun umumnya <130/80 mmHg jika ditoleransi, namun pada lansia sangat tua (>80 tahun) target lebih longgar <140/90 mmHg untuk menghindari hipotensi ortostatik. Risiko jatuh akibat tekanan darah terlalu rendah menjadi perhatian utama. Pengobatan dimulai dari dosis rendah dan ditingkatkan perlahan ('start low, go slow'). Perubahan gaya hidup tetap efektif dan dianjurkan.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Hipertensi pada lansia (usia ≥65 tahun) memiliki karakteristik khusus. Hipertensi sistolik terisolasi (sistolik tinggi tapi diastolik normal) lebih umum karena kekakuan arteri seiring usia. Target tekanan darah untuk lansia ≥65 tahun umumnya <130/80 mmHg jika ditoleransi, namun pada lansia sangat tua (>80 tahun) target lebih longgar <140/90 mmHg untuk menghindari hipotensi ortostatik. Risiko jatuh akibat tekanan darah terlalu rendah menjadi perhatian utama. Pengobatan dimulai dari dosis rendah dan ditingkatkan perlahan ('start low, go slow'). Perubahan gaya hidup tetap efektif dan dianjurkan.",
+    "poin_kunci": [
+      "Hipertensi sistolik terisolasi lebih umum pada lansia karena pembuluh darah kaku",
+      "Target tekanan darah lansia 65-79 tahun: <130/80 mmHg jika toleransi baik",
+      "Lansia >80 tahun: target lebih longgar <140/90 mmHg untuk cegah jatuh",
+      "Hipotensi ortostatik (pusing saat berdiri) harus diwaspadai",
+      "Prinsip pengobatan: 'start low, go slow' — mulai dosis kecil, naikkan bertahap",
+      "Hipertensi tidak diobati pada lansia tetap berbahaya dan meningkatkan risiko demensia"
+    ],
+    "relevansi_rag": [
+      "Apakah hipertensi pada lansia berbeda?",
+      "Berapa target tekanan darah untuk orang tua?",
+      "Apakah orang tua >70 tahun perlu minum obat hipertensi?",
+      "Kenapa orang tua sering pusing saat berdiri?",
+      "Apa itu hipertensi sistolik terisolasi pada lansia?"
+    ],
+    "resep": null
+  },
+  "text": "ID:\nS007\n\nJudul:\nHipertensi pada Lansia — Penanganan dan Target Tekanan Darah\n\nKategori:\nHipertensi Populasi Khusus\n\nTahun:\n2024-2025\n\nTipe:\npengetahuan_klinis\n\nPenulis:\nTim Medis\n\nRingkasan:\nHipertensi pada lansia (usia ≥65 tahun) memiliki karakteristik khusus. Hipertensi sistolik terisolasi (sistolik tinggi tapi diastolik normal) lebih umum karena kekakuan arteri seiring usia. Target tekanan darah untuk lansia ≥65 tahun umumnya <130/80 mmHg jika ditoleransi, namun pada lansia sangat tua (>80 tahun) target lebih longgar <140/90 mmHg untuk menghindari hipotensi ortostatik. Risiko jatuh akibat tekanan darah terlalu rendah menjadi perhatian utama. Pengobatan dimulai dari dosis rendah dan ditingkatkan perlahan ('start low, go slow'). Perubahan gaya hidup tetap efektif dan dianjurkan.\n\nAbstrak ringkas:\nHipertensi pada lansia (usia ≥65 tahun) memiliki karakteristik khusus. Hipertensi sistolik terisolasi (sistolik tinggi tapi diastolik normal) lebih umum karena kekakuan arteri seiring usia. Target tekanan darah untuk lansia ≥65 tahun umumnya <130/80 mmHg jika ditoleransi, namun pada lansia sangat tua (>80 tahun) target lebih longgar <140/90 mmHg untuk menghindari hipotensi ortostatik. Risiko jatuh akibat tekanan darah terlalu rendah menjadi perhatian utama. Pengobatan dimulai dari dosis rendah dan ditingkatkan perlahan ('start low, go slow'). Perubahan gaya hidup tetap efektif dan dianjurkan.\n\nKesimpulan:\nHipertensi pada lansia (usia ≥65 tahun) memiliki karakteristik khusus. Hipertensi sistolik terisolasi (sistolik tinggi tapi diastolik normal) lebih umum karena kekakuan arteri seiring usia. Target tekanan darah untuk lansia ≥65 tahun umumnya <130/80 mmHg jika ditoleransi, namun pada lansia sangat tua (>80 tahun) target lebih longgar <140/90 mmHg untuk menghindari hipotensi ortostatik. Risiko jatuh akibat tekanan darah terlalu rendah menjadi perhatian utama. Pengobatan dimulai dari dosis rendah dan ditingkatkan perlahan ('start low, go slow'). Perubahan gaya hidup tetap efektif dan dianjurkan.\n\nKeywords:\n- hipertensi lansia\n- elderly\n- sistolik terisolasi\n- ortostatik\n- target tekanan darah\n\nPoin kunci:\n- Hipertensi sistolik terisolasi lebih umum pada lansia karena pembuluh darah kaku\n- Target tekanan darah lansia 65-79 tahun: <130/80 mmHg jika toleransi baik\n- Lansia >80 tahun: target lebih longgar <140/90 mmHg untuk cegah jatuh\n- Hipotensi ortostatik (pusing saat berdiri) harus diwaspadai\n- Prinsip pengobatan: 'start low, go slow' — mulai dosis kecil, naikkan bertahap\n- Hipertensi tidak diobati pada lansia tetap berbahaya dan meningkatkan risiko demensia\n\nRelevansi RAG:\n- Apakah hipertensi pada lansia berbeda?\n- Berapa target tekanan darah untuk orang tua?\n- Apakah orang tua >70 tahun perlu minum obat hipertensi?\n- Kenapa orang tua sering pusing saat berdiri?\n- Apa itu hipertensi sistolik terisolasi pada lansia?"
+}

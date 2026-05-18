@@ -1,0 +1,68 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.031666+00:00"
+  },
+  "document": {
+    "id": "S018",
+    "tipe": "resep",
+    "kategori": "Resep Makanan Sehat",
+    "tahun": "2024-2025",
+    "judul": "Resep Sup Ikan Tomat (Tinggi Omega-3, Rendah Natrium)",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "resep ikan",
+      "sup ikan",
+      "omega-3",
+      "tomat",
+      "rendah garam",
+      "hipertensi"
+    ],
+    "ringkasan": "Sup ikan tomat adalah pilihan protein sehat untuk hipertensi. Ikan mengandung omega-3 yang terbukti menurunkan tekanan darah dan trigliserida. Tomat kaya likopen dan kalium. Dibuat tanpa kecap asin atau penyedap berlebihan.",
+    "abstrak_ringkas": "Sup ikan tomat adalah pilihan protein sehat untuk hipertensi. Ikan mengandung omega-3 yang terbukti menurunkan tekanan darah dan trigliserida. Tomat kaya likopen dan kalium. Dibuat tanpa kecap asin atau penyedap berlebihan.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Sup ikan tomat adalah pilihan protein sehat untuk hipertensi. Ikan mengandung omega-3 yang terbukti menurunkan tekanan darah dan trigliserida. Tomat kaya likopen dan kalium. Dibuat tanpa kecap asin atau penyedap berlebihan.",
+    "poin_kunci": [
+      "Ikan laut kaya omega-3 — terbukti menurunkan tekanan darah dan peradangan",
+      "Tomat mengandung kalium dan likopen — antioksidan yang baik untuk jantung",
+      "Rempah alami (jahe, serai, jeruk nipis) memberi rasa tanpa garam berlebih",
+      "Hindari penambahan kecap asin atau saus ikan yang tinggi natrium"
+    ],
+    "relevansi_rag": [
+      "Resep ikan untuk penderita hipertensi?",
+      "Apakah ikan baik untuk tekanan darah tinggi?",
+      "Resep masakan rendah garam berbahan ikan?",
+      "Bagaimana cara memasak yang sehat untuk hipertensi?"
+    ],
+    "resep": {
+      "waktu_masak": "25 menit",
+      "porsi": "3 porsi",
+      "bahan": [
+        "300g ikan tenggiri atau kakap, potong setebal 2 cm",
+        "3 buah tomat merah, potong dadu",
+        "3 siung bawang putih, geprek",
+        "3 siung bawang merah, iris",
+        "1 batang serai, memarkan",
+        "2 lembar daun jeruk",
+        "1 buah jeruk nipis (ambil airnya)",
+        "1 sdm minyak untuk menumis",
+        "700 ml air",
+        "1/4 sdt garam (bisa dikurangi)",
+        "Lada, jahe, dan daun bawang secukupnya"
+      ],
+      "cara_membuat": [
+        "Tumis bawang merah, bawang putih, serai, daun jeruk hingga harum",
+        "Masukkan tomat, tumis hingga layu",
+        "Tuang air, didihkan",
+        "Masukkan ikan, masak 8-10 menit",
+        "Bumbui dengan garam minimal dan lada",
+        "Matikan api, tambahkan air jeruk nipis",
+        "Tabur daun bawang, sajikan hangat"
+      ],
+      "nilai_gizi_per_porsi": "Kalori: ±180 kkal | Natrium: <250 mg | Omega-3: tinggi | Kalium: ±450 mg"
+    }
+  },
+  "text": "ID:\nS018\n\nJudul:\nResep Sup Ikan Tomat (Tinggi Omega-3, Rendah Natrium)\n\nKategori:\nResep Makanan Sehat\n\nTahun:\n2024-2025\n\nTipe:\nresep\n\nPenulis:\nTim Medis\n\nRingkasan:\nSup ikan tomat adalah pilihan protein sehat untuk hipertensi. Ikan mengandung omega-3 yang terbukti menurunkan tekanan darah dan trigliserida. Tomat kaya likopen dan kalium. Dibuat tanpa kecap asin atau penyedap berlebihan.\n\nAbstrak ringkas:\nSup ikan tomat adalah pilihan protein sehat untuk hipertensi. Ikan mengandung omega-3 yang terbukti menurunkan tekanan darah dan trigliserida. Tomat kaya likopen dan kalium. Dibuat tanpa kecap asin atau penyedap berlebihan.\n\nKesimpulan:\nSup ikan tomat adalah pilihan protein sehat untuk hipertensi. Ikan mengandung omega-3 yang terbukti menurunkan tekanan darah dan trigliserida. Tomat kaya likopen dan kalium. Dibuat tanpa kecap asin atau penyedap berlebihan.\n\nKeywords:\n- resep ikan\n- sup ikan\n- omega-3\n- tomat\n- rendah garam\n- hipertensi\n\nPoin kunci:\n- Ikan laut kaya omega-3 — terbukti menurunkan tekanan darah dan peradangan\n- Tomat mengandung kalium dan likopen — antioksidan yang baik untuk jantung\n- Rempah alami (jahe, serai, jeruk nipis) memberi rasa tanpa garam berlebih\n- Hindari penambahan kecap asin atau saus ikan yang tinggi natrium\n\nRelevansi RAG:\n- Resep ikan untuk penderita hipertensi?\n- Apakah ikan baik untuk tekanan darah tinggi?\n- Resep masakan rendah garam berbahan ikan?\n- Bagaimana cara memasak yang sehat untuk hipertensi?"
+}

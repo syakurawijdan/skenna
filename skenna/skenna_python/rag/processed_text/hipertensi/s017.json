@@ -1,0 +1,63 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.030665+00:00"
+  },
+  "document": {
+    "id": "S017",
+    "tipe": "resep",
+    "kategori": "Resep Makanan Sehat",
+    "tahun": "2024-2025",
+    "judul": "Resep Tumis Bayam Bawang Putih (Rendah Garam, Kaya Kalium)",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "resep bayam",
+      "tumis bayam",
+      "rendah garam",
+      "kalium",
+      "magnesium",
+      "hipertensi"
+    ],
+    "ringkasan": "Tumis bayam bawang putih adalah menu sehat ideal untuk penderita hipertensi. Bayam kaya kalium (558 mg per 100g) dan magnesium yang membantu menurunkan tekanan darah. Bawang putih mengandung allicin yang memiliki efek antihipertensi ringan. Dimasak tanpa atau minim garam, memanfaatkan rasa alami bahan.",
+    "abstrak_ringkas": "Tumis bayam bawang putih adalah menu sehat ideal untuk penderita hipertensi. Bayam kaya kalium (558 mg per 100g) dan magnesium yang membantu menurunkan tekanan darah. Bawang putih mengandung allicin yang memiliki efek antihipertensi ringan. Dimasak tanpa atau minim garam, memanfaatkan rasa alami bahan.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Tumis bayam bawang putih adalah menu sehat ideal untuk penderita hipertensi. Bayam kaya kalium (558 mg per 100g) dan magnesium yang membantu menurunkan tekanan darah. Bawang putih mengandung allicin yang memiliki efek antihipertensi ringan. Dimasak tanpa atau minim garam, memanfaatkan rasa alami bahan.",
+    "poin_kunci": [
+      "Bayam adalah sumber kalium dan magnesium terbaik untuk hipertensi",
+      "Bawang putih mengandung allicin — efek antihipertensi alami",
+      "Gunakan minyak zaitun atau canola — lebih sehat dari minyak kelapa sawit berlebihan",
+      "Minimalkan garam — ganti dengan lemon, lada, atau rempah untuk rasa"
+    ],
+    "relevansi_rag": [
+      "Resep sayuran untuk penderita hipertensi?",
+      "Bagaimana cara memasak bayam untuk hipertensi?",
+      "Resep masakan rendah garam yang enak?",
+      "Makanan apa yang bisa dimasak untuk menurunkan tekanan darah?"
+    ],
+    "resep": {
+      "waktu_masak": "10 menit",
+      "porsi": "2 porsi",
+      "bahan": [
+        "200g bayam segar, cuci bersih",
+        "4 siung bawang putih, cincang halus",
+        "2 siung bawang merah, iris tipis",
+        "1 sdm minyak zaitun atau minyak canola",
+        "1/4 sdt garam (opsional, bisa dikurangi/dihilangkan)",
+        "Lada hitam secukupnya",
+        "Air perasan lemon (opsional)"
+      ],
+      "cara_membuat": [
+        "Panaskan minyak dengan api sedang",
+        "Tumis bawang putih dan bawang merah hingga harum (±1-2 menit)",
+        "Masukkan bayam, aduk rata",
+        "Masak ±3-4 menit hingga bayam layu",
+        "Tambahkan sedikit garam dan lada hitam",
+        "Angkat, peras sedikit lemon di atasnya untuk kesegaran"
+      ],
+      "nilai_gizi_per_porsi": "Kalori: ±80 kkal | Natrium: <150 mg | Kalium: ±500 mg"
+    }
+  },
+  "text": "ID:\nS017\n\nJudul:\nResep Tumis Bayam Bawang Putih (Rendah Garam, Kaya Kalium)\n\nKategori:\nResep Makanan Sehat\n\nTahun:\n2024-2025\n\nTipe:\nresep\n\nPenulis:\nTim Medis\n\nRingkasan:\nTumis bayam bawang putih adalah menu sehat ideal untuk penderita hipertensi. Bayam kaya kalium (558 mg per 100g) dan magnesium yang membantu menurunkan tekanan darah. Bawang putih mengandung allicin yang memiliki efek antihipertensi ringan. Dimasak tanpa atau minim garam, memanfaatkan rasa alami bahan.\n\nAbstrak ringkas:\nTumis bayam bawang putih adalah menu sehat ideal untuk penderita hipertensi. Bayam kaya kalium (558 mg per 100g) dan magnesium yang membantu menurunkan tekanan darah. Bawang putih mengandung allicin yang memiliki efek antihipertensi ringan. Dimasak tanpa atau minim garam, memanfaatkan rasa alami bahan.\n\nKesimpulan:\nTumis bayam bawang putih adalah menu sehat ideal untuk penderita hipertensi. Bayam kaya kalium (558 mg per 100g) dan magnesium yang membantu menurunkan tekanan darah. Bawang putih mengandung allicin yang memiliki efek antihipertensi ringan. Dimasak tanpa atau minim garam, memanfaatkan rasa alami bahan.\n\nKeywords:\n- resep bayam\n- tumis bayam\n- rendah garam\n- kalium\n- magnesium\n- hipertensi\n\nPoin kunci:\n- Bayam adalah sumber kalium dan magnesium terbaik untuk hipertensi\n- Bawang putih mengandung allicin — efek antihipertensi alami\n- Gunakan minyak zaitun atau canola — lebih sehat dari minyak kelapa sawit berlebihan\n- Minimalkan garam — ganti dengan lemon, lada, atau rempah untuk rasa\n\nRelevansi RAG:\n- Resep sayuran untuk penderita hipertensi?\n- Bagaimana cara memasak bayam untuk hipertensi?\n- Resep masakan rendah garam yang enak?\n- Makanan apa yang bisa dimasak untuk menurunkan tekanan darah?"
+}

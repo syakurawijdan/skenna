@@ -41,9 +41,10 @@ class UserRepository:
 		gender: str,
 		birth_date,
 		has_hypertension: bool,
-		systolic_pressure: int,
-		diastolic_pressure: int,
-		is_pregnant: bool,
+		hypertension_condition: str = None,
+		systolic_pressure: int = None,
+		diastolic_pressure: int = None,
+		pregnancy_status: str = None,
 	) -> UserProfile:
 		profile = db.scalar(select(UserProfile).where(UserProfile.user_id == user_id))
 		if profile is None:
@@ -53,9 +54,10 @@ class UserRepository:
 		profile.gender = gender
 		profile.birth_date = birth_date
 		profile.has_hypertension = has_hypertension
+		profile.hypertension_condition = hypertension_condition
 		profile.systolic_pressure = systolic_pressure
 		profile.diastolic_pressure = diastolic_pressure
-		profile.is_pregnant = is_pregnant
+		profile.pregnancy_status = pregnancy_status
 
 		db.commit()
 		db.refresh(profile)

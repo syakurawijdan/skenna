@@ -1,0 +1,66 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.034666+00:00"
+  },
+  "document": {
+    "id": "S020",
+    "tipe": "resep",
+    "kategori": "Resep Makanan Sehat",
+    "tahun": "2024-2025",
+    "judul": "Resep Ayam Panggang Rempah (Pengganti Ayam Goreng untuk Hipertensi)",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "resep ayam panggang",
+      "rendah lemak",
+      "rendah garam",
+      "rempah",
+      "protein sehat"
+    ],
+    "ringkasan": "Ayam panggang rempah adalah alternatif sehat menggantikan ayam goreng yang tinggi lemak dan garam. Dipanggang tanpa kulit menghasilkan protein tinggi dengan lemak jenuh rendah. Marinasi rempah memberikan rasa kaya tanpa ketergantungan pada garam atau MSG.",
+    "abstrak_ringkas": "Ayam panggang rempah adalah alternatif sehat menggantikan ayam goreng yang tinggi lemak dan garam. Dipanggang tanpa kulit menghasilkan protein tinggi dengan lemak jenuh rendah. Marinasi rempah memberikan rasa kaya tanpa ketergantungan pada garam atau MSG.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Ayam panggang rempah adalah alternatif sehat menggantikan ayam goreng yang tinggi lemak dan garam. Dipanggang tanpa kulit menghasilkan protein tinggi dengan lemak jenuh rendah. Marinasi rempah memberikan rasa kaya tanpa ketergantungan pada garam atau MSG.",
+    "poin_kunci": [
+      "Panggang/kukus/rebus lebih sehat dari goreng untuk hipertensi",
+      "Rempah-rempah alami menggantikan garam tanpa mengurangi rasa",
+      "Kunyit dan bawang putih memiliki efek anti-inflamasi",
+      "Minyak zaitun mengandung lemak tak jenuh yang sehat untuk jantung",
+      "Lepas kulit ayam untuk mengurangi lemak jenuh secara signifikan"
+    ],
+    "relevansi_rag": [
+      "Resep ayam sehat untuk penderita hipertensi?",
+      "Apakah penderita hipertensi boleh makan ayam?",
+      "Bagaimana cara memasak ayam yang sehat untuk hipertensi?",
+      "Resep masakan rendah lemak untuk hipertensi?"
+    ],
+    "resep": {
+      "waktu_masak": "45 menit (termasuk marinasi 20 menit)",
+      "porsi": "3 porsi",
+      "bahan": [
+        "500g dada ayam atau paha ayam tanpa kulit",
+        "3 siung bawang putih, haluskan",
+        "1 sdt kunyit bubuk",
+        "1 sdt ketumbar bubuk",
+        "1/2 sdt jintan",
+        "1 sdt paprika bubuk (opsional)",
+        "2 sdm minyak zaitun",
+        "Air perasan 1 buah lemon/jeruk nipis",
+        "1/4 sdt garam",
+        "Lada hitam secukupnya",
+        "Daun rosemary atau thyme (opsional)"
+      ],
+      "cara_membuat": [
+        "Campur semua bumbu rempah dengan minyak zaitun dan air lemon",
+        "Lumuri ayam dengan bumbu, diamkan minimal 20 menit (atau semalam di kulkas)",
+        "Panaskan oven 190°C atau gunakan teflon anti lengket",
+        "Panggang ayam ±25-30 menit, balik sekali di tengah waktu",
+        "Pastikan matang sempurna, sajikan dengan sayuran kukus atau salad"
+      ],
+      "nilai_gizi_per_porsi": "Kalori: ±220 kkal | Natrium: <200 mg | Protein: ±30g | Lemak jenuh: rendah"
+    }
+  },
+  "text": "ID:\nS020\n\nJudul:\nResep Ayam Panggang Rempah (Pengganti Ayam Goreng untuk Hipertensi)\n\nKategori:\nResep Makanan Sehat\n\nTahun:\n2024-2025\n\nTipe:\nresep\n\nPenulis:\nTim Medis\n\nRingkasan:\nAyam panggang rempah adalah alternatif sehat menggantikan ayam goreng yang tinggi lemak dan garam. Dipanggang tanpa kulit menghasilkan protein tinggi dengan lemak jenuh rendah. Marinasi rempah memberikan rasa kaya tanpa ketergantungan pada garam atau MSG.\n\nAbstrak ringkas:\nAyam panggang rempah adalah alternatif sehat menggantikan ayam goreng yang tinggi lemak dan garam. Dipanggang tanpa kulit menghasilkan protein tinggi dengan lemak jenuh rendah. Marinasi rempah memberikan rasa kaya tanpa ketergantungan pada garam atau MSG.\n\nKesimpulan:\nAyam panggang rempah adalah alternatif sehat menggantikan ayam goreng yang tinggi lemak dan garam. Dipanggang tanpa kulit menghasilkan protein tinggi dengan lemak jenuh rendah. Marinasi rempah memberikan rasa kaya tanpa ketergantungan pada garam atau MSG.\n\nKeywords:\n- resep ayam panggang\n- rendah lemak\n- rendah garam\n- rempah\n- protein sehat\n\nPoin kunci:\n- Panggang/kukus/rebus lebih sehat dari goreng untuk hipertensi\n- Rempah-rempah alami menggantikan garam tanpa mengurangi rasa\n- Kunyit dan bawang putih memiliki efek anti-inflamasi\n- Minyak zaitun mengandung lemak tak jenuh yang sehat untuk jantung\n- Lepas kulit ayam untuk mengurangi lemak jenuh secara signifikan\n\nRelevansi RAG:\n- Resep ayam sehat untuk penderita hipertensi?\n- Apakah penderita hipertensi boleh makan ayam?\n- Bagaimana cara memasak ayam yang sehat untuk hipertensi?\n- Resep masakan rendah lemak untuk hipertensi?"
+}

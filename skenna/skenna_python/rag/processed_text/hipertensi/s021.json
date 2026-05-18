@@ -1,0 +1,63 @@
+{
+  "metadata": {
+    "source_json": "C:\\Users\\USER\\Downloads\\hipertensi_jurnal.json",
+    "extracted_at": "2026-05-16T12:06:22.035665+00:00"
+  },
+  "document": {
+    "id": "S021",
+    "tipe": "resep",
+    "kategori": "Resep Makanan Sehat",
+    "tahun": "2024-2025",
+    "judul": "Resep Smoothie Bit Pisang (Minuman Penurun Tekanan Darah Alami)",
+    "penulis": "Tim Medis",
+    "file_sumber": null,
+    "keywords": [
+      "smoothie bit",
+      "beetroot",
+      "pisang",
+      "minuman hipertensi",
+      "nitrat",
+      "kalium"
+    ],
+    "ringkasan": "Smoothie bit (beetroot) dan pisang adalah minuman yang terbukti secara ilmiah membantu menurunkan tekanan darah. Bit mengandung nitrat alami yang diubah tubuh menjadi nitric oxide — zat vasodilator yang melebarkan pembuluh darah. Beberapa penelitian menunjukkan jus bit dapat menurunkan tekanan darah sistolik 4-10 mmHg dalam beberapa jam.",
+    "abstrak_ringkas": "Smoothie bit (beetroot) dan pisang adalah minuman yang terbukti secara ilmiah membantu menurunkan tekanan darah. Bit mengandung nitrat alami yang diubah tubuh menjadi nitric oxide — zat vasodilator yang melebarkan pembuluh darah. Beberapa penelitian menunjukkan jus bit dapat menurunkan tekanan darah sistolik 4-10 mmHg dalam beberapa jam.",
+    "metodologi": "",
+    "temuan_utama": "",
+    "kesimpulan": "Smoothie bit (beetroot) dan pisang adalah minuman yang terbukti secara ilmiah membantu menurunkan tekanan darah. Bit mengandung nitrat alami yang diubah tubuh menjadi nitric oxide — zat vasodilator yang melebarkan pembuluh darah. Beberapa penelitian menunjukkan jus bit dapat menurunkan tekanan darah sistolik 4-10 mmHg dalam beberapa jam.",
+    "poin_kunci": [
+      "Bit adalah sumber nitrat alami terbaik — bantu lebarkan pembuluh darah",
+      "Jus bit terbukti turunkan tekanan darah sistolik 4-10 mmHg",
+      "Pisang + air kelapa = kombinasi kalium tinggi untuk lawan efek natrium",
+      "Minuman ini tidak menggantikan obat, tapi sebagai pendukung gaya hidup sehat",
+      "Minum pagi hari untuk efek optimal"
+    ],
+    "relevansi_rag": [
+      "Minuman apa yang bisa menurunkan tekanan darah?",
+      "Apakah jus bit bisa menurunkan tekanan darah?",
+      "Resep minuman sehat untuk hipertensi?",
+      "Apakah air kelapa baik untuk hipertensi?",
+      "Jus apa yang bagus untuk tekanan darah tinggi?"
+    ],
+    "resep": {
+      "waktu_masak": "5 menit",
+      "porsi": "1 porsi",
+      "bahan": [
+        "1 buah bit ukuran sedang, kupas dan potong dadu (atau 100ml jus bit siap pakai)",
+        "1 buah pisang matang",
+        "150ml air kelapa (kaya kalium) atau air biasa",
+        "1/2 buah apel (opsional, untuk rasa manis)",
+        "Perasan jeruk nipis",
+        "Es batu (opsional)"
+      ],
+      "cara_membuat": [
+        "Masukkan semua bahan ke blender",
+        "Blender hingga halus",
+        "Tambahkan air jika terlalu kental",
+        "Saring atau minum langsung",
+        "Tambahkan es batu, sajikan segera"
+      ],
+      "nilai_gizi_per_porsi": "Kalori: ±150 kkal | Natrium: <50 mg | Kalium: ±700 mg | Nitrat: tinggi"
+    }
+  },
+  "text": "ID:\nS021\n\nJudul:\nResep Smoothie Bit Pisang (Minuman Penurun Tekanan Darah Alami)\n\nKategori:\nResep Makanan Sehat\n\nTahun:\n2024-2025\n\nTipe:\nresep\n\nPenulis:\nTim Medis\n\nRingkasan:\nSmoothie bit (beetroot) dan pisang adalah minuman yang terbukti secara ilmiah membantu menurunkan tekanan darah. Bit mengandung nitrat alami yang diubah tubuh menjadi nitric oxide — zat vasodilator yang melebarkan pembuluh darah. Beberapa penelitian menunjukkan jus bit dapat menurunkan tekanan darah sistolik 4-10 mmHg dalam beberapa jam.\n\nAbstrak ringkas:\nSmoothie bit (beetroot) dan pisang adalah minuman yang terbukti secara ilmiah membantu menurunkan tekanan darah. Bit mengandung nitrat alami yang diubah tubuh menjadi nitric oxide — zat vasodilator yang melebarkan pembuluh darah. Beberapa penelitian menunjukkan jus bit dapat menurunkan tekanan darah sistolik 4-10 mmHg dalam beberapa jam.\n\nKesimpulan:\nSmoothie bit (beetroot) dan pisang adalah minuman yang terbukti secara ilmiah membantu menurunkan tekanan darah. Bit mengandung nitrat alami yang diubah tubuh menjadi nitric oxide — zat vasodilator yang melebarkan pembuluh darah. Beberapa penelitian menunjukkan jus bit dapat menurunkan tekanan darah sistolik 4-10 mmHg dalam beberapa jam.\n\nKeywords:\n- smoothie bit\n- beetroot\n- pisang\n- minuman hipertensi\n- nitrat\n- kalium\n\nPoin kunci:\n- Bit adalah sumber nitrat alami terbaik — bantu lebarkan pembuluh darah\n- Jus bit terbukti turunkan tekanan darah sistolik 4-10 mmHg\n- Pisang + air kelapa = kombinasi kalium tinggi untuk lawan efek natrium\n- Minuman ini tidak menggantikan obat, tapi sebagai pendukung gaya hidup sehat\n- Minum pagi hari untuk efek optimal\n\nRelevansi RAG:\n- Minuman apa yang bisa menurunkan tekanan darah?\n- Apakah jus bit bisa menurunkan tekanan darah?\n- Resep minuman sehat untuk hipertensi?\n- Apakah air kelapa baik untuk hipertensi?\n- Jus apa yang bagus untuk tekanan darah tinggi?"
+}

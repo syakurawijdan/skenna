@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -9,9 +9,10 @@ class UserProfileUpsertRequest(BaseModel):
 	gender: Literal["perempuan", "laki-laki"]
 	birth_date: date
 	has_hypertension: bool
-	systolic_pressure: int = Field(..., ge=50, le=300)
-	diastolic_pressure: int = Field(..., ge=30, le=200)
-	is_pregnant: bool
+	hypertension_condition: Optional[Literal["history_only", "controlled", "uncontrolled"]] = None
+	systolic_pressure: Optional[int] = Field(None, ge=50, le=300)
+	diastolic_pressure: Optional[int] = Field(None, ge=30, le=200)
+	pregnancy_status: Optional[Literal["pregnant", "breastfeeding", "none"]] = None
 
 
 class UserProfileUpsertResponse(BaseModel):

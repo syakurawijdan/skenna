@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:skenna/data/user_session.dart';
 
 import '../navigation/app_routes.dart';
 
@@ -16,11 +17,19 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 2), () {
-      if (!mounted) {
-        return;
+    debugPrint('SplashScreen loaded'); // ← tambah ini
+    Timer(const Duration(seconds: 2), () async {
+      if (!mounted) return;
+      debugPrint('Timer fired'); // ← tambah ini
+
+      final userId = UserSession().getUserId();
+      debugPrint('userId: $userId'); // ← tambah ini
+
+      if (userId > 0) {
+        Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+      } else {
+        Navigator.pushReplacementNamed(context, AppRoutes.onboarding1);
       }
-      Navigator.pushReplacementNamed(context, AppRoutes.onboarding1);
     });
   }
 

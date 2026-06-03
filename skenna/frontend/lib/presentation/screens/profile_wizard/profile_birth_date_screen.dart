@@ -92,7 +92,7 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
       ),
       filled: true,
       fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(6),
         borderSide: const BorderSide(color: Color(0xFFBEC7DB)),
@@ -210,119 +210,102 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
               ),
               const SizedBox(height: 16),
               Center(
-                child: SizedBox(
-                  width: 317,
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 91,
-                        child: DropdownButtonFormField<int>(
-                          value: _day,
-                          isExpanded: true,
-                          items:
-                              List<int>.generate(maxDay, (index) => index + 1)
-                                  .map(
-                                    (value) => DropdownMenuItem(
-                                      value: value,
-                                      child: Text(
-                                        value.toString().padLeft(2, '0'),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged: (value) {
-                            if (value == null) {
-                              return;
-                            }
-                            setState(() {
-                              _day = value;
-                            });
-                          },
-                          style: GoogleFonts.plusJakartaSans(
-                            color: const Color(0xFF2C4A8A),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          icon: const Icon(
-                            Icons.keyboard_arrow_down,
-                            color: Color(0xFF2C4A8A),
-                            size: 18,
-                          ),
-                          decoration: _dateFieldDecoration('DD'),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min, // ← ini yang bikin centered
+                  children: [
+                    SizedBox(
+                      width: 91,
+                      child: DropdownButtonFormField<int>(
+                        value: _day,
+                        isExpanded: true,
+                        items: List<int>.generate(maxDay, (index) => index + 1)
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text(value.toString().padLeft(2, '0')),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() => _day = value);
+                        },
+                        style: GoogleFonts.plusJakartaSans(
+                          color: const Color(0xFF2C4A8A),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
-                      ),
-                      const SizedBox(width: 22),
-                      SizedBox(
-                        width: 91,
-                        child: DropdownButtonFormField<int>(
-                          value: _month,
-                          isExpanded: true,
-                          items: List<int>.generate(12, (index) => index + 1)
-                              .map(
-                                (value) => DropdownMenuItem(
-                                  value: value,
-                                  child: Text(value.toString().padLeft(2, '0')),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (value) {
-                            if (value == null) {
-                              return;
-                            }
-                            setState(() {
-                              _month = value;
-                            });
-                          },
-                          style: GoogleFonts.plusJakartaSans(
-                            color: const Color(0xFF2C4A8A),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          icon: const Icon(
-                            Icons.keyboard_arrow_down,
-                            color: Color(0xFF2C4A8A),
-                            size: 18,
-                          ),
-                          decoration: _dateFieldDecoration('MM'),
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Color(0xFF2C4A8A),
+                          size: 18,
                         ),
+                        decoration: _dateFieldDecoration('DD'),
                       ),
-                      const SizedBox(width: 22),
-                      SizedBox(
-                        width: 91,
-                        child: DropdownButtonFormField<int>(
-                          value: _year,
-                          isExpanded: true,
-                          items: _yearItems
-                              .map(
-                                (value) => DropdownMenuItem(
-                                  value: value,
-                                  child: Text(value.toString()),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (value) {
-                            if (value == null) {
-                              return;
-                            }
-                            setState(() {
-                              _year = value;
-                            });
-                          },
-                          style: GoogleFonts.plusJakartaSans(
-                            color: const Color(0xFF2C4A8A),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          icon: const Icon(
-                            Icons.keyboard_arrow_down,
-                            color: Color(0xFF2C4A8A),
-                            size: 18,
-                          ),
-                          decoration: _dateFieldDecoration('YYYY'),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 91,
+                      child: DropdownButtonFormField<int>(
+                        value: _month,
+                        isExpanded: true,
+                        items: List<int>.generate(12, (index) => index + 1)
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text(value.toString().padLeft(2, '0')),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() => _month = value);
+                        },
+                        style: GoogleFonts.plusJakartaSans(
+                          color: const Color(0xFF2C4A8A),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Color(0xFF2C4A8A),
+                          size: 18,
+                        ),
+                        decoration: _dateFieldDecoration('MM'),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 110, // ← lebih lebar untuk 4 digit tahun
+                      child: DropdownButtonFormField<int>(
+                        value: _year,
+                        isExpanded: true,
+                        items: _yearItems
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text(value.toString()),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() => _year = value);
+                        },
+                        style: GoogleFonts.plusJakartaSans(
+                          color: const Color(0xFF2C4A8A),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Color(0xFF2C4A8A),
+                          size: 18,
+                        ),
+                        decoration: _dateFieldDecoration('YYYY'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),

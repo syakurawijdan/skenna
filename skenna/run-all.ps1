@@ -31,6 +31,8 @@ Start-Process powershell -ArgumentList @(
     "Set-Location '$frontendPath'; `$env:PUB_CACHE='$pubCachePath'; flutter run --dart-define=API_BASE_URL=$ApiBaseUrl"
 )
 
+
+
 Write-Host "Started backend and frontend."
 Write-Host "Backend:  http://127.0.0.1:8000"
 Write-Host "Frontend: flutter run in a separate window"

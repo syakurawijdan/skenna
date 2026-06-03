@@ -1,3 +1,5 @@
+import 'package:skenna/presentation/screens/scan_confirmation_sheet.dart';
+
 class AppRoutes {
   static const splash = '/splash';
   static const onboarding1 = '/onboarding-1';
@@ -13,6 +15,11 @@ class AppRoutes {
   static const sodiumSafe = '/sodium-safe';
   static const sodiumUnsafe = '/sodium-unsafe';
   static const sodiumPregnant = '/sodium-pregnant';
+  static const hasilScanAman = '/hasil-scan-aman';
+  static const hasilBandingkan = '/hasil-bandingkan';
+  static const hasilScanWaspada = '/hasil-scan-waspada';
+  static const hasilScanBahaya = '/hasil-scan-bahaya';
   static const dashboard = '/dashboard';
   static const chatbot = '/chatbot';
+  static const ScanConfirmationSheet = '/scan-confirmation-screen';
 }

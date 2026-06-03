@@ -27,7 +27,7 @@ def create_app() -> FastAPI:
 		allow_credentials=False,
 		allow_methods=["*"],
 		allow_headers=["*"],
-	)
+)
 
 	@app.on_event("startup")
 	def on_startup() -> None:

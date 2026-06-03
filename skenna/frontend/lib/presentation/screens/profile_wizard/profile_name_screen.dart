@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../navigation/app_routes.dart';
 import 'profile_wizard_store.dart';
+import '../../../data/api_client.dart';
+import '../../../data/user_session.dart';
 
 class ProfileFormScreen extends StatefulWidget {
   const ProfileFormScreen({super.key});
@@ -17,6 +19,8 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   @override
   void initState() {
     super.initState();
+    ProfileWizardStore.instance.reset();
+    UserSession().clear();
     _nameController = TextEditingController(
       text: ProfileWizardStore.instance.draft.fullName,
     );
@@ -29,13 +33,39 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     super.dispose();
   }
 
-  void _next() {
+  void _next() async {
     final value = _nameController.text.trim();
     if (value.isEmpty) {
       _showValidation('Nama wajib diisi');
       return;
     }
     ProfileWizardStore.instance.draft.fullName = value;
+
+    try {
+      final userSession = UserSession();
+      final apiClient = ApiClient();
+
+      debugPrint('Mendaftarkan user baru ke MySQL: $value');
+
+      // PENTING: Langsung tembak register tanpa mengecek isLoggedIn()
+      // agar MySQL selalu melahirkan ID baru (seperti ID 14, 15, dst)
+      final response = await apiClient.registerUser(fullName: value);
+      debugPrint('Register response sukses: $response');
+
+      // Ambil ID baru dari MySQL dan timpa (overwrite) id lama di SharedPreferences
+      final int newUserId = response['id'] as int;
+      await userSession.setUserId(newUserId);
+
+      debugPrint(
+        'UserSession berhasil diperbarui dengan ID Baru: ${userSession.getUserId()}',
+      );
+    } catch (e) {
+      debugPrint('Gagal registrasi user ke MySQL: $e');
+      // Tambahkan snackbar error agar kamu tahu jika API Register gagal/mati
+      _showValidation('Gagal terhubung ke server. Coba lagi.');
+      return; // Hentikan navigasi jika register gagal
+    }
+
     Navigator.pushNamed(context, AppRoutes.profileGender);
   }
 

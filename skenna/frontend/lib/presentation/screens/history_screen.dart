@@ -1,12 +1,204 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
-
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/api_client.dart';
+import 'scan_screen.dart';
+import 'hasil_perbandingan_produk.dart';
+import 'hasil_scan_aman_screen.dart';
+import '../screens/profile_wizard/profile_wizard_store.dart';
+import '../../domain/natrium_classifier.dart';
+import '../../../data/user_session.dart';
+
+class ScanHistoryItem {
+  final String id;
+  final String productName;
+  final int sodiumMg;
+  final double servings;
+  final DateTime timestamp;
+  final String? imagePath;
+  final String type;
+  bool isConsumed;
+  final String kategori;
+  final String? productName2;
+  final int? sodiumMg2;
+  final String? imagePath2;
+  final int packageMl;
+  final int portionsInPackage;
+  final String satuanTakaran;
+  final int packageMl2;
+  final int portionsInPackage2;
+  final String satuanTakaran2;
+
+  ScanHistoryItem({
+    required this.id,
+    required this.productName,
+    required this.sodiumMg,
+    required this.servings,
+    required this.timestamp,
+    this.imagePath,
+    this.type = 'single',
+    this.isConsumed = false,
+    this.kategori = 'lainnya',
+    this.productName2,
+    this.sodiumMg2,
+    this.imagePath2,
+    this.packageMl = 0,
+    this.portionsInPackage = 1,
+    this.satuanTakaran = 'g',
+    this.packageMl2 = 0,
+    this.portionsInPackage2 = 1,
+    this.satuanTakaran2 = 'g',
+  });
+
+  factory ScanHistoryItem.fromJson(Map<String, dynamic> json) {
+    return ScanHistoryItem(
+      id:
+          json['id']?.toString() ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
+      productName:
+          json['food_name'] as String? ??
+          json['product_name'] as String? ??
+          'Produk',
+      sodiumMg: (json['sodium_mg'] as num?)?.toInt() ?? 0,
+      servings: (json['servings'] as num?)?.toDouble() ?? 1.0,
+      timestamp:
+          DateTime.tryParse(json['consumed_at'] as String? ?? '') ??
+          DateTime.tryParse(json['timestamp'] as String? ?? '') ??
+          DateTime.now(),
+      imagePath: json['image_path'] as String?,
+      type: json['type'] as String? ?? 'single',
+      isConsumed: json['is_consumed'] == true || json['is_consumed'] == 1,
+      kategori: json['kategori'] as String? ?? 'lainnya',
+      productName2: json['product_name2'] as String?,
+      sodiumMg2: (json['sodium_mg2'] as num?)?.toInt(),
+      imagePath2: json['image_path2'] as String?,
+      // ── TAMBAH: parse dari API response (default-safe jika null) ──────
+      packageMl: (json['package_ml'] as num?)?.toInt() ?? 0,
+      portionsInPackage: (json['portions_in_package'] as num?)?.toInt() ?? 1,
+      satuanTakaran: json['satuan_takaran'] as String? ?? 'g',
+      packageMl2: (json['package_ml2'] as num?)?.toInt() ?? 0,
+      portionsInPackage2: (json['portions_in_package2'] as num?)?.toInt() ?? 1,
+      satuanTakaran2: json['satuan_takaran2'] as String? ?? 'g',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'product_name': productName,
+    'sodium_mg': sodiumMg,
+    'servings': servings,
+    'timestamp': timestamp.toIso8601String(),
+    'image_path': imagePath,
+    'type': type,
+    'is_consumed': isConsumed,
+    'kategori': kategori,
+    'product_name2': productName2,
+    'sodium_mg2': sodiumMg2,
+    'image_path2': imagePath2,
+    'package_ml': packageMl,
+    'portions_in_package': portionsInPackage,
+    'satuan_takaran': satuanTakaran,
+    'package_ml2': packageMl2,
+    'portions_in_package2': portionsInPackage2,
+    'satuan_takaran2': satuanTakaran2,
+  };
+}
+
+// ─────────────────────────────────────────────
+// HELPER — natrium harian
+// ─────────────────────────────────────────────
+
+class DailyNatriumHelper {
+  static const _key = 'daily_sodium';
+
+  static String _dayKey() {
+    final now = DateTime.now();
+    final userId = UserSession().getUserId() ?? 'guest';
+    return '${_key}_${userId}_${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  }
+
+  static Future<void> addMg(int mg) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = _dayKey();
+    await prefs.setInt(key, (prefs.getInt(key) ?? 0) + mg);
+  }
+
+  static Future<void> removeMg(int mg) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = _dayKey();
+    await prefs.setInt(key, ((prefs.getInt(key) ?? 0) - mg).clamp(0, 999999));
+  }
+
+  static Future<int> getTodayMg() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_dayKey()) ?? 0;
+  }
+}
+
+// ─────────────────────────────────────────────
+// HELPER — simpan/load history
+// ─────────────────────────────────────────────
+
+class ScanHistoryHelper {
+  static const _key = 'scan_history';
+  static String _userKey() {
+    final userId = UserSession().getUserId() ?? 'guest';
+    return '${_key}_$userId';
+  }
+
+  static Future<List<ScanHistoryItem>> loadAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getStringList(_userKey()) ?? [];
+    return raw
+        .map((e) => ScanHistoryItem.fromJson(jsonDecode(e)))
+        .toList()
+        .reversed
+        .toList();
+  }
+
+  static Future<void> saveAll(List<ScanHistoryItem> items) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _userKey(),
+      items.reversed.map((e) => jsonEncode(e.toJson())).toList(),
+    );
+  }
+
+  static Future<void> addItem(ScanHistoryItem item) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getStringList(_userKey()) ?? [];
+    raw.add(jsonEncode(item.toJson()));
+    await prefs.setStringList(_userKey(), raw);
+    if (item.isConsumed) {
+      await DailyNatriumHelper.addMg((item.sodiumMg * item.servings).round());
+    }
+  }
+
+  static Future<void> updateItem(ScanHistoryItem updated) async {
+    final all = await loadAll();
+    final idx = all.indexWhere((e) => e.id == updated.id);
+    if (idx != -1) all[idx] = updated;
+    await saveAll(all);
+  }
+}
+
+// ─────────────────────────────────────────────
+// ENUM
+// ─────────────────────────────────────────────
 
 enum HistoryRange { day, week, month }
 
+enum ScanTypeFilter { all, single, comparison }
+
+// ─────────────────────────────────────────────
+// SCREEN
+// ─────────────────────────────────────────────
+
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key, required this.apiClient});
-
   final ApiClient apiClient;
 
   @override
@@ -14,9 +206,16 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
+  static const _white = Color(0xFFFFFFFF);
+  static const _blue = Color(0xFF2C4A8A);
+  static const _blueSoft = Color(0xFFDFE4ED);
+  static const _blueGray = Color(0xFFBEC7DB);
+  static const _gray = Color(0xFFD9D9D9);
+
   bool _loading = false;
-  List<dynamic> _items = <dynamic>[];
-  HistoryRange _selectedRange = HistoryRange.day;
+  List<ScanHistoryItem> _items = [];
+  HistoryRange _range = HistoryRange.month;
+  ScanTypeFilter _typeFilter = ScanTypeFilter.all;
 
   @override
   void initState() {
@@ -27,194 +226,549 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _loadHistory() async {
     setState(() => _loading = true);
     try {
-      final data = await widget.apiClient.getIntakeHistory(1);
-      setState(() => _items = data);
-    } catch (e) {
-      setState(() => _items = <dynamic>['Gagal mengambil data: $e']);
-    } finally {
-      if (mounted) {
-        setState(() => _loading = false);
+      final userId = UserSession().getUserId();
+      if (userId == 0) {
+        if (mounted) setState(() => _items = []);
+        return;
       }
+
+      final raw = await widget.apiClient.getIntakeHistory(userId);
+
+      debugPrint('=== RAW HISTORY: ${raw.first}');
+
+      final now = DateTime.now();
+      final allItems = raw
+          .map(
+            (e) =>
+                ScanHistoryItem.fromJson(Map<String, dynamic>.from(e as Map)),
+          )
+          .toList();
+
+      final filtered = allItems.where((item) {
+        final ts = item.timestamp.toLocal();
+        final inRange = switch (_range) {
+          HistoryRange.day =>
+            ts.year == now.year && ts.month == now.month && ts.day == now.day,
+          HistoryRange.week => now.difference(ts).inDays <= 7,
+          HistoryRange.month => now.difference(ts).inDays <= 30,
+        };
+        if (!inRange) return false;
+        return switch (_typeFilter) {
+          ScanTypeFilter.all => true,
+          ScanTypeFilter.single => item.type == 'single',
+          ScanTypeFilter.comparison => item.type == 'comparison',
+        };
+      }).toList();
+
+      if (mounted) setState(() => _items = filtered);
+    } catch (e) {
+      debugPrint('History load error: $e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  List<Map<String, String>> get _displayItems {
-    final mapped = _items
-        .whereType<Map<String, dynamic>>()
-        .map(
-          (item) => <String, String>{
-            'title': (item['food_name']?.toString().trim().isNotEmpty ?? false)
-                ? item['food_name'].toString()
-                : 'Monde Snack',
-            'subtitle': '${item['sodium_mg'] ?? 1900} Mg/Na',
-          },
-        )
-        .toList();
-
-    if (mapped.isNotEmpty) {
-      return mapped;
-    }
-
-    return List<Map<String, String>>.generate(
-      4,
-      (_) => <String, String>{'title': 'Monde Snack', 'subtitle': '1900 Mg/Na'},
-    );
+  String _formatTime(DateTime ts) {
+    final local = ts.toLocal();
+    final diff = DateTime.now().difference(local);
+    if (diff.inMinutes < 1) return 'Baru saja';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} menit lalu';
+    if (diff.inHours < 24) return '${diff.inHours} jam lalu';
+    if (diff.inDays == 1) return 'Kemarin';
+    return '${local.day}/${local.month}/${local.year}';
   }
+
+  static TextStyle _ts(double size, FontWeight weight, Color color) =>
+      GoogleFonts.plusJakartaSans(
+        fontSize: size,
+        fontWeight: weight,
+        color: color,
+      );
 
   @override
   Widget build(BuildContext context) {
-    const bg = Color(0xFFF5F5F7);
-    const normalBlue = Color(0xFF2C4A8A);
-    const lightText = Color(0xFFB0B0B0);
-
     return Container(
-      color: bg,
+      color: _white,
       child: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 44),
-            const Text(
-              'Riwayat Scan',
-              style: TextStyle(
-                color: normalBlue,
-                fontSize: 25,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 18),
-            _HistoryRangeSwitcher(
-              selected: _selectedRange,
-              onChanged: (range) {
-                setState(() => _selectedRange = range);
-              },
-            ),
-            const SizedBox(height: 22),
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 30),
-                itemCount: _displayItems.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (_, i) {
-                  final item = _displayItems[i];
-                  return Container(
-                    padding: const EdgeInsets.fromLTRB(18, 13, 12, 13),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x26000000),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item['title'] ?? '-',
-                                style: const TextStyle(
-                                  color: normalBlue,
-                                  fontSize: 30,
-                                  fontWeight: FontWeight.w400,
-                                  height: 1,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                item['subtitle'] ?? '-',
-                                style: const TextStyle(
-                                  color: lightText,
-                                  fontSize: 25,
-                                  fontWeight: FontWeight.w400,
-                                  height: 1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: 28,
-                          height: 28,
-                          decoration: const BoxDecoration(
-                            color: normalBlue,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.chevron_right,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            if (_loading)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 8),
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
+            _buildHeader(),
+            const SizedBox(height: 26),
+            _buildWaktuDropdown(),
+            const SizedBox(height: 14),
+            _buildTypeFilterChips(),
+            const SizedBox(height: 20),
+            _buildBody(),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Riwayat Scan',
+              textAlign: TextAlign.center,
+              style: _ts(22, FontWeight.w700, _blue),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWaktuDropdown() {
+    const rangeLabels = {
+      HistoryRange.day: 'Hari ini',
+      HistoryRange.week: 'Minggu ini',
+      HistoryRange.month: 'Bulan ini',
+    };
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Waktu', style: _ts(16, FontWeight.w600, _blue)),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+            decoration: BoxDecoration(
+              color: _white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _blueGray),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<HistoryRange>(
+                value: _range,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: _blue,
+                ),
+                style: _ts(14, FontWeight.w500, _blue),
+                items: HistoryRange.values
+                    .map(
+                      (r) => DropdownMenuItem(
+                        value: r,
+                        child: Text(
+                          rangeLabels[r]!,
+                          style: _ts(14, FontWeight.w500, _blue),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (r) {
+                  if (r == null) return;
+                  setState(() => _range = r);
+                  _loadHistory();
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypeFilterChips() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Jenis scan', style: _ts(16, FontWeight.w600, _blue)),
+          const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _TypeChip(
+                  label: 'Semua',
+                  iconAsset: 'icons/mingcute_grid-fil.svg',
+                  fallbackIcon: Icons.apps_rounded,
+                  isActive: _typeFilter == ScanTypeFilter.all,
+                  onTap: () {
+                    setState(() => _typeFilter = ScanTypeFilter.all);
+                    _loadHistory();
+                  },
+                ),
+                const SizedBox(width: 10),
+                _TypeChip(
+                  label: 'Single Item',
+                  iconAsset: 'icons/scan.svg',
+                  fallbackIcon: Icons.qr_code_scanner_rounded,
+                  isActive: _typeFilter == ScanTypeFilter.single,
+                  onTap: () {
+                    setState(() => _typeFilter = ScanTypeFilter.single);
+                    _loadHistory();
+                  },
+                ),
+                const SizedBox(width: 10),
+                _TypeChip(
+                  label: 'Perbandingan',
+                  iconAsset: 'icons/repeat-circle.svg',
+                  fallbackIcon: Icons.compare_arrows_rounded,
+                  isActive: _typeFilter == ScanTypeFilter.comparison,
+                  onTap: () {
+                    setState(() => _typeFilter = ScanTypeFilter.comparison);
+                    _loadHistory();
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_loading) {
+      return const Expanded(
+        child: Center(child: CircularProgressIndicator(color: _blue)),
+      );
+    }
+
+    if (_items.isEmpty) {
+      return Expanded(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Image.asset(
+                  'assets/illustrations/belum_ada_history.png',
+                  width: 240,
+                  height: 240,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(height: 8),
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      color: _blue,
+                    ),
+                    children: [
+                      const TextSpan(text: 'Yuk, '),
+                      TextSpan(
+                        text: 'Scan produk ',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: _blue,
+                        ),
+                      ),
+                      const TextSpan(text: 'untuk mulai\n'),
+                      TextSpan(
+                        text: 'menyimpan riwayatmu ',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: _blue,
+                        ),
+                      ),
+                      const TextSpan(text: 'sekarang'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 64),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              ScanScreen(apiClient: widget.apiClient),
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _blue,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: Text(
+                        'Mulai Scan Produk',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final singles = _items.where((e) => e.type == 'single').toList();
+    final comparisons = _items.where((e) => e.type == 'comparison').toList();
+
+    return Expanded(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+        children: [
+          if ((_typeFilter == ScanTypeFilter.all ||
+                  _typeFilter == ScanTypeFilter.single) &&
+              singles.isNotEmpty) ...[
+            _sectionLabel('Single Item'),
+            const SizedBox(height: 10),
+            ...singles.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: _SingleItemCard(
+                  item: item,
+                  timeLabel: _formatTime(item.timestamp),
+                  onDetail: () => _openDetail(item),
+                ),
+              ),
+            ),
+          ],
+          if ((_typeFilter == ScanTypeFilter.all ||
+                  _typeFilter == ScanTypeFilter.comparison) &&
+              comparisons.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            _sectionLabel('Perbandingan Item'),
+            const SizedBox(height: 10),
+            ...comparisons.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: _ComparisonItemCard(
+                  item: item,
+                  timeLabel: _formatTime(item.timestamp),
+                  onDetail: () => _openDetail(item),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionLabel(String text) =>
+      Text(text, style: _ts(16, FontWeight.w700, _blue));
+
+  void _openDetail(ScanHistoryItem item) async {
+    int dailyLimit = 2000;
+    try {
+      final userId = UserSession().getUserId();
+      if (userId > 0) {
+        final profile = await widget.apiClient.getUserProfile(userId);
+        final birthDateStr = profile['birth_date'] as String?;
+        if (birthDateStr != null) {
+          final hasil = await klasifikasiNatriumDariDraft(
+            birthDate: DateTime.parse(birthDateStr),
+            gender: profile['gender'] as String? ?? '',
+            hasHypertension: profile['has_hypertension'] as bool? ?? false,
+            hypertensionCondition: profile['hypertension_condition'] as String?,
+            systolicPressure: profile['systolic_pressure'] as int?,
+            diastolicPressure: profile['diastolic_pressure'] as int?,
+            pregnancyStatus: profile['pregnancy_status'] as String?,
+          );
+          dailyLimit = hasil.batasNatrium;
+        }
+      }
+    } catch (e) {
+      debugPrint('Gagal fetch daily limit: $e');
+    }
+
+    if (item.type == 'comparison') {
+      // ── FIX: pakai data dari item, bukan hardcode 0/1/'g' ──────────────
+      final produkA = ProductCompareData(
+        productName: item.productName,
+        kategori: item.kategori,
+        satuanTakaran: item.satuanTakaran, // WAS: 'g'
+        perPortionMg: item.sodiumMg,
+        packageMl: item.packageMl, // WAS: 0
+        portionsInPackage: item.portionsInPackage, // WAS: item.servings.toInt()
+        imagePath: item.imagePath,
+      );
+
+      final produkB = ProductCompareData(
+        productName: item.productName2 ?? '-',
+        kategori: item.kategori,
+        satuanTakaran: item.satuanTakaran2, // WAS: 'g'
+        perPortionMg: item.sodiumMg2 ?? 0,
+        packageMl: item.packageMl2, // WAS: 0
+        portionsInPackage: item.portionsInPackage2, // WAS: 1
+        imagePath: item.imagePath2,
+      );
+
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => HasilBandingkanScreen(
+            productA: produkA,
+            productB: produkB,
+            dailyLimitMg: dailyLimit,
+            apiClient: widget.apiClient,
+          ),
+        ),
+      ).then((_) => _loadHistory());
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => HasilScanAmanScreen(
+          productName: item.productName,
+          kategori: item.kategori,
+          perPortionMg: item.sodiumMg,
+          initialServings: item.servings.toInt(),
+          fromHistory: true,
+          historyItemId: item.id,
+          imagePath: item.imagePath,
+          isConsumed: item.isConsumed,
+          dailyLimitMg: dailyLimit,
+          apiClient: widget.apiClient,
+        ),
+      ),
+    ).then((_) => _loadHistory());
+  }
 }
 
-class _HistoryRangeSwitcher extends StatelessWidget {
-  const _HistoryRangeSwitcher({
-    required this.selected,
-    required this.onChanged,
+// ─────────────────────────────────────────────
+// CARD — Single Item
+// ─────────────────────────────────────────────
+
+class _SingleItemCard extends StatelessWidget {
+  const _SingleItemCard({
+    required this.item,
+    required this.timeLabel,
+    required this.onDetail,
   });
 
-  final HistoryRange selected;
-  final ValueChanged<HistoryRange> onChanged;
+  final ScanHistoryItem item;
+  final String timeLabel;
+  final VoidCallback onDetail;
+
+  static const _white = Color(0xFFFFFFFF);
+  static const _blue = Color(0xFF2C4A8A);
+  static const _navy = Color(0xFF213868);
+  static const _blueSoft = Color(0xFFDFE4ED);
+  static const _gray = Color(0xFFD9D9D9);
+
+  static TextStyle _ts(double size, FontWeight w, Color c) =>
+      GoogleFonts.plusJakartaSans(fontSize: size, fontWeight: w, color: c);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 282,
-      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(100),
-        boxShadow: const [
+        color: _white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _gray),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x40000000),
-            blurRadius: 12,
-            offset: Offset(0, 3),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _RangePill(
-            label: 'Hari Ini',
-            isActive: selected == HistoryRange.day,
-            onTap: () => onChanged(HistoryRange.day),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+            child: Text(
+              item.productName,
+              style: _ts(17, FontWeight.w700, _navy),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          const SizedBox(width: 12),
-          _RangePill(
-            label: 'Minggu',
-            isActive: selected == HistoryRange.week,
-            onTap: () => onChanged(HistoryRange.week),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: _ProductImage(path: item.imagePath, size: 80),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _blueSoft,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${(item.sodiumMg * item.servings).round()} mg natrium',
+                          style: _ts(13, FontWeight.w600, _blue),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          _IconChip(
+                            iconAsset:
+                                'assets/icons/fluent_food-24-regular.svg',
+                            fallbackIcon: Icons.restaurant_menu_rounded,
+                            label:
+                                '${item.servings % 1 == 0 ? item.servings.toInt() : item.servings} Porsi',
+                          ),
+                          const SizedBox(width: 10),
+                          _IconChip(
+                            iconAsset: 'assets/icons/video-time.svg',
+                            fallbackIcon: Icons.access_time_rounded,
+                            label: timeLabel,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(width: 12),
-          _RangePill(
-            label: 'Bulan',
-            isActive: selected == HistoryRange.month,
-            onTap: () => onChanged(HistoryRange.month),
+          Divider(height: 1, color: _gray),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+            child: Row(
+              children: [
+                _StatusBadge(consumed: item.isConsumed),
+                const Spacer(),
+                GestureDetector(
+                  onTap: onDetail,
+                  child: Text(
+                    'Lihat Detail',
+                    style: _ts(12, FontWeight.w500, _blue),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -222,40 +776,369 @@ class _HistoryRangeSwitcher extends StatelessWidget {
   }
 }
 
-class _RangePill extends StatelessWidget {
-  const _RangePill({
+// ─────────────────────────────────────────────
+// CARD — Comparison Item
+// ─────────────────────────────────────────────
+
+class _ComparisonItemCard extends StatelessWidget {
+  const _ComparisonItemCard({
+    required this.item,
+    required this.timeLabel,
+    required this.onDetail,
+  });
+
+  final ScanHistoryItem item;
+  final String timeLabel;
+  final VoidCallback onDetail;
+
+  static const _white = Color(0xFFFFFFFF);
+  static const _darkblue = Color(0xFF213868);
+  static const _blue = Color(0xFF2C4A8A);
+  static const _gray = Color(0xFFD9D9D9);
+
+  static TextStyle _ts(double size, FontWeight w, Color c) =>
+      GoogleFonts.plusJakartaSans(fontSize: size, fontWeight: w, color: c);
+
+  @override
+  Widget build(BuildContext context) {
+    final name2 = item.productName2 ?? '-';
+    final sodium2 = item.sodiumMg2 ?? 0;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: _white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _gray),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    bottomLeft: Radius.circular(10),
+                  ),
+                  child: _ProductImage(path: item.imagePath, size: 80),
+                ),
+                const SizedBox(width: 2),
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(10),
+                    bottomRight: Radius.circular(10),
+                  ),
+                  child: _ProductImage(path: item.imagePath2, size: 80),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.productName,
+                        style: _ts(15, FontWeight.w700, _darkblue),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${item.sodiumMg} mg Natrium',
+                        style: _ts(13, FontWeight.w500, _blue),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        name2,
+                        style: _ts(15, FontWeight.w700, _blue),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$sodium2 mg Natrium',
+                        style: _ts(12, FontWeight.w500, _blue),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+            child: Row(
+              children: [
+                _IconChip(
+                  iconAsset: 'assets/icons/fluent_food-24-regular.svg',
+                  fallbackIcon: Icons.restaurant_menu_rounded,
+                  label: item.productName,
+                ),
+                const SizedBox(width: 10),
+                _IconChip(
+                  iconAsset: 'assets/icons/video-time.svg',
+                  fallbackIcon: Icons.access_time_rounded,
+                  label: timeLabel,
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: _gray),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+            child: Row(
+              children: [
+                _StatusBadge(consumed: item.isConsumed),
+                const Spacer(),
+                GestureDetector(
+                  onTap: onDetail,
+                  child: Text(
+                    'Lihat Detail',
+                    style: _ts(12, FontWeight.w500, _blue),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// WIDGET — _IconChip
+// ─────────────────────────────────────────────
+
+class _IconChip extends StatelessWidget {
+  const _IconChip({required this.label, this.iconAsset, this.fallbackIcon});
+
+  final String label;
+  final String? iconAsset;
+  final IconData? fallbackIcon;
+
+  static const _blue = Color(0xFF2C4A8A);
+  static const _blueSoft = Color(0xFFDFE4ED);
+  static const _gray = Color(0xFFD9D9D9);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _gray),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 26,
+            height: 26,
+            decoration: const BoxDecoration(
+              color: _blueSoft,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: iconAsset != null
+                  ? SvgPicture.asset(
+                      iconAsset!,
+                      width: 14,
+                      height: 14,
+                      colorFilter: const ColorFilter.mode(
+                        _blue,
+                        BlendMode.srcIn,
+                      ),
+                    )
+                  : Icon(fallbackIcon, size: 14, color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: _blue,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// WIDGET — _StatusBadge
+// ─────────────────────────────────────────────
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.consumed});
+  final bool consumed;
+
+  static const _green = Color(0xFF43A047);
+  static const _amber = Color(0xFFFFBF00);
+
+  @override
+  Widget build(BuildContext context) {
+    final color = consumed ? _green : _amber;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            consumed
+                ? Icons.check_circle_outline_rounded
+                : Icons.cancel_outlined,
+            size: 14,
+            color: color,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            consumed ? 'Dikonsumsi' : 'Tidak dikonsumsi',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// WIDGET — _ProductImage
+// ─────────────────────────────────────────────
+
+class _ProductImage extends StatelessWidget {
+  const _ProductImage({this.path, required this.size});
+  final String? path;
+  final double size;
+
+  static const _blueSoft = Color(0xFFDFE4ED);
+  static const _blueGray = Color(0xFFBEC7DB);
+
+  @override
+  Widget build(BuildContext context) {
+    if (path != null && path!.isNotEmpty) {
+      final file = File(path!);
+      if (file.existsSync()) {
+        return Image.file(file, width: size, height: size, fit: BoxFit.cover);
+      }
+    }
+    return Container(
+      width: size,
+      height: size,
+      color: _blueSoft,
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        color: _blueGray,
+        size: 28,
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// WIDGET — _TypeChip
+// ─────────────────────────────────────────────
+
+class _TypeChip extends StatelessWidget {
+  const _TypeChip({
     required this.label,
     required this.isActive,
     required this.onTap,
-  });
+    this.iconAsset,
+    this.fallbackIcon,
+  }) : assert(
+         iconAsset != null || fallbackIcon != null,
+         'Harus isi salah satu: iconAsset atau fallbackIcon',
+       );
 
   final String label;
   final bool isActive;
   final VoidCallback onTap;
+  final String? iconAsset;
+  final IconData? fallbackIcon;
+
+  static const _white = Color(0xFFFFFFFF);
+  static const _blue = Color(0xFF2C4A8A);
+  static const _gray = Color(0xFFD9D9D9);
 
   @override
   Widget build(BuildContext context) {
-    const normalBlue = Color(0xFF2C4A8A);
-
-    return Expanded(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(100),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isActive ? normalBlue : Colors.transparent,
-            borderRadius: BorderRadius.circular(100),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isActive ? Colors.white : normalBlue,
-              fontSize: 16,
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+    final iconColor = isActive ? Colors.white : _blue;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        decoration: BoxDecoration(
+          color: isActive ? _blue : _white,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: isActive ? _blue : _gray),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: _blue.withOpacity(0.20),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (iconAsset != null)
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? Colors.white.withOpacity(0.20)
+                      : const Color(0xFFDFE4ED),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    iconAsset!,
+                    width: 18,
+                    height: 18,
+                    colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+                  ),
+                ),
+              )
+            else
+              Icon(fallbackIcon, size: 15, color: iconColor),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+                color: iconColor,
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

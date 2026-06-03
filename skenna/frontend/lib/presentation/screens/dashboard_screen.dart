@@ -172,7 +172,7 @@ class DashboardScreen extends StatelessWidget {
                         ),
                         alignment: Alignment.center,
                         child: SvgPicture.asset(
-                          'assets/icons/edit-2 (1).svg',
+                          'assets/icons/edit-2.svg',
                           width: 18,
                           height: 18,
                           colorFilter: ColorFilter.mode(

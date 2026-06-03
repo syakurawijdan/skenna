@@ -19,3 +19,6 @@ class UserProfileUpsertResponse(BaseModel):
 	user_id: int
 	full_name: str
 	message: str
+
+class UserCreateRequest(BaseModel):
+    full_name: str

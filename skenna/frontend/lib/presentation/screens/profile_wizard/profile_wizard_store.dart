@@ -27,7 +27,11 @@ class ProfileWizardStore {
   ProfileWizardStore._();
 
   static final ProfileWizardStore instance = ProfileWizardStore._();
-  final ProfileWizardDraft draft = ProfileWizardDraft();
+  ProfileWizardDraft draft = ProfileWizardDraft();
+
+  void reset() {
+    draft = ProfileWizardDraft();
+  }
 
   double progressForStep(ProfileWizardStep step) {
     final total = _totalSteps();

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../domain/natrium_classifier.dart';
 import '../app_shell.dart';
+import '../navigation/app_routes.dart';
 
 class SodiumLimitPregnantScreen extends StatelessWidget {
   const SodiumLimitPregnantScreen({super.key, required this.hasil});

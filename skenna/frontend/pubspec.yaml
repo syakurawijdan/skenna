@@ -13,8 +13,10 @@ dependencies:
   flutter_svg: ^2.2.3
   google_fonts: ^6.3.2
   http: ^1.2.2
-  shared_preferences: ^2.3.0
+  shared_preferences: ^2.5.5
   logger: ^2.7.0
+  camera: ^0.11.4
+  google_generative_ai: ^0.4.6
 
 dev_dependencies:
   flutter_test:
@@ -31,4 +33,15 @@ flutter:
     - assets/icons/fluent_bot-sparkle-16-regular.svg
     - assets/icons/streamline-ultimate_seasoning-food.svg
     - assets/illustrations/
-    - assets/rules/
+    - assets/icons/fluent_molecule-24-regular.svg
+    - assets/icons/fluent_food-24-regular.svg
+    - assets/icons/hugeicons_serving-food.svg
+    - assets/icons/edit-2.svg 
+    - assets/rules/  
+    - assets/icons/hugeicons_serving-food.svg
+    - assets/icons/mingcute_grid-fil.svg
+    - assets/icons/repeat-circle.svg
+    - assets/icons/scan.svg
+    - assets/icons/video-time.svg
+    - assets/icons/material-symbols_readiness-score-outline-kiri.svg
+    - assets/icons/material-symbols_readiness-score-outline-kanan.svg

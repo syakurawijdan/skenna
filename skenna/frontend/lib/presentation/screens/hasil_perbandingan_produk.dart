@@ -39,13 +39,19 @@ class HasilBandingkanScreen extends StatefulWidget {
     required this.productA,
     required this.productB,
     this.dailyLimitMg = 2000,
+    this.isHardMaximum = true,
     this.apiClient,
+    this.readOnly = false,
+    this.originalProduct,
   });
 
   final ProductCompareData productA;
   final ProductCompareData productB;
   final int dailyLimitMg;
+  final bool isHardMaximum;
   final ApiClient? apiClient;
+  final bool readOnly;
+  final ProductCompareData? originalProduct;
 
   @override
   State<HasilBandingkanScreen> createState() => _HasilBandingkanScreenState();
@@ -87,6 +93,8 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
       _aLebihRendah ? widget.productB : widget.productA;
 
   double _pct(int mg) => mg / widget.dailyLimitMg;
+  String get _limitPhrase =>
+      widget.isHardMaximum ? 'batas harian' : 'kebutuhan harian';
 
   Color _barColor(double p) => p <= .50
       ? _colorSafe
@@ -178,54 +186,59 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
               const SizedBox(height: 24),
 
               // ── KARTU PILIHAN ─────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Kamu pilih yang mana?',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: _blue,
+              if (!widget.readOnly) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Kamu pilih yang mana?',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: _blue,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildChoiceCard(
-                            product: widget.productA,
-                            isWinner: isAWinner,
-                            isSelected: _selectedProduct == 1,
-                            onTap: () => setState(() {
-                              _selectedProduct = 1;
-                              _tabController.animateTo(0);
-                            }),
-                          ),
+                      const SizedBox(height: 12),
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: _buildChoiceCard(
+                                product: widget.productA,
+                                isWinner: isAWinner,
+                                isSelected: _selectedProduct == 1,
+                                onTap: () => setState(() {
+                                  _selectedProduct = 1;
+                                  _tabController.animateTo(0);
+                                }),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildChoiceCard(
+                                product: widget.productB,
+                                isWinner: !isAWinner,
+                                isSelected: _selectedProduct == 2,
+                                onTap: () => setState(() {
+                                  _selectedProduct = 2;
+                                  _tabController.animateTo(1);
+                                }),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildChoiceCard(
-                            product: widget.productB,
-                            isWinner: !isAWinner,
-                            isSelected: _selectedProduct == 2,
-                            onTap: () => setState(() {
-                              _selectedProduct = 2;
-                              _tabController.animateTo(1);
-                            }),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              // ── KONTRIBUSI HARIAN ─────────────────────────────────────────
+                // ── KONTRIBUSI HARIAN ─────────────────────────────────────────
+              ],
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -282,76 +295,82 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
               const SizedBox(height: 32),
 
               // ── CTA ───────────────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _selectedProduct > 0
-                          ? _blue
-                          : const Color(0xFFD9D9D9),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(26),
+              if (!widget.readOnly) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _selectedProduct > 0
+                            ? _blue
+                            : const Color(0xFFD9D9D9),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(26),
+                        ),
+                        elevation: 0,
                       ),
-                      elevation: 0,
+                      onPressed: (_saving || _selectedProduct == 0)
+                          ? null
+                          : _handleCatatKonsumsi,
+                      child: _saving
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              _selectedProduct == 0
+                                  ? 'Pilih salah satu produk'
+                                  : 'Catat Konsumsi',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
                     ),
-                    onPressed: (_saving || _selectedProduct == 0)
-                        ? null
-                        : _handleCatatKonsumsi,
-                    child: _saving
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            _selectedProduct == 0
-                                ? 'Pilih salah satu produk'
-                                : 'Catat Konsumsi',
-                            style: GoogleFonts.plusJakartaSans(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
-                            ),
-                          ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(26),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(26),
+                        ),
                       ),
-                    ),
-                    onPressed: () => Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ScanScreen(apiClient: widget.apiClient),
+                      onPressed: () => Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ScanScreen(
+                            apiClient: widget.apiClient,
+                            compareWithProduct:
+                                widget.originalProduct ?? widget.productA,
+                          ),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      'Pilih Produk Lain',
-                      style: GoogleFonts.plusJakartaSans(
-                        color: _blue,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
+                      child: Text(
+                        'Pilih Produk Lain',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: _blue,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
               const SizedBox(height: 24),
             ],
           ),
@@ -362,6 +381,13 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
 
   // ── Header gradient ───────────────────────────────────────────────────────
   Widget _buildHeader() {
+    final screenSize = MediaQuery.sizeOf(context);
+    final circleSize = (screenSize.shortestSide * 0.56)
+        .clamp(176.0, 220.0)
+        .toDouble();
+    final middleCircleSize = circleSize * 0.84;
+    final innerCircleSize = circleSize * 0.68;
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -393,15 +419,15 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
-                      width: 36,
-                      height: 36,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.25),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.chevron_left,
-                        size: 24,
+                        Icons.arrow_back,
+                        size: 20,
                         color: Colors.white,
                       ),
                     ),
@@ -421,30 +447,30 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
 
               // Circle visual — winner produk
               SizedBox(
-                width: 220,
-                height: 220,
+                width: circleSize,
+                height: circleSize,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     Container(
-                      width: 220,
-                      height: 220,
+                      width: circleSize,
+                      height: circleSize,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withOpacity(0.20),
                       ),
                     ),
                     Container(
-                      width: 185,
-                      height: 185,
+                      width: middleCircleSize,
+                      height: middleCircleSize,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withOpacity(0.25),
                       ),
                     ),
                     Container(
-                      width: 150,
-                      height: 150,
+                      width: innerCircleSize,
+                      height: innerCircleSize,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         color: Color(0xFF2E9E3E),
@@ -463,27 +489,35 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          _winner.productName,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
+                        SizedBox(
+                          width: innerCircleSize * 0.65, // ← batasi lebar teks
+                          child: Text(
+                            _winner.productName,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
+                        const SizedBox(height: 8),
                         Text(
                           '${_winner.perPortionMg} mg',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
+                            fontSize: 10,
                             color: Colors.white.withOpacity(0.85),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
                           'Total Natrium',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
+                            fontSize: 10,
                             color: Colors.white.withOpacity(0.8),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -533,6 +567,7 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Row(
               children: [
@@ -561,8 +596,10 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
             const SizedBox(height: 10),
             Text(
               product.productName,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: GoogleFonts.plusJakartaSans(
-                fontSize: 20,
+                fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: textColor,
               ),
@@ -579,13 +616,13 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
             Text(
               '${product.perPortionMg} mg',
               style: GoogleFonts.plusJakartaSans(
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: FontWeight.w800,
                 color: natriumColor,
               ),
             ),
             Text(
-              'Per Porsi',
+              'Per Sajian',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -645,7 +682,7 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
                     color: _blue,
                   ),
                 ),
-                const TextSpan(text: ' dari batas harian'),
+                TextSpan(text: ' dari $_limitPhrase'),
               ],
             ),
           ),
@@ -721,15 +758,15 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
         const SizedBox(height: 8),
         _infoCard(
           'Isi Kemasan',
-          '${p.packageMl} ${p.satuanTakaran} (${p.portionsInPackage} Porsi)',
+          '${p.packageMl} ${p.satuanTakaran} (${p.portionsInPackage} sajian)',
         ),
         const SizedBox(height: 8),
-        _infoCard('Kategori', p.kategori),
+        _infoCard('Kategori', _labelKategori(p.kategori)),
 
         const SizedBox(height: 8),
-        _infoCard('Satu Porsi', '$portionSatuan ${p.satuanTakaran}'),
+        _infoCard('Takaran per Sajian', '$portionSatuan ${p.satuanTakaran}'),
         const SizedBox(height: 8),
-        _infoCard('Natrium per Porsi', '${p.perPortionMg} mg'),
+        _infoCard('Natrium per Sajian', '${p.perPortionMg} mg per sajian'),
       ],
     );
   }
@@ -766,6 +803,7 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
 
   // ── Catat konsumsi ────────────────────────────────────────────────────────
   Future<void> _handleCatatKonsumsi() async {
+    if (widget.readOnly) return;
     setState(() => _saving = true);
     final selectedData = _selectedProduct == 1
         ? widget.productA
@@ -796,6 +834,8 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
         packageMl2: otherData.packageMl,
         portionsInPackage2: otherData.portionsInPackage,
         satuanTakaran2: otherData.satuanTakaran,
+        imagePath: selectedData.imagePath,
+        imagePath2: otherData.imagePath,
       );
 
       if (!mounted) return;
@@ -880,7 +920,22 @@ class _CompareProgressBar extends StatelessWidget {
                     curve: Curves.easeInOut,
                     width: filledWidth,
                     height: barHeight,
-                    color: barColor,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(barHeight / 2),
+                      gradient: LinearGradient(
+                        colors: const [
+                          Color(0xFF43A047),
+                          Color(0xFFFFBF00),
+                          Color(0xFFE53935),
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                        begin: Alignment.centerLeft,
+                        end: Alignment(
+                          progress > 0 ? (1 / progress).clamp(1.0, 10.0) : 1.0,
+                          0,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
             ],

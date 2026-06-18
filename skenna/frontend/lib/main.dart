@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:device_preview/device_preview.dart';
+// import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skenna/data/user_session.dart';
 
@@ -13,6 +12,8 @@ import 'presentation/screens/chatbot_screen.dart';
 import 'presentation/screens/onboarding_1_screen.dart';
 import 'presentation/screens/onboarding_2_screen.dart';
 import 'presentation/screens/onboarding_3_screen.dart';
+import 'presentation/screens/edit_profile_screen.dart';
+import 'presentation/screens/consumed_today_screen.dart';
 import 'presentation/screens/profile_wizard/profile_name_screen.dart';
 import 'presentation/screens/profile_wizard/profile_birth_date_screen.dart';
 import 'presentation/screens/profile_wizard/profile_blood_pressure_screen.dart';
@@ -21,23 +22,15 @@ import 'presentation/screens/profile_wizard/profile_hypertension_condition_scree
 import 'presentation/screens/profile_wizard/profile_hypertension_status_screen.dart';
 import 'presentation/screens/profile_wizard/profile_pregnancy_screen.dart';
 import 'presentation/screens/splash_screen.dart';
-import 'presentation/screens/sodium_limit_pregnant_screen.dart';
-import 'presentation/screens/sodium_limit_safe_screen.dart';
-import 'presentation/screens/sodium_limit_unsafe_screen.dart';
+import 'presentation/screens/sodium_result_screen.dart';
 import 'presentation/screens/hasil_scan_aman_screen.dart';
-import 'presentation/screens/profile_wizard/profile_wizard_store.dart';
-import 'presentation/screens/scan_confirmation_sheet.dart';
 import 'presentation/screens/hasil_perbandingan_produk.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppInitService().init(); // init selesai SEBELUM app jalan
-  runApp(
-    DevicePreview(
-      enabled: !kReleaseMode,
-      builder: (context) => const MainApp(),
-    ),
-  );
+  await UserSession().init();
+  await AppInitService().init();
+  runApp(const MainApp());
 }
 
 class MainApp extends StatefulWidget {
@@ -64,6 +57,8 @@ class _MainAppState extends State<MainApp> {
     AppRoutes.profileBloodPressure: (_) => const ProfileBloodPressureScreen(),
     AppRoutes.profilePregnancy: (_) => const ProfilePregnancyScreen(),
     AppRoutes.dashboard: (_) => const AppShell(),
+    AppRoutes.editProfile: (_) => const EditProfileScreen(),
+    AppRoutes.consumedToday: (_) => const ConsumedTodayScreen(),
   };
 
   static Route<dynamic> _buildAnimatedRoute(
@@ -165,16 +160,16 @@ class _MainAppState extends State<MainApp> {
     );
   }
 
-  static Future<int> _getDailyLimit() async {
+  static Future<HasilKlasifikasi?> _getDailyClassification() async {
     try {
       final userId = UserSession().getUserId();
-      if (userId == 0) return 2000;
+      if (userId == 0) return null;
 
       final profile = await ApiClient().getUserProfile(userId);
       final birthDateStr = profile['birth_date'] as String?;
-      if (birthDateStr == null) return 2000;
+      if (birthDateStr == null) return null;
 
-      final hasil = await klasifikasiNatriumDariDraft(
+      return klasifikasiNatriumDariDraft(
         birthDate: DateTime.parse(birthDateStr),
         gender: profile['gender'] as String? ?? '',
         hasHypertension: profile['has_hypertension'] as bool? ?? false,
@@ -183,9 +178,8 @@ class _MainAppState extends State<MainApp> {
         diastolicPressure: profile['diastolic_pressure'] as int?,
         pregnancyStatus: profile['pregnancy_status'] as String?,
       );
-      return hasil.batasNatrium;
     } catch (_) {
-      return 2000;
+      return null;
     }
   }
 
@@ -218,10 +212,11 @@ class _MainAppState extends State<MainApp> {
 
       return _buildAnimatedRoute(
         settings,
-        (_) => FutureBuilder<int>(
-          future: _getDailyLimit(),
+        (_) => FutureBuilder<HasilKlasifikasi?>(
+          future: _getDailyClassification(),
           builder: (context, snapshot) {
-            final dailyLimit = snapshot.data ?? 2000;
+            final hasil = snapshot.data;
+            final dailyLimit = hasil?.batasNatrium ?? 2000;
             return HasilScanAmanScreen(
               productName: productName,
               kategori: kategori,
@@ -230,6 +225,7 @@ class _MainAppState extends State<MainApp> {
               packageMl: packageMl,
               portionsInPackage: portionsInPackage,
               dailyLimitMg: dailyLimit,
+              isHardMaximum: hasil?.isHardMaximum ?? true,
               initialServings: initialServings,
               apiClient: ApiClient(),
               fromHistory: fromHistory,
@@ -238,20 +234,24 @@ class _MainAppState extends State<MainApp> {
         ),
       );
     }
-    // ← SETELAH blok hasilScanAman yang sudah ada, tambah ini:
     if (settings.name == AppRoutes.hasilBandingkan) {
       final args = settings.arguments as Map<String, dynamic>;
       return _buildAnimatedRoute(
         settings,
-        (_) => FutureBuilder<int>(
-          future: _getDailyLimit(),
+        (_) => FutureBuilder<HasilKlasifikasi?>(
+          future: _getDailyClassification(),
           builder: (context, snapshot) {
-            final dailyLimit = snapshot.data ?? 2000;
+            final hasil = snapshot.data;
+            final dailyLimit = hasil?.batasNatrium ?? 2000;
             return HasilBandingkanScreen(
               productA: args['productA'] as ProductCompareData,
               productB: args['productB'] as ProductCompareData,
               dailyLimitMg: dailyLimit,
+              isHardMaximum: hasil?.isHardMaximum ?? true,
               apiClient: ApiClient(),
+              originalProduct:
+                  args['originalProduct']
+                      as ProductCompareData?, // ← tambah ini
             );
           },
         ),
@@ -261,7 +261,15 @@ class _MainAppState extends State<MainApp> {
     if (settings.name == AppRoutes.sodiumSafe ||
         settings.name == AppRoutes.sodiumUnsafe ||
         settings.name == AppRoutes.sodiumPregnant) {
-      final hasil = settings.arguments as HasilKlasifikasi?;
+      final args = settings.arguments;
+      final hasil = args is Map<String, dynamic>
+          ? args['hasil'] as HasilKlasifikasi?
+          : args is HasilKlasifikasi
+          ? args
+          : null;
+      final categoryKey = args is Map<String, dynamic>
+          ? args['categoryKey'] as String? ?? hasil?.categoryKey
+          : hasil?.categoryKey;
       if (hasil == null) {
         return _buildAnimatedRoute(
           settings,
@@ -271,21 +279,13 @@ class _MainAppState extends State<MainApp> {
         );
       }
 
-      if (settings.name == AppRoutes.sodiumSafe) {
-        return _buildAnimatedRoute(
-          settings,
-          (_) => SodiumLimitSafeScreen(hasil: hasil),
-        );
-      }
-      if (settings.name == AppRoutes.sodiumUnsafe) {
-        return _buildAnimatedRoute(
-          settings,
-          (_) => SodiumLimitUnsafeScreen(hasil: hasil),
-        );
-      }
       return _buildAnimatedRoute(
         settings,
-        (_) => SodiumLimitPregnantScreen(hasil: hasil),
+        (_) => SodiumResultScreen(
+          categoryKey: categoryKey ?? hasil.categoryKey,
+          hasil: hasil,
+          dailyLimitMg: hasil.batasNatrium,
+        ),
       );
     }
 
@@ -300,8 +300,8 @@ class _MainAppState extends State<MainApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      locale: DevicePreview.locale(context),
-      builder: DevicePreview.appBuilder,
+      // locale: DevicePreview.locale(context),
+      // builder: DevicePreview.appBuilder,
       title: 'Skenna Sodium',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),

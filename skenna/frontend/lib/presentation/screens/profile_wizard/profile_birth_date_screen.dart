@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../domain/natrium_classifier.dart';
 import '../../navigation/app_routes.dart';
+import 'profile_step_layout.dart';
 import 'profile_wizard_store.dart';
 
 class ProfileBirthDateScreen extends StatefulWidget {
@@ -13,42 +15,140 @@ class ProfileBirthDateScreen extends StatefulWidget {
 }
 
 class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
-  int? _day;
-  int? _month;
-  int? _year;
+  late TextEditingController _dayCtrl;
+  late TextEditingController _monthCtrl;
+  late TextEditingController _yearCtrl;
+
+  late FocusNode _dayFocus;
+  late FocusNode _monthFocus;
+  late FocusNode _yearFocus;
 
   @override
   void initState() {
     super.initState();
+    _dayFocus = FocusNode();
+    _monthFocus = FocusNode();
+    _yearFocus = FocusNode();
+
     final saved = ProfileWizardStore.instance.draft.birthDate;
-    _year = saved?.year;
-    _month = saved?.month;
-    _day = saved?.day;
+    _dayCtrl = TextEditingController(
+      text: saved != null ? saved.day.toString().padLeft(2, '0') : '',
+    );
+    _monthCtrl = TextEditingController(
+      text: saved != null ? saved.month.toString().padLeft(2, '0') : '',
+    );
+    _yearCtrl = TextEditingController(
+      text: saved != null ? saved.year.toString() : '',
+    );
+
+    _dayCtrl.addListener(() => setState(() {}));
+    _monthCtrl.addListener(() => setState(() {}));
+    _yearCtrl.addListener(() => setState(() {}));
   }
 
-  List<int> get _yearItems {
-    final currentYear = DateTime.now().year;
-    return List<int>.generate(100, (index) => currentYear - index);
+  @override
+  void dispose() {
+    _dayCtrl.dispose();
+    _dayFocus.dispose();
+    _monthCtrl.dispose();
+    _monthFocus.dispose();
+    _yearCtrl.dispose();
+    _yearFocus.dispose();
+    super.dispose();
   }
 
-  int _daysInMonth(int year, int month) {
-    final firstOfNextMonth = month == 12
-        ? DateTime(year + 1, 1, 1)
-        : DateTime(year, month + 1, 1);
-    return firstOfNextMonth.subtract(const Duration(days: 1)).day;
+  bool get _isFormValid {
+    final day = int.tryParse(_dayCtrl.text.trim());
+    final month = int.tryParse(_monthCtrl.text.trim());
+    final year = int.tryParse(_yearCtrl.text.trim());
+    if (day == null || month == null || year == null) return false;
+    if (_yearCtrl.text.trim().length != 4) return false;
+    if (month < 1 || month > 12) return false;
+    if (year < 1940 || year > DateTime.now().year) return false;
+    if (day < 1 || day > _maxDay(month, year)) return false;
+    return true;
+  }
+
+  int _maxDay(int m, int y) {
+    if ([1, 3, 5, 7, 8, 10, 12].contains(m)) return 31;
+    if ([4, 6, 9, 11].contains(m)) return 30;
+    return ((y % 4 == 0 && y % 100 != 0) || y % 400 == 0) ? 29 : 28;
+  }
+
+  String? _dayError() {
+    final day = int.tryParse(_dayCtrl.text.trim());
+    final month = int.tryParse(_monthCtrl.text.trim());
+    final year = int.tryParse(_yearCtrl.text.trim());
+    if (day == null || _dayCtrl.text.isEmpty) return null;
+    if (day < 1 || day > 31) return 'Tanggal tidak valid';
+    if (month != null) {
+      final y = (year != null && _yearCtrl.text.trim().length == 4)
+          ? year
+          : 2001;
+      if (day > _maxDay(month, y)) {
+        return 'Maks. ${_maxDay(month, y)} hari';
+      }
+    }
+    return null;
+  }
+
+  String? _monthError() {
+    final month = int.tryParse(_monthCtrl.text.trim());
+    if (month == null || _monthCtrl.text.isEmpty) return null;
+    if (month < 1 || month > 12) return 'Bulan tidak valid';
+    return null;
+  }
+
+  InputDecoration _inputDecoration(String hintText, {String? errorText}) {
+    return InputDecoration(
+      hintText: hintText,
+      errorText: errorText,
+      hintTextDirection: TextDirection.ltr,
+      hintStyle: GoogleFonts.plusJakartaSans(
+        color: const Color(0xFFB0B0B0),
+        fontSize: 15,
+        fontWeight: FontWeight.w400,
+      ),
+      filled: false,
+      fillColor: Colors.white,
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFBEC7DB)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFBEC7DB)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFF2C4A8A)),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFE53935)),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFE53935)),
+      ),
+      errorStyle: GoogleFonts.plusJakartaSans(
+        color: const Color(0xFFE53935),
+        fontSize: 9,
+        fontWeight: FontWeight.w400,
+      ),
+    );
   }
 
   Future<void> _next() async {
-    if (_year == null || _month == null || _day == null) {
-      return;
-    }
-    final year = _year!;
-    final month = _month!;
-    final day = _day!;
-    ProfileWizardStore.instance.draft.birthDate = DateTime(year, month, day);
-
-    // Calculate age
+    if (!_isFormValid) return;
+    final day = int.parse(_dayCtrl.text.trim());
+    final month = int.parse(_monthCtrl.text.trim());
+    final year = int.parse(_yearCtrl.text.trim());
     final birthDate = DateTime(year, month, day);
+    ProfileWizardStore.instance.draft.birthDate = birthDate;
+
     final today = DateTime.now();
     int age = today.year - birthDate.year;
     if (today.month < birthDate.month ||
@@ -63,18 +163,16 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
         hasHypertension: false,
       );
       if (!mounted) return;
-      // Ensure any open dropdowns/overlays are dismissed before navigation
       FocusScope.of(context).unfocus();
       await Future<void>.delayed(const Duration(milliseconds: 80));
       if (!mounted) return;
       Navigator.pushNamedAndRemoveUntil(
         context,
-        routeUntukKategori(hasil.kategori),
+        routeUntukCategoryKey(hasil.categoryKey),
         (route) => false,
-        arguments: hasil,
+        arguments: {'categoryKey': hasil.categoryKey, 'hasil': hasil},
       );
     } else {
-      // Go to hypertension status screen
       FocusScope.of(context).unfocus();
       await Future<void>.delayed(const Duration(milliseconds: 80));
       if (!mounted) return;
@@ -82,29 +180,52 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
     }
   }
 
-  InputDecoration _dateFieldDecoration(String hintText) {
-    return InputDecoration(
-      hintText: hintText,
-      hintStyle: GoogleFonts.plusJakartaSans(
-        color: const Color(0xFF2C4A8A),
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-      ),
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(6),
-        borderSide: const BorderSide(color: Color(0xFFBEC7DB)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(6),
-        borderSide: const BorderSide(color: Color(0xFFBEC7DB)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(6),
-        borderSide: const BorderSide(color: Color(0xFF2C4A8A)),
-      ),
+  Widget _field({
+    required String label,
+    required TextEditingController ctrl,
+    required FocusNode focusNode,
+    required String hint,
+    required int maxLen,
+    FocusNode? nextFocus,
+    String? errorText,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            color: const Color(0xFF2C4A8A),
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: ctrl,
+          focusNode: focusNode,
+          keyboardType: TextInputType.number,
+          textAlign: TextAlign.center,
+          textAlignVertical: TextAlignVertical.center,
+          maxLength: maxLen,
+          expands: false,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onChanged: (v) {
+            if (v.length == maxLen && nextFocus != null) {
+              nextFocus.requestFocus();
+            }
+          },
+          style: GoogleFonts.plusJakartaSans(
+            color: const Color(0xFF2C4A8A),
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+          decoration: _inputDecoration(
+            hint,
+            errorText: errorText,
+          ).copyWith(counterText: ''),
+        ),
+      ],
     );
   }
 
@@ -113,286 +234,94 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
     final progress = ProfileWizardStore.instance.progressForStep(
       ProfileWizardStep.birthDate,
     );
-    final selectedYear = _year;
-    final selectedMonth = _month;
-    final maxDay = (selectedYear != null && selectedMonth != null)
-        ? _daysInMonth(selectedYear, selectedMonth)
-        : 31;
-    if (_day != null && _day! > maxDay) {
-      _day = maxDay;
-    }
-    final isFormValid = _year != null && _month != null && _day != null;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 72),
-          child: Column(
-            children: [
-              const SizedBox(height: 64),
-              Center(
-                child: SizedBox(
-                  width: 327,
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 35,
-                        height: 35,
-                        child: IconButton(
-                          style: IconButton.styleFrom(
-                            backgroundColor: const Color(0xFFDFE4ED),
-                            padding: const EdgeInsets.all(8),
-                          ),
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(
-                            Icons.arrow_back,
-                            color: Color(0xFF2C4A8A),
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      SizedBox(
-                        width: 276,
-                        height: 8,
-                        child: Stack(
-                          children: [
-                            Container(
-                              width: 276,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE6E6E6),
-                                borderRadius: BorderRadius.circular(100),
-                              ),
-                            ),
-                            FractionallySizedBox(
-                              widthFactor: progress,
-                              child: Container(
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF2C4A8A),
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              Center(
-                child: Image.asset(
-                  'assets/illustrations/birthday.png',
-                  width: 302,
-                  height: 302,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Center(
-                child: SizedBox(
-                  width: 380,
-                  child: Text(
-                    'Tanggal lahir kamu',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.montserrat(
-                      color: const Color(0xFF2C4A8A),
-                      fontSize: 31,
-                      fontWeight: FontWeight.w700,
-                      height: 1,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min, // ← ini yang bikin centered
-                  children: [
-                    SizedBox(
-                      width: 91,
-                      child: DropdownButtonFormField<int>(
-                        value: _day,
-                        isExpanded: true,
-                        items: List<int>.generate(maxDay, (index) => index + 1)
-                            .map(
-                              (value) => DropdownMenuItem(
-                                value: value,
-                                child: Text(value.toString().padLeft(2, '0')),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() => _day = value);
-                        },
-                        style: GoogleFonts.plusJakartaSans(
-                          color: const Color(0xFF2C4A8A),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        icon: const Icon(
-                          Icons.keyboard_arrow_down,
-                          color: Color(0xFF2C4A8A),
-                          size: 18,
-                        ),
-                        decoration: _dateFieldDecoration('DD'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    SizedBox(
-                      width: 91,
-                      child: DropdownButtonFormField<int>(
-                        value: _month,
-                        isExpanded: true,
-                        items: List<int>.generate(12, (index) => index + 1)
-                            .map(
-                              (value) => DropdownMenuItem(
-                                value: value,
-                                child: Text(value.toString().padLeft(2, '0')),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() => _month = value);
-                        },
-                        style: GoogleFonts.plusJakartaSans(
-                          color: const Color(0xFF2C4A8A),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        icon: const Icon(
-                          Icons.keyboard_arrow_down,
-                          color: Color(0xFF2C4A8A),
-                          size: 18,
-                        ),
-                        decoration: _dateFieldDecoration('MM'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    SizedBox(
-                      width: 110, // ← lebih lebar untuk 4 digit tahun
-                      child: DropdownButtonFormField<int>(
-                        value: _year,
-                        isExpanded: true,
-                        items: _yearItems
-                            .map(
-                              (value) => DropdownMenuItem(
-                                value: value,
-                                child: Text(value.toString()),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() => _year = value);
-                        },
-                        style: GoogleFonts.plusJakartaSans(
-                          color: const Color(0xFF2C4A8A),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        icon: const Icon(
-                          Icons.keyboard_arrow_down,
-                          color: Color(0xFF2C4A8A),
-                          size: 18,
-                        ),
-                        decoration: _dateFieldDecoration('YYYY'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Center(
-                child: SizedBox(
-                  width: 344,
-                  child: Text(
-                    'Format tanggal: DD/MM/YYYY',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.plusJakartaSans(
-                      color: const Color(0xFFB0B0B0),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 32),
-              Center(
-                child: SizedBox(
-                  width: 344,
-                  child: Text.rich(
-                    TextSpan(
-                      style: GoogleFonts.plusJakartaSans(
-                        color: const Color(0xFF2C4A8A),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        height: 1,
-                      ),
-                      children: [
-                        const TextSpan(text: 'Semakin '),
-                        TextSpan(
-                          text: 'lengkap data',
-                          style: GoogleFonts.plusJakartaSans(
-                            color: const Color(0xFF2C4A8A),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            height: 1,
-                          ),
-                        ),
-                        const TextSpan(text: ' yang kamu isi,\n'),
-                        const TextSpan(text: 'semakin '),
-                        TextSpan(
-                          text: 'akurat ',
-                          style: GoogleFonts.plusJakartaSans(
-                            color: const Color(0xFF2C4A8A),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            height: 1,
-                          ),
-                        ),
-                        const TextSpan(text: 'hasil analisis dari Skenna'),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              Center(
-                child: SizedBox(
-                  width: 344,
-                  height: 55,
-                  child: FilledButton(
-                    onPressed: isFormValid ? _next : null,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF2C4A8A),
-                      disabledBackgroundColor: const Color(0xFFB0B0B0),
-                      elevation: 4,
-                      shadowColor: const Color(0x40000000),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                    ),
-                    child: Text(
-                      'Selanjutnya',
-                      style: GoogleFonts.plusJakartaSans(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        height: 1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+    return ProfileStepLayout(
+      progress: progress,
+      illustrationAsset: 'assets/illustrations/birthday.png',
+      title: 'Tanggal lahir kamu',
+      content: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: _field(
+              label: 'Hari',
+              ctrl: _dayCtrl,
+              focusNode: _dayFocus,
+              hint: 'DD',
+              maxLen: 2,
+              nextFocus: _monthFocus,
+              errorText: _dayError(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 2,
+            child: _field(
+              label: 'Bulan',
+              ctrl: _monthCtrl,
+              focusNode: _monthFocus,
+              hint: 'MM',
+              maxLen: 2,
+              nextFocus: _yearFocus,
+              errorText: _monthError(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 3,
+            child: _field(
+              label: 'Tahun',
+              ctrl: _yearCtrl,
+              focusNode: _yearFocus,
+              hint: 'YYYY',
+              maxLen: 4,
+            ),
+          ),
+        ],
+      ),
+      subtitle: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          style: GoogleFonts.plusJakartaSans(
+            color: const Color(0xFF2C4A8A),
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            height: 1.3,
+          ),
+          children: const [
+            TextSpan(text: 'Semakin '),
+            TextSpan(
+              text: 'lengkap data',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            TextSpan(text: ' yang kamu isi,\nsemakin '),
+            TextSpan(
+              text: 'akurat',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            TextSpan(text: ' hasil analisis dari Skenna'),
+          ],
+        ),
+      ),
+      primaryButton: FilledButton(
+        onPressed: _isFormValid ? _next : null,
+        style: FilledButton.styleFrom(
+          backgroundColor: const Color(0xFF2C4A8A),
+          disabledBackgroundColor: const Color(0xFFB0B0B0),
+          elevation: 4,
+          shadowColor: const Color(0x40000000),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25),
+          ),
+        ),
+        child: Text(
+          'Selanjutnya',
+          style: GoogleFonts.plusJakartaSans(
+            color: Colors.white,
+            fontSize: 19,
+            fontWeight: FontWeight.w600,
+            height: 1,
           ),
         ),
       ),

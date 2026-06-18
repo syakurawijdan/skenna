@@ -2,19 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skenna/presentation/screens/hasil_perbandingan_produk.dart';
 import '../navigation/app_routes.dart';
+import '../widgets/custom_dropdown.dart';
 import 'hasil_scan_aman_screen.dart';
+import '../../domain/natrium_classifier.dart';
 
 class ScanConfirmationSheet extends StatefulWidget {
   final Map<String, dynamic> dataGizi;
   final int userId;
-  // ── TAMBAH: jika tidak null → mode perbandingan ──
+  final dynamic apiClient;
   final ProductCompareData? compareWithProduct;
 
   const ScanConfirmationSheet({
     Key? key,
     required this.dataGizi,
     required this.userId,
-    this.compareWithProduct, // ← nullable, default null = mode normal
+    required this.apiClient,
+    this.compareWithProduct,
   }) : super(key: key);
 
   @override
@@ -24,6 +27,18 @@ class ScanConfirmationSheet extends StatefulWidget {
 class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
   static const _blue = Color(0xFF2C4A8A);
   static const _navy = Color(0xFF213868);
+  static const _categoryItems = [
+    DropdownItem(value: 'mie_instan', label: 'Mie & Pasta Instan'),
+    DropdownItem(value: 'keripik_snack', label: 'Snack & Keripik'),
+    DropdownItem(value: 'makanan_kaleng', label: 'Makanan Kaleng'),
+    DropdownItem(value: 'biskuit_roti', label: 'Roti & Biskuit'),
+    DropdownItem(value: 'frozen_food', label: 'Frozen Food'),
+    DropdownItem(value: 'sereal', label: 'Sereal & Oatmeal'),
+    DropdownItem(value: 'biskuit', label: 'Biskuit & Wafer'),
+    DropdownItem(value: 'susu', label: 'Susu & Produk Susu'),
+    DropdownItem(value: 'minuman_kemasan', label: 'Minuman Kemasan'),
+    DropdownItem(value: 'lainnya', label: 'Lainnya'),
+  ];
 
   static TextStyle get _inputTextStyle => GoogleFonts.plusJakartaSans(
     fontSize: 16,
@@ -44,40 +59,56 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
     borderSide: const BorderSide(color: _blue, width: 2),
   );
 
-  static InputDecoration _decoration({
-    String? hint,
-    String? suffix,
-    TextInputType? keyboardType,
-  }) => InputDecoration(
-    hintText: hint,
-    hintStyle: _hintStyle,
-    suffixText: suffix,
-    suffixStyle: GoogleFonts.plusJakartaSans(
-      fontSize: 14,
-      fontWeight: FontWeight.w500,
-      color: _blue,
-    ),
-    border: _normalBorder,
-    enabledBorder: _normalBorder,
-    focusedBorder: _focusedBorder,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+  static InputBorder get _errorBorder => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(10),
+    borderSide: const BorderSide(color: Colors.red),
   );
+
+  static InputDecoration _decoration({String? hint, String? suffix}) =>
+      InputDecoration(
+        hintText: hint,
+        hintStyle: _hintStyle,
+        suffixText: suffix,
+        suffixStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: _blue,
+        ),
+        border: _normalBorder,
+        enabledBorder: _normalBorder,
+        focusedBorder: _focusedBorder,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+      );
 
   late TextEditingController _namaController;
   late TextEditingController _takaranController;
   late TextEditingController _porsiController;
   late TextEditingController _sodiumController;
-  String _kategori = 'minuman_kemasan';
+  String _kategori = '';
   int _jumlahKonsumsi = 1;
+  bool _namaError = false;
+  bool _sodiumError = false;
+  bool _takaranError = false;
+  bool _porsiError = false;
 
   // ── Apakah mode perbandingan? ──
   bool get _isModePerbandingan => widget.compareWithProduct != null;
+
+  bool get _formValid =>
+      _namaController.text.trim().isNotEmpty &&
+      _sodiumController.text.trim().isNotEmpty &&
+      _kategori.isNotEmpty &&
+      (int.tryParse(_takaranController.text) ?? 0) > 0 &&
+      (int.tryParse(_porsiController.text) ?? 0) > 0;
 
   @override
   void initState() {
     super.initState();
     _namaController = TextEditingController(
-      text: widget.dataGizi['jenis_produk'] ?? '',
+      text: widget.dataGizi['nama_produk'] ?? '',
     );
     _takaranController = TextEditingController(
       text: '${widget.dataGizi['takaran_saji_angka'] ?? ''}',
@@ -88,9 +119,10 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
     _sodiumController = TextEditingController(
       text: '${widget.dataGizi['sodium_mg'] ?? ''}',
     );
-    _kategori = widget.dataGizi['jenis_produk'] == 'minuman'
-        ? 'minuman_kemasan'
-        : 'makanan_lainnya';
+    _namaController.addListener(() => setState(() {}));
+    _sodiumController.addListener(() => setState(() {}));
+    _takaranController.addListener(() => setState(() {}));
+    _porsiController.addListener(() => setState(() {}));
   }
 
   @override
@@ -102,25 +134,68 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
     super.dispose();
   }
 
-  void _lanjutkan() {
-    Navigator.of(context).pop(); // tutup sheet dulu
+  Future<void> _lanjutkan() async {
+    setState(() {
+      _namaError = _namaController.text.trim().isEmpty;
+      _sodiumError = _sodiumController.text.trim().isEmpty;
+      _takaranError = (int.tryParse(_takaranController.text) ?? 0) <= 0;
+      _porsiError = (int.tryParse(_porsiController.text) ?? 0) <= 0;
+    });
+
+    if (_namaError || _sodiumError || _takaranError || _porsiError) return;
+
+    final scanId = widget.dataGizi['scan_id'] as int?;
+    if (scanId != null) {
+      try {
+        await widget.apiClient.updateScan(
+          scanId: scanId,
+          namaProduk: _namaController.text,
+          kategori: _kategori,
+        );
+      } catch (e) {
+        debugPrint('=== UPDATE SCAN ERROR: $e');
+      }
+    }
+
+    // ── Ambil daily limit user ──
+    int dailyLimit = 2000; // ← deklarasi di sini
+    bool isHardMaximum = true;
+    try {
+      final profile = await widget.apiClient.getUserProfile(widget.userId);
+      final birthDateStr = profile['birth_date'] as String?;
+      if (birthDateStr != null) {
+        final hasil = await klasifikasiNatriumDariDraft(
+          birthDate: DateTime.parse(birthDateStr),
+          gender: profile['gender'] as String? ?? '',
+          hasHypertension: profile['has_hypertension'] as bool? ?? false,
+          hypertensionCondition: profile['hypertension_condition'] as String?,
+          systolicPressure: profile['systolic_pressure'] as int?,
+          diastolicPressure: profile['diastolic_pressure'] as int?,
+          pregnancyStatus: profile['pregnancy_status'] as String?,
+        );
+        dailyLimit = hasil.batasNatrium;
+        isHardMaximum = hasil.isHardMaximum;
+      }
+    } catch (e) {
+      debugPrint('Gagal fetch daily limit: $e');
+    }
+
+    Navigator.of(context).pop();
+
+    final takaranPerPorsi = int.tryParse(_takaranController.text) ?? 0;
+    final porsiPerKemasan = int.tryParse(_porsiController.text) ?? 1;
 
     if (_isModePerbandingan) {
-      // ── MODE PERBANDINGAN ────────────────────────────────────────────
-      // Buat ProductCompareData untuk produk B (yang baru di-scan)
-      final takaranPerPorsi = int.tryParse(_takaranController.text) ?? 0;
-      final porsiPerKemasan = int.tryParse(_porsiController.text) ?? 1;
-
       final productB = ProductCompareData(
         productName: _namaController.text.isNotEmpty
             ? _namaController.text
             : 'Produk B',
         kategori: _kategori,
         satuanTakaran: _kategori == 'minuman_kemasan' ? 'ml' : 'g',
-        perPortionMg: int.tryParse(_sodiumController.text) ?? 0,
-        // isi kemasan = takaran per porsi × jumlah porsi
+        perPortionMg: double.tryParse(_sodiumController.text)?.toInt() ?? 0,
         packageMl: takaranPerPorsi * porsiPerKemasan,
         portionsInPackage: porsiPerKemasan,
+        imagePath: widget.dataGizi['image_path'] as String?,
       );
 
       Navigator.pushReplacementNamed(
@@ -129,29 +204,42 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
         arguments: {
           'productA': widget.compareWithProduct,
           'productB': productB,
+          'originalProduct': widget.compareWithProduct,
         },
       );
     } else {
-      // ── MODE NORMAL (scan biasa) ──────────────────────────────────────
-      final takaranPerPorsi = int.tryParse(_takaranController.text) ?? 0;
-      final porsiPerKemasan = int.tryParse(_porsiController.text) ?? 1;
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (_) => HasilScanAmanScreen(
             productName: _namaController.text,
             kategori: _kategori,
-            perPortionMg: int.tryParse(_sodiumController.text) ?? 0,
-            satuanTakaran: _kategori == 'minuman_kemasan' ? 'ml' : 'g',
-            packageMl: takaranPerPorsi * porsiPerKemasan, // ← total isi kemasan
+            perPortionMg: double.tryParse(_sodiumController.text)?.toInt() ?? 0,
+            dailyLimitMg: dailyLimit, // ← sudah terisi
+            isHardMaximum: isHardMaximum,
+            satuanTakaran:
+                (widget.dataGizi['satuan_takaran'] as String?)?.isNotEmpty ==
+                    true
+                ? widget.dataGizi['satuan_takaran'] as String
+                : (_kategori == 'minuman_kemasan' ? 'ml' : 'g'),
+            packageMl: takaranPerPorsi * porsiPerKemasan,
             portionsInPackage: porsiPerKemasan,
             initialServings: _jumlahKonsumsi,
             userId: widget.userId,
+            apiClient: widget.apiClient,
+            imagePath: widget.dataGizi['image_path'] as String?,
+            scanId: widget.dataGizi['scan_id'] as int?,
           ),
         ),
       );
     }
+  }
+
+  String _categoryLabel(String value) {
+    for (final item in _categoryItems) {
+      if (item.value == value) return item.label;
+    }
+    return 'Pilih kategori';
   }
 
   @override
@@ -185,7 +273,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
             ),
             const SizedBox(height: 16),
 
-            // ── Judul — beda teks tergantung mode ──
+            // ── Judul ──
             Text(
               _isModePerbandingan
                   ? 'Produk Pembanding'
@@ -198,7 +286,6 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
             ),
             const SizedBox(height: 4),
 
-            // ── Subtitle — tampilkan nama produk A jika mode perbandingan ──
             Text(
               _isModePerbandingan
                   ? 'Dibandingkan dengan: ${widget.compareWithProduct!.productName}'
@@ -213,87 +300,63 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
             ),
             const SizedBox(height: 20),
 
-            // ── Nama produk ─────────────────────
+            // ── Nama produk ──
             _buildLabel('Nama Produk'),
             TextField(
               controller: _namaController,
               style: _inputTextStyle,
-              decoration: _decoration(hint: 'Masukkan nama produk...'),
+              decoration: _decoration(hint: 'Masukkan nama produk').copyWith(
+                enabledBorder: _namaError ? _errorBorder : _normalBorder,
+                errorText: _namaError ? 'Nama produk wajib diisi' : null,
+              ),
+              onChanged: (_) => setState(() => _namaError = false),
             ),
             const SizedBox(height: 14),
 
-            // ── Kategori ────────────────────────
+            // ── Kategori ──
             _buildLabel('Kategori'),
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFD9D9D9)),
-                borderRadius: BorderRadius.circular(10),
-              ),
+            CustomDropdownField(
+              value: _categoryLabel(_kategori),
+              placeholder: 'Pilih kategori',
+              textAlign: TextAlign.left,
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _kategori,
-                  isExpanded: true,
-                  dropdownColor: Colors.white,
-                  focusColor: Colors.transparent,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: _blue,
-                  ),
-                  icon: const Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: _blue,
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'mie', child: Text('Mie Instan')),
-                    DropdownMenuItem(value: 'snack', child: Text('Snack')),
-                    DropdownMenuItem(
-                      value: 'makanan_kaleng',
-                      child: Text('Makanan Kaleng'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'saus',
-                      child: Text('Saus & Bumbu'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'roti',
-                      child: Text('Roti & Bakeri'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'frozen_food',
-                      child: Text('Frozen Food'),
-                    ),
-                    DropdownMenuItem(value: 'sereal', child: Text('Sereal')),
-                    DropdownMenuItem(
-                      value: 'minuman_kemasan',
-                      child: Text('Minuman Kemasan'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'makanan_lainnya',
-                      child: Text('Lainnya'),
-                    ),
-                  ],
-                  onChanged: (val) => setState(() => _kategori = val!),
-                ),
-              ),
+              onTap: () async {
+                final selected = await showCustomDropdown<String>(
+                  context: context,
+                  title: 'Pilih Kategori Produk',
+                  items: _categoryItems,
+                  selectedValue: _kategori,
+                );
+                if (selected == null) return;
+                setState(() => _kategori = selected);
+              },
             ),
             const SizedBox(height: 14),
 
+            // ── Takaran & Porsi ──
             Row(
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildLabel('Takaran per porsi'),
+                      _buildLabel('Takaran per sajian'),
                       TextField(
                         controller: _takaranController,
                         keyboardType: TextInputType.number,
                         style: _inputTextStyle,
-                        decoration: _decoration(
-                          suffix: _kategori == 'minuman_kemasan' ? 'ml' : 'g',
-                        ),
+                        decoration:
+                            _decoration(
+                              suffix: _kategori == 'minuman_kemasan'
+                                  ? 'ml'
+                                  : 'g',
+                            ).copyWith(
+                              enabledBorder: _takaranError
+                                  ? _errorBorder
+                                  : _normalBorder,
+                              errorText: _takaranError ? 'Wajib diisi' : null,
+                            ),
+                        onChanged: (_) => setState(() => _takaranError = false),
                       ),
                     ],
                   ),
@@ -303,12 +366,19 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildLabel('Porsi per kemasan'),
+                      _buildLabel('Isi per sajian'),
                       TextField(
                         controller: _porsiController,
                         keyboardType: TextInputType.number,
                         style: _inputTextStyle,
-                        decoration: _decoration(suffix: 'porsi'),
+                        decoration: _decoration(suffix: 'sajian').copyWith(
+                          hintText: 'contoh: 9',
+                          enabledBorder: _porsiError
+                              ? _errorBorder
+                              : _normalBorder,
+                          errorText: _porsiError ? 'Wajib diisi' : null,
+                        ),
+                        onChanged: (_) => setState(() => _porsiError = false),
                       ),
                     ],
                   ),
@@ -317,19 +387,23 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
             ),
             const SizedBox(height: 14),
 
-            // ── Natrium ──────────────────────────
-            _buildLabel('Jumlah natrium per porsi'),
+            // ── Natrium ──
+            _buildLabel('Jumlah natrium per sajian'),
             TextField(
               controller: _sodiumController,
               keyboardType: TextInputType.number,
               style: _inputTextStyle,
-              decoration: _decoration(suffix: 'mg'),
+              decoration: _decoration(suffix: 'mg').copyWith(
+                enabledBorder: _sodiumError ? _errorBorder : _normalBorder,
+                errorText: _sodiumError ? 'Natrium wajib diisi' : null,
+              ),
+              onChanged: (_) => setState(() => _sodiumError = false),
             ),
             const SizedBox(height: 14),
 
             // ── Jumlah konsumsi — HANYA tampil di mode normal ──
             if (!_isModePerbandingan) ...[
-              _buildLabel('Jumlah yang akan dikonsumsi'),
+              _buildLabel('Isi per sajian'),
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(color: const Color(0xFFD9D9D9)),
@@ -346,7 +420,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                     ),
                     Expanded(
                       child: Text(
-                        '$_jumlahKonsumsi Porsi',
+                        '$_jumlahKonsumsi Kemasan',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
@@ -369,14 +443,15 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
             ] else
               const SizedBox(height: 24),
 
-            // ── Tombol lanjutkan ─────────────────
+            // ── Tombol lanjutkan ──
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: _lanjutkan,
+                onPressed: _formValid ? _lanjutkan : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _blue,
+                  disabledBackgroundColor: const Color(0xFFBEC7DB),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(26),
@@ -405,7 +480,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
       style: GoogleFonts.plusJakartaSans(
         fontSize: 14,
         fontWeight: FontWeight.w500,
-        color: Color(0xFFAAAAAA),
+        color: const Color(0xFFAAAAAA),
       ),
     ),
   );

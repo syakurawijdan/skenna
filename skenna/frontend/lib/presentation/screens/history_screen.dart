@@ -9,6 +9,7 @@ import 'scan_screen.dart';
 import 'hasil_perbandingan_produk.dart';
 import 'hasil_scan_aman_screen.dart';
 import '../screens/profile_wizard/profile_wizard_store.dart';
+import '../widgets/custom_dropdown.dart';
 import '../../domain/natrium_classifier.dart';
 import '../../../data/user_session.dart';
 
@@ -31,6 +32,7 @@ class ScanHistoryItem {
   final int packageMl2;
   final int portionsInPackage2;
   final String satuanTakaran2;
+  final Map<String, dynamic>? rekomendasiJson;
 
   ScanHistoryItem({
     required this.id,
@@ -51,6 +53,7 @@ class ScanHistoryItem {
     this.packageMl2 = 0,
     this.portionsInPackage2 = 1,
     this.satuanTakaran2 = 'g',
+    this.rekomendasiJson,
   });
 
   factory ScanHistoryItem.fromJson(Map<String, dynamic> json) {
@@ -75,13 +78,17 @@ class ScanHistoryItem {
       productName2: json['product_name2'] as String?,
       sodiumMg2: (json['sodium_mg2'] as num?)?.toInt(),
       imagePath2: json['image_path2'] as String?,
-      // ── TAMBAH: parse dari API response (default-safe jika null) ──────
       packageMl: (json['package_ml'] as num?)?.toInt() ?? 0,
       portionsInPackage: (json['portions_in_package'] as num?)?.toInt() ?? 1,
       satuanTakaran: json['satuan_takaran'] as String? ?? 'g',
       packageMl2: (json['package_ml2'] as num?)?.toInt() ?? 0,
       portionsInPackage2: (json['portions_in_package2'] as num?)?.toInt() ?? 1,
       satuanTakaran2: json['satuan_takaran2'] as String? ?? 'g',
+      rekomendasiJson: json['rekomendasi_json'] != null
+          ? Map<String, dynamic>.from(
+              jsonDecode(json['rekomendasi_json'] as String) as Map,
+            )
+          : null,
     );
   }
 
@@ -104,7 +111,18 @@ class ScanHistoryItem {
     'package_ml2': packageMl2,
     'portions_in_package2': portionsInPackage2,
     'satuan_takaran2': satuanTakaran2,
+    'rekomendasi_json': rekomendasiJson != null
+        ? jsonEncode(rekomendasiJson)
+        : null,
   };
+}
+
+bool isEditableHistoryRecord(ScanHistoryItem item, {DateTime? now}) {
+  final recordDate = item.timestamp.toLocal();
+  final currentDate = (now ?? DateTime.now()).toLocal();
+  return recordDate.year == currentDate.year &&
+      recordDate.month == currentDate.month &&
+      recordDate.day == currentDate.day;
 }
 
 // ─────────────────────────────────────────────
@@ -194,6 +212,35 @@ enum HistoryRange { day, week, month }
 enum ScanTypeFilter { all, single, comparison }
 
 // ─────────────────────────────────────────────
+// STICKY DELEGATE — Jenis scan tetap kelihatan
+// ─────────────────────────────────────────────
+
+class _StickyTypeFilterDelegate extends SliverPersistentHeaderDelegate {
+  const _StickyTypeFilterDelegate({required this.child, required this.height});
+  final Widget child;
+  final double height;
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  bool shouldRebuild(_StickyTypeFilterDelegate oldDelegate) =>
+      oldDelegate.child != child || oldDelegate.height != height;
+}
+
+// ─────────────────────────────────────────────
 // SCREEN
 // ─────────────────────────────────────────────
 
@@ -235,6 +282,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       final raw = await widget.apiClient.getIntakeHistory(userId);
 
       debugPrint('=== RAW HISTORY: ${raw.first}');
+      debugPrint('=== REKO JSON: ${(raw.first as Map)['rekomendasi_json']}');
 
       final now = DateTime.now();
       final allItems = raw
@@ -285,23 +333,51 @@ class _HistoryScreenState extends State<HistoryScreen> {
         color: color,
       );
 
+  // ─── BUILD UTAMA — pakai CustomScrollView ────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    // Ambil tinggi status bar agar header tidak tertutup
+    final topPadding = MediaQuery.of(context).padding.top;
+
     return Container(
       color: _white,
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 26),
-            _buildWaktuDropdown(),
-            const SizedBox(height: 14),
-            _buildTypeFilterChips(),
-            const SizedBox(height: 20),
-            _buildBody(),
-          ],
-        ),
+      child: CustomScrollView(
+        slivers: [
+          // ✅ Header + Waktu — pakai padding manual ganti SafeArea
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.only(top: topPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 26),
+                  _buildWaktuDropdown(),
+                  const SizedBox(height: 14),
+                ],
+              ),
+            ),
+          ),
+
+          // ✅ "Jenis scan" — STICKY, tetap kelihatan saat scroll
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _StickyTypeFilterDelegate(
+              height: 96,
+              child: Container(
+                color: _white,
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
+                child: _buildTypeFilterChipsContent(),
+              ),
+            ),
+          ),
+
+          // ✅ Konten list
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
+            sliver: _buildBodySliver(),
+          ),
+        ],
       ),
     );
   }
@@ -336,230 +412,206 @@ class _HistoryScreenState extends State<HistoryScreen> {
         children: [
           Text('Waktu', style: _ts(16, FontWeight.w600, _blue)),
           const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-            decoration: BoxDecoration(
-              color: _white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: _blueGray),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<HistoryRange>(
-                value: _range,
-                icon: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: _blue,
-                ),
-                style: _ts(14, FontWeight.w500, _blue),
-                items: HistoryRange.values
-                    .map(
-                      (r) => DropdownMenuItem(
-                        value: r,
-                        child: Text(
-                          rangeLabels[r]!,
-                          style: _ts(14, FontWeight.w500, _blue),
+          SizedBox(
+            width: 125,
+            child: CustomDropdownField(
+              value: rangeLabels[_range],
+              placeholder: 'Pilih waktu',
+              height: 40,
+              fontSize: 13,
+              textAlign: TextAlign.left,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              onTap: () async {
+                final selected = await showCustomDropdown<HistoryRange>(
+                  context: context,
+                  title: 'Pilih Rentang Waktu',
+                  items: HistoryRange.values
+                      .map(
+                        (range) => DropdownItem(
+                          value: range,
+                          label: rangeLabels[range]!,
                         ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (r) {
-                  if (r == null) return;
-                  setState(() => _range = r);
+                      )
+                      .toList(),
+                  selectedValue: _range,
+                );
+                if (selected == null) return;
+                setState(() => _range = selected);
+                _loadHistory();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── chips tanpa Padding luar, untuk ditaruh di sticky header ─────────────
+  Widget _buildTypeFilterChipsContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('Jenis scan', style: _ts(16, FontWeight.w600, _blue)),
+        const SizedBox(height: 10),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _TypeChip(
+                label: 'Semua',
+                iconAsset: 'assets/icons/mingcute_grid-fil.svg',
+                fallbackIcon: Icons.apps_rounded,
+                isActive: _typeFilter == ScanTypeFilter.all,
+                onTap: () {
+                  setState(() => _typeFilter = ScanTypeFilter.all);
                   _loadHistory();
                 },
               ),
-            ),
+              const SizedBox(width: 10),
+              _TypeChip(
+                label: 'Single Item',
+                iconAsset: 'assets/icons/scan.svg',
+                fallbackIcon: Icons.qr_code_scanner_rounded,
+                isActive: _typeFilter == ScanTypeFilter.single,
+                onTap: () {
+                  setState(() => _typeFilter = ScanTypeFilter.single);
+                  _loadHistory();
+                },
+              ),
+              const SizedBox(width: 10),
+              _TypeChip(
+                label: 'Perbandingan',
+                iconAsset: 'assets/icons/repeat-circle.svg',
+                fallbackIcon: Icons.compare_arrows_rounded,
+                isActive: _typeFilter == ScanTypeFilter.comparison,
+                onTap: () {
+                  setState(() => _typeFilter = ScanTypeFilter.comparison);
+                  _loadHistory();
+                },
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildTypeFilterChips() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Jenis scan', style: _ts(16, FontWeight.w600, _blue)),
-          const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _TypeChip(
-                  label: 'Semua',
-                  iconAsset: 'icons/mingcute_grid-fil.svg',
-                  fallbackIcon: Icons.apps_rounded,
-                  isActive: _typeFilter == ScanTypeFilter.all,
-                  onTap: () {
-                    setState(() => _typeFilter = ScanTypeFilter.all);
-                    _loadHistory();
-                  },
-                ),
-                const SizedBox(width: 10),
-                _TypeChip(
-                  label: 'Single Item',
-                  iconAsset: 'icons/scan.svg',
-                  fallbackIcon: Icons.qr_code_scanner_rounded,
-                  isActive: _typeFilter == ScanTypeFilter.single,
-                  onTap: () {
-                    setState(() => _typeFilter = ScanTypeFilter.single);
-                    _loadHistory();
-                  },
-                ),
-                const SizedBox(width: 10),
-                _TypeChip(
-                  label: 'Perbandingan',
-                  iconAsset: 'icons/repeat-circle.svg',
-                  fallbackIcon: Icons.compare_arrows_rounded,
-                  isActive: _typeFilter == ScanTypeFilter.comparison,
-                  onTap: () {
-                    setState(() => _typeFilter = ScanTypeFilter.comparison);
-                    _loadHistory();
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBody() {
+  // ── body sebagai Sliver ───────────────────────────────────────────────────
+  Widget _buildBodySliver() {
     if (_loading) {
-      return const Expanded(
+      return const SliverFillRemaining(
         child: Center(child: CircularProgressIndicator(color: _blue)),
       );
     }
 
     if (_items.isEmpty) {
-      return Expanded(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Image.asset(
-                  'assets/illustrations/belum_ada_history.png',
-                  width: 240,
-                  height: 240,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(height: 8),
-                RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      color: _blue,
-                    ),
-                    children: [
-                      const TextSpan(text: 'Yuk, '),
-                      TextSpan(
-                        text: 'Scan produk ',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: _blue,
-                        ),
-                      ),
-                      const TextSpan(text: 'untuk mulai\n'),
-                      TextSpan(
-                        text: 'menyimpan riwayatmu ',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: _blue,
-                        ),
-                      ),
-                      const TextSpan(text: 'sekarang'),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 64),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              ScanScreen(apiClient: widget.apiClient),
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _blue,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                      child: Text(
-                        'Mulai Scan Produk',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildEmptyState(),
       );
     }
 
     final singles = _items.where((e) => e.type == 'single').toList();
     final comparisons = _items.where((e) => e.type == 'comparison').toList();
 
-    return Expanded(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+    final List<Widget> cards = [];
+
+    if ((_typeFilter == ScanTypeFilter.all ||
+            _typeFilter == ScanTypeFilter.single) &&
+        singles.isNotEmpty) {
+      cards.add(_sectionLabel('Single Item'));
+      cards.add(const SizedBox(height: 10));
+      for (final item in singles) {
+        cards.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: _SingleItemCard(
+              item: item,
+              apiClient: widget.apiClient,
+              timeLabel: _formatTime(item.timestamp),
+              onDetail: () => _openDetail(item),
+            ),
+          ),
+        );
+      }
+    }
+
+    if ((_typeFilter == ScanTypeFilter.all ||
+            _typeFilter == ScanTypeFilter.comparison) &&
+        comparisons.isNotEmpty) {
+      cards.add(const SizedBox(height: 6));
+      cards.add(_sectionLabel('Perbandingan Item'));
+      cards.add(const SizedBox(height: 10));
+      for (final item in comparisons) {
+        cards.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: _ComparisonItemCard(
+              item: item,
+              apiClient: widget.apiClient,
+              timeLabel: _formatTime(item.timestamp),
+              onDetail: () => _openDetail(item),
+            ),
+          ),
+        );
+      }
+    }
+
+    return SliverList(delegate: SliverChildListDelegate(cards));
+  }
+
+  Widget _buildEmptyState() {
+    final emptyImageSize = (MediaQuery.sizeOf(context).height * 0.28)
+        .clamp(180.0, 240.0)
+        .toDouble();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 160),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if ((_typeFilter == ScanTypeFilter.all ||
-                  _typeFilter == ScanTypeFilter.single) &&
-              singles.isNotEmpty) ...[
-            _sectionLabel('Single Item'),
-            const SizedBox(height: 10),
-            ...singles.map(
-              (item) => Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: _SingleItemCard(
-                  item: item,
-                  timeLabel: _formatTime(item.timestamp),
-                  onDetail: () => _openDetail(item),
+          Image.asset(
+            'assets/illustrations/belum_ada_history.png',
+            width: emptyImageSize,
+            height: emptyImageSize,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  color: _blue,
                 ),
+                children: [
+                  const TextSpan(text: 'Yuk, '),
+                  TextSpan(
+                    text: 'Scan produk ',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: _blue,
+                    ),
+                  ),
+                  const TextSpan(text: 'untuk mulai\n'),
+                  TextSpan(
+                    text: 'menyimpan riwayatmu ',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: _blue,
+                    ),
+                  ),
+                  const TextSpan(text: 'sekarang'),
+                ],
               ),
             ),
-          ],
-          if ((_typeFilter == ScanTypeFilter.all ||
-                  _typeFilter == ScanTypeFilter.comparison) &&
-              comparisons.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            _sectionLabel('Perbandingan Item'),
-            const SizedBox(height: 10),
-            ...comparisons.map(
-              (item) => Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: _ComparisonItemCard(
-                  item: item,
-                  timeLabel: _formatTime(item.timestamp),
-                  onDetail: () => _openDetail(item),
-                ),
-              ),
-            ),
-          ],
+          ),
         ],
       ),
     );
@@ -569,7 +621,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
       Text(text, style: _ts(16, FontWeight.w700, _blue));
 
   void _openDetail(ScanHistoryItem item) async {
+    debugPrint('=== OPEN DETAIL: id=${item.id}, reko=${item.rekomendasiJson}');
+    final isEditable = isEditableHistoryRecord(item);
     int dailyLimit = 2000;
+    bool isHardMaximum = true;
     try {
       final userId = UserSession().getUserId();
       if (userId > 0) {
@@ -586,6 +641,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             pregnancyStatus: profile['pregnancy_status'] as String?,
           );
           dailyLimit = hasil.batasNatrium;
+          isHardMaximum = hasil.isHardMaximum;
         }
       }
     } catch (e) {
@@ -593,24 +649,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
 
     if (item.type == 'comparison') {
-      // ── FIX: pakai data dari item, bukan hardcode 0/1/'g' ──────────────
       final produkA = ProductCompareData(
         productName: item.productName,
         kategori: item.kategori,
-        satuanTakaran: item.satuanTakaran, // WAS: 'g'
+        satuanTakaran: item.satuanTakaran,
         perPortionMg: item.sodiumMg,
-        packageMl: item.packageMl, // WAS: 0
-        portionsInPackage: item.portionsInPackage, // WAS: item.servings.toInt()
+        packageMl: item.packageMl,
+        portionsInPackage: item.portionsInPackage,
         imagePath: item.imagePath,
       );
 
       final produkB = ProductCompareData(
         productName: item.productName2 ?? '-',
         kategori: item.kategori,
-        satuanTakaran: item.satuanTakaran2, // WAS: 'g'
+        satuanTakaran: item.satuanTakaran2,
         perPortionMg: item.sodiumMg2 ?? 0,
-        packageMl: item.packageMl2, // WAS: 0
-        portionsInPackage: item.portionsInPackage2, // WAS: 1
+        packageMl: item.packageMl2,
+        portionsInPackage: item.portionsInPackage2,
         imagePath: item.imagePath2,
       );
 
@@ -622,7 +677,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
             productA: produkA,
             productB: produkB,
             dailyLimitMg: dailyLimit,
+            isHardMaximum: isHardMaximum,
             apiClient: widget.apiClient,
+            readOnly: !isEditable,
           ),
         ),
       ).then((_) => _loadHistory());
@@ -643,7 +700,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
           imagePath: item.imagePath,
           isConsumed: item.isConsumed,
           dailyLimitMg: dailyLimit,
+          isHardMaximum: isHardMaximum,
           apiClient: widget.apiClient,
+          readOnly: !isEditable,
+          rekomendasiJson: item.rekomendasiJson,
+          packageMl: item.packageMl,
+          portionsInPackage: item.portionsInPackage,
+          satuanTakaran: item.satuanTakaran,
         ),
       ),
     ).then((_) => _loadHistory());
@@ -657,11 +720,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
 class _SingleItemCard extends StatelessWidget {
   const _SingleItemCard({
     required this.item,
+    required this.apiClient,
     required this.timeLabel,
     required this.onDetail,
   });
 
   final ScanHistoryItem item;
+  final ApiClient apiClient;
   final String timeLabel;
   final VoidCallback onDetail;
 
@@ -708,7 +773,11 @@ class _SingleItemCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: _ProductImage(path: item.imagePath, size: 80),
+                  child: _ProductImage(
+                    path: item.imagePath,
+                    size: 64,
+                    apiClient: apiClient,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -730,22 +799,10 @@ class _SingleItemCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          _IconChip(
-                            iconAsset:
-                                'assets/icons/fluent_food-24-regular.svg',
-                            fallbackIcon: Icons.restaurant_menu_rounded,
-                            label:
-                                '${item.servings % 1 == 0 ? item.servings.toInt() : item.servings} Porsi',
-                          ),
-                          const SizedBox(width: 10),
-                          _IconChip(
-                            iconAsset: 'assets/icons/video-time.svg',
-                            fallbackIcon: Icons.access_time_rounded,
-                            label: timeLabel,
-                          ),
-                        ],
+                      _HistoryMetadataChips(
+                        servingLabel:
+                            '${item.servings % 1 == 0 ? item.servings.toInt() : item.servings} Porsi',
+                        timeLabel: timeLabel,
                       ),
                     ],
                   ),
@@ -783,11 +840,13 @@ class _SingleItemCard extends StatelessWidget {
 class _ComparisonItemCard extends StatelessWidget {
   const _ComparisonItemCard({
     required this.item,
+    required this.apiClient,
     required this.timeLabel,
     required this.onDetail,
   });
 
   final ScanHistoryItem item;
+  final ApiClient apiClient;
   final String timeLabel;
   final VoidCallback onDetail;
 
@@ -830,7 +889,11 @@ class _ComparisonItemCard extends StatelessWidget {
                     topLeft: Radius.circular(10),
                     bottomLeft: Radius.circular(10),
                   ),
-                  child: _ProductImage(path: item.imagePath, size: 80),
+                  child: _ProductImage(
+                    path: item.imagePath,
+                    size: 64,
+                    apiClient: apiClient,
+                  ),
                 ),
                 const SizedBox(width: 2),
                 ClipRRect(
@@ -838,7 +901,11 @@ class _ComparisonItemCard extends StatelessWidget {
                     topRight: Radius.circular(10),
                     bottomRight: Radius.circular(10),
                   ),
-                  child: _ProductImage(path: item.imagePath2, size: 80),
+                  child: _ProductImage(
+                    path: item.imagePath2,
+                    size: 64,
+                    apiClient: apiClient,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -859,7 +926,7 @@ class _ComparisonItemCard extends StatelessWidget {
                       const SizedBox(height: 10),
                       Text(
                         name2,
-                        style: _ts(15, FontWeight.w700, _blue),
+                        style: _ts(15, FontWeight.w700, _darkblue),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -875,21 +942,11 @@ class _ComparisonItemCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-            child: Row(
-              children: [
-                _IconChip(
-                  iconAsset: 'assets/icons/fluent_food-24-regular.svg',
-                  fallbackIcon: Icons.restaurant_menu_rounded,
-                  label: item.productName,
-                ),
-                const SizedBox(width: 10),
-                _IconChip(
-                  iconAsset: 'assets/icons/video-time.svg',
-                  fallbackIcon: Icons.access_time_rounded,
-                  label: timeLabel,
-                ),
-              ],
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+            child: _HistoryMetadataChips(
+              servingLabel:
+                  '${item.servings % 1 == 0 ? item.servings.toInt() : item.servings} Porsi',
+              timeLabel: timeLabel,
             ),
           ),
           Divider(height: 1, color: _gray),
@@ -911,6 +968,46 @@ class _ComparisonItemCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// WIDGET — _HistoryMetadataChips
+// ─────────────────────────────────────────────
+
+class _HistoryMetadataChips extends StatelessWidget {
+  const _HistoryMetadataChips({
+    required this.servingLabel,
+    required this.timeLabel,
+  });
+
+  final String servingLabel;
+  final String timeLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          fit: FlexFit.loose,
+          child: _IconChip(
+            iconAsset: 'assets/icons/fluent_food-24-regular.svg',
+            fallbackIcon: Icons.restaurant_menu_rounded,
+            label: servingLabel,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          fit: FlexFit.loose,
+          child: _IconChip(
+            iconAsset: 'assets/icons/video-time.svg',
+            fallbackIcon: Icons.access_time_rounded,
+            label: timeLabel,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -960,16 +1057,20 @@ class _IconChip extends StatelessWidget {
                         BlendMode.srcIn,
                       ),
                     )
-                  : Icon(fallbackIcon, size: 14, color: Colors.white),
+                  : Icon(fallbackIcon, size: 14, color: _blue),
             ),
           ),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: _blue,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: _blue,
+              ),
             ),
           ),
         ],
@@ -1029,9 +1130,10 @@ class _StatusBadge extends StatelessWidget {
 // ─────────────────────────────────────────────
 
 class _ProductImage extends StatelessWidget {
-  const _ProductImage({this.path, required this.size});
+  const _ProductImage({this.path, required this.size, required this.apiClient});
   final String? path;
   final double size;
+  final ApiClient apiClient;
 
   static const _blueSoft = Color(0xFFDFE4ED);
   static const _blueGray = Color(0xFFBEC7DB);
@@ -1043,7 +1145,24 @@ class _ProductImage extends StatelessWidget {
       if (file.existsSync()) {
         return Image.file(file, width: size, height: size, fit: BoxFit.cover);
       }
+
+      final isServerPath =
+          path!.startsWith('/uploads') || path!.startsWith('http');
+      final imageFullUrl = isServerPath ? apiClient.imageUrl(path) : '';
+      if (imageFullUrl.isNotEmpty) {
+        return Image.network(
+          imageFullUrl,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _placeholder(),
+        );
+      }
     }
+    return _placeholder();
+  }
+
+  Widget _placeholder() {
     return Container(
       width: size,
       height: size,
@@ -1110,8 +1229,8 @@ class _TypeChip extends StatelessWidget {
           children: [
             if (iconAsset != null)
               Container(
-                width: 32,
-                height: 32,
+                width: 25,
+                height: 25,
                 decoration: BoxDecoration(
                   color: isActive
                       ? Colors.white.withOpacity(0.20)

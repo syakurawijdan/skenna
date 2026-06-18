@@ -1,16 +1,11 @@
-import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:skenna/presentation/screens/hasil_perbandingan_produk.dart';
 import 'package:skenna/presentation/screens/hasil_perbandingan_produk.dart';
 
 import '../../data/api_client.dart';
 import 'scan_screen.dart';
-import 'history_screen.dart';
 import '../app_shell.dart';
 import '../../../data/user_session.dart';
 
@@ -19,13 +14,11 @@ import '../../../data/user_session.dart';
 // ════════════════════════════════════════════════════════════════════════════
 class RekomendasiProduk {
   final String namaProduk;
-  final String merek;
   final int sodiumPerSajianMg;
   final String alasan;
 
   RekomendasiProduk({
     required this.namaProduk,
-    required this.merek,
     required this.sodiumPerSajianMg,
     required this.alasan,
   });
@@ -33,7 +26,6 @@ class RekomendasiProduk {
   factory RekomendasiProduk.fromJson(Map<String, dynamic> json) {
     return RekomendasiProduk(
       namaProduk: json['nama_produk'] as String? ?? '-',
-      merek: json['merek'] as String? ?? '-',
       sodiumPerSajianMg: (json['sodium_per_sajian_mg'] as num?)?.toInt() ?? 0,
       alasan: json['alasan'] as String? ?? '-',
     );
@@ -47,13 +39,14 @@ class HasilScanAmanScreen extends StatefulWidget {
   const HasilScanAmanScreen({
     super.key,
     this.productName = 'Produk',
-    this.userId = 1,
+    this.userId = 0,
     this.kategori = 'lainnya',
     this.satuanTakaran = 'g',
-    this.perPortionMg = 220,
-    this.packageMl = 1000,
-    this.portionsInPackage = 10,
+    this.perPortionMg = 0,
+    this.packageMl = 0,
+    this.portionsInPackage = 1,
     this.dailyLimitMg = 2000,
+    this.isHardMaximum = true,
     this.initialServings = 1,
     this.fromHistory = false,
     this.historyItemId,
@@ -61,6 +54,10 @@ class HasilScanAmanScreen extends StatefulWidget {
     this.imagePath,
     this.apiClient,
     this.onCatatKonsumsi,
+    this.readOnly = false,
+    this.isFromHistory = false,
+    this.rekomendasiJson,
+    this.scanId,
   });
 
   final String productName;
@@ -71,12 +68,17 @@ class HasilScanAmanScreen extends StatefulWidget {
   final int packageMl;
   final int portionsInPackage;
   final int dailyLimitMg;
+  final bool isHardMaximum;
   final int initialServings;
   final bool fromHistory;
   final String? historyItemId;
-  final bool isConsumed; // ← true = sudah pernah dicatat, false = belum
+  final bool isConsumed;
   final String? imagePath;
   final ApiClient? apiClient;
+  final bool readOnly;
+  final bool isFromHistory;
+  final Map<String, dynamic>? rekomendasiJson;
+  final int? scanId;
   final Future<Map<String, dynamic>> Function({
     required int sodiumMg,
     required int servings,
@@ -97,100 +99,98 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
   static const _colorWarn = Color(0xFFFFBF00);
   static const _colorDanger = Color(0xFFE53935);
 
-  static const _geminiApiKey = '';
-
-  late int _selectedPortions;
+  late int _selectedSajian;
   bool _saving = false;
   bool _sudahDicatat = false;
-  int _portionsSaatDicatat = 0;
+  int _sajianSaatDicatat = 0;
   String? _localHistoryItemId;
 
-  bool get _porsiBerubaH => _selectedPortions != _portionsSaatDicatat;
-
-  bool get _tombolAktif => !_sudahDicatat || _porsiBerubaH;
+  bool get _sajianBerubah => _selectedSajian != _sajianSaatDicatat;
+  bool get _tombolAktif =>
+      !widget.readOnly && (!_sudahDicatat || _sajianBerubah);
+  bool get _hideScanFlowButtons => widget.isFromHistory;
+  String get _limitPhrase =>
+      widget.isHardMaximum ? 'batas harian' : 'kebutuhan harian';
+  String get _limitWarningPhrase =>
+      widget.isHardMaximum ? 'batas' : 'kebutuhan harian';
+  String get _limitTitle =>
+      widget.isHardMaximum ? 'Batas Harian' : 'Kebutuhan Harian';
 
   List<RekomendasiProduk> _rekomendasi = [];
   bool _loadingReko = false;
   String? _rekoError;
+  String? _tipsTeks;
 
   @override
   void initState() {
     super.initState();
-    _selectedPortions = widget.initialServings;
+    _selectedSajian = widget.initialServings;
     _sudahDicatat = widget.fromHistory && widget.isConsumed;
-    _portionsSaatDicatat = widget.initialServings;
+    _sajianSaatDicatat = widget.initialServings;
 
-    if (widget.fromHistory) {
-      _localHistoryItemId = widget.historyItemId;
-    } else {
-      _localHistoryItemId = DateTime.now().millisecondsSinceEpoch.toString();
-      // _simpanScanKeHistory();
+    if (!widget.fromHistory && !widget.readOnly) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _cekOverLimitHarian();
+      });
     }
 
-    _loadRekomendasi();
+    if (widget.rekomendasiJson != null) {
+      _parseRekomendasiFromJson(widget.rekomendasiJson!);
+    } else {
+      _loadRekomendasi();
+    }
   }
 
-  // bool _historySaved = false;
-  // Future<void> _simpanScanKeHistory() async {
-  //   if (widget.productName == 'Produk' && widget.perPortionMg == 0) {
-  //     debugPrint('Skip simpan: data produk kosong');
-  //     _historySaved = true;
-  //     return;
-  //   }
-
-  //   try {
-  //     final client = widget.apiClient ?? ApiClient();
-  //     final activeUserId = UserSession().getUserId();
-  //     if (activeUserId == 0) {
-  //       debugPrint('Skip simpan: user belum login');
-  //       _historySaved = true;
-  //       return;
-  //     }
-
-  //     final response = await client.postScanHistory(
-  //       userId: activeUserId,
-  //       sodiumMg: widget.perPortionMg,
-  //       servings: _selectedPortions,
-  //       productName: widget.productName,
-  //       sodiumLevel: _getSodiumLevel(widget.perPortionMg),
-  //       kategori: widget.kategori,
-  //       packageMl: widget.packageMl,
-  //       portionsInPackage: widget.portionsInPackage,
-  //       satuanTakaran: widget.satuanTakaran,
-  //     );
-  //     _localHistoryItemId = response['id'].toString();
-  //     _historySaved = true;
-  //   } catch (e) {
-  //     debugPrint('postScanHistory error: $e');
-  //     _historySaved = true;
-  //   }
-  // }
-
-  // ── Prompt rekomendasi ───────────────────────────────────────────────────
-  String _buildRekomendasiPrompt(String kategori, int sodiumMg) {
-    return '''
-Berikan 1 rekomendasi produk kemasan yang dijual di Indonesia
-dengan kategori "$kategori" yang memiliki kandungan natrium
-lebih rendah dari $sodiumMg mg per sajian.
-Respons WAJIB hanya raw JSON tanpa Markdown backticks, tanpa penjelasan apapun.
-
-{
-  "rekomendasi": [
-    {
-      "nama_produk": string,
-      "kategori": string,
-      "sodium_per_sajian_mg": number
+  void _parseRekomendasiFromJson(Map<String, dynamic> data) {
+    final List<dynamic> items = data['rekomendasi'] ?? [];
+    final String? tips = data['tips'] as String?;
+    if (tips != null && items.isEmpty) {
+      _tipsTeks = tips;
+      _rekomendasi = [];
+    } else {
+      _rekomendasi = items
+          .map((e) => RekomendasiProduk.fromJson(e as Map<String, dynamic>))
+          .toList();
     }
-  ]
-}
+  }
 
-ATURAN:
-1. Hanya produk kemasan nyata yang beredar di Indonesia
-2. Jika tidak ada produk nyata yang diketahui untuk kategori ini,
-   berikan saran generik seperti "Pilih produk berlabel rendah sodium"
-   dengan sodium_per_sajian_mg diisi 0
-4. Semua angka harus NUMBER bukan string
-''';
+  Future<void> _cekOverLimitHarian() async {
+    try {
+      final userId = UserSession().getUserId();
+      if (userId <= 0) return;
+      final client = widget.apiClient ?? ApiClient();
+      final stats = await client.getDashboardStats(userId);
+      final consumedToday =
+          (stats['total_sodium_consumed_today'] as num?)?.round() ?? 0;
+
+      if (!mounted) return;
+      if (consumedToday >= widget.dailyLimitMg) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Natrium harianmu sudah melebihi $_limitWarningPhrase ${widget.dailyLimitMg} mg!',
+                    style: GoogleFonts.plusJakartaSans(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFE53935),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Cek over limit gagal: $e');
+    }
   }
 
   Future<void> _loadRekomendasi() async {
@@ -198,65 +198,38 @@ ATURAN:
     setState(() {
       _loadingReko = true;
       _rekoError = null;
+      _tipsTeks = null;
     });
 
     try {
-      final prompt = _buildRekomendasiPrompt(
-        widget.kategori,
-        widget.perPortionMg,
+      final client = widget.apiClient ?? ApiClient();
+      final result = await client.getRekomendasiProduk(
+        kategori: widget.kategori,
+        sodiumMg: widget.perPortionMg,
       );
+      debugPrint('=== REKO RESULT: $result');
+      final List<dynamic> items = result['rekomendasi'] ?? [];
+      final String? tips = result['tips'] as String?;
 
-      final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$_geminiApiKey',
-      );
-
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "contents": [
-            {
-              "parts": [
-                {"text": prompt},
-              ],
-            },
-          ],
-          "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1000},
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final text =
-            decoded['candidates'][0]['content']['parts'][0]['text'] as String;
-
-        final cleanText = text
-            .replaceAll('```json', '')
-            .replaceAll('```', '')
-            .trim();
-
-        final Map<String, dynamic> data = jsonDecode(cleanText);
-        final List<dynamic> list = data['rekomendasi'] as List<dynamic>;
-
-        if (mounted) {
-          setState(() {
-            _rekomendasi = list
-                .map((e) => RekomendasiProduk.fromJson(e))
-                .toList();
-            _loadingReko = false;
-          });
+      if (!mounted) return;
+      setState(() {
+        if (tips != null && items.isEmpty) {
+          _tipsTeks = tips;
+          _rekomendasi = [];
+        } else {
+          _rekomendasi = items
+              .map((e) => RekomendasiProduk.fromJson(e as Map<String, dynamic>))
+              .toList();
+          _tipsTeks = null;
         }
-      } else {
-        throw Exception('API Error ${response.statusCode}');
-      }
+        _loadingReko = false;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _rekoError = 'Gagal memuat rekomendasi';
-          _loadingReko = false;
-        });
-      }
-      debugPrint('Rekomendasi error: $e');
+      if (!mounted) return;
+      setState(() {
+        _rekoError = 'Gagal memuat rekomendasi.';
+        _loadingReko = false;
+      });
     }
   }
 
@@ -267,21 +240,13 @@ ATURAN:
       : p <= .75
       ? _colorWarn
       : _colorDanger;
-
   Color _circleColor(double p) => p <= .50
       ? const Color(0xFF2E9E3E)
       : p <= .75
       ? const Color(0xFFFFBF00)
       : const Color(0xFFE53935);
-
   Color _outerCircleColor(double p) => Colors.white.withOpacity(0.20);
   Color _midCircleColor(double p) => Colors.white.withOpacity(0.25);
-
-  String _statusText(double p) => p <= .50
-      ? 'Masih dalam batas aman'
-      : p <= .75
-      ? 'Mulai perhatikan asupan natrium'
-      : 'Hampir mencapai batas harian';
 
   List<Color> _gradientColors(double p) => p <= .50
       ? [
@@ -311,23 +276,35 @@ ATURAN:
     const map = {
       'mie_instan': 'Mie & Pasta Instan',
       'keripik_snack': 'Snack & Keripik',
-      'saus_bumbu': 'Saus & Bumbu',
       'minuman_kemasan': 'Minuman Kemasan',
       'biskuit_roti': 'Roti & Biskuit',
       'makanan_kaleng': 'Makanan Kaleng',
       'sereal': 'Sereal & Oatmeal',
+      'biskuit': 'Biskuit & Wafer',
+      'susu': 'Susu & Produk Susu',
       'frozen_food': 'Frozen Food',
       'lainnya': 'Lainnya',
     };
     return map[k] ?? k;
   }
 
-  // ── build ────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final portionSatuan = (widget.packageMl / widget.portionsInPackage).round();
+    final screenSize = MediaQuery.sizeOf(context);
+    final circleSize = (screenSize.shortestSide * 0.56)
+        .clamp(176.0, 220.0)
+        .toDouble();
+    final middleCircleSize = circleSize * 0.84;
+    final innerCircleSize = circleSize * 0.68;
+
+    // Takaran per sajian (gram/ml per 1 sajian)
+    final takaranPerSajian = widget.portionsInPackage > 0
+        ? (widget.packageMl / widget.portionsInPackage).round()
+        : 0;
     final satuan = widget.satuanTakaran;
-    final totalNatrium = widget.perPortionMg * _selectedPortions;
+
+    // Total natrium dari sajian yang dipilih
+    final totalNatrium = widget.perPortionMg * _selectedSajian;
     final pct = _pct(totalNatrium);
     final arcColor = _arcColor(pct);
     final pctInt = (pct * 100).round();
@@ -340,7 +317,7 @@ ATURAN:
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── HEADER ─────────────────────────────────────────────────
+              // ── HEADER ──────────────────────────────────────────────────
               AnimatedContainer(
                 duration: const Duration(milliseconds: 400),
                 curve: Curves.easeInOut,
@@ -380,61 +357,61 @@ ATURAN:
                                 }
                               },
                               child: Container(
-                                width: 36,
-                                height: 36,
+                                width: 40,
+                                height: 40,
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.25),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
-                                  Icons.chevron_left,
-                                  size: 24,
+                                  Icons.arrow_back,
+                                  size: 20,
                                   color: Colors.white,
                                 ),
                               ),
                             ),
-                            GestureDetector(
-                              onTap: () => Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      ScanScreen(apiClient: widget.apiClient),
+                            if (!_hideScanFlowButtons)
+                              GestureDetector(
+                                onTap: () => Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        ScanScreen(apiClient: widget.apiClient),
+                                  ),
                                 ),
-                              ),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.25),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.camera_alt_outlined,
-                                      size: 16,
-                                      color: Colors.white,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'Scan lagi',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 15,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.25),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.camera_alt_outlined,
+                                        size: 18,
                                         color: Colors.white,
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Scan lagi',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 24),
-
                         Text(
                           'Kontribusi Produk Ini',
                           style: GoogleFonts.plusJakartaSans(
@@ -444,18 +421,17 @@ ATURAN:
                           ),
                         ),
                         const SizedBox(height: 16),
-
                         SizedBox(
-                          width: 220,
-                          height: 220,
+                          width: circleSize,
+                          height: circleSize,
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
                               AnimatedContainer(
                                 duration: const Duration(milliseconds: 400),
                                 curve: Curves.easeInOut,
-                                width: 220,
-                                height: 220,
+                                width: circleSize,
+                                height: circleSize,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: _outerCircleColor(pct),
@@ -464,8 +440,8 @@ ATURAN:
                               AnimatedContainer(
                                 duration: const Duration(milliseconds: 400),
                                 curve: Curves.easeInOut,
-                                width: 185,
-                                height: 185,
+                                width: middleCircleSize,
+                                height: middleCircleSize,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: _midCircleColor(pct),
@@ -474,8 +450,8 @@ ATURAN:
                               AnimatedContainer(
                                 duration: const Duration(milliseconds: 400),
                                 curve: Curves.easeInOut,
-                                width: 150,
-                                height: 150,
+                                width: innerCircleSize,
+                                height: innerCircleSize,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: _circleColor(pct),
@@ -493,12 +469,12 @@ ATURAN:
                                       BlendMode.srcIn,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 4),
                                   Text(
                                     '$totalNatrium mg',
                                     style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 31,
-                                      fontWeight: FontWeight.w500,
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.w700,
                                       color: Colors.white,
                                     ),
                                   ),
@@ -506,8 +482,9 @@ ATURAN:
                                   Text(
                                     'Total natrium',
                                     style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 13,
+                                      fontSize: 12,
                                       color: Colors.white.withOpacity(0.8),
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
@@ -523,6 +500,7 @@ ATURAN:
 
               const SizedBox(height: 8),
 
+              // ── % KONTRIBUSI + PROGRESS BAR ─────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -546,7 +524,7 @@ ATURAN:
                             ),
                           ),
                           const TextSpan(text: ' natrium\n'),
-                          const TextSpan(text: 'dari batas harian '),
+                          TextSpan(text: 'dari $_limitPhrase '),
                           TextSpan(
                             text: '${widget.dailyLimitMg} mg',
                             style: GoogleFonts.plusJakartaSans(
@@ -558,7 +536,6 @@ ATURAN:
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 16),
                     _GradientProgressBar(
                       progress: pct.clamp(0.0, 1.0),
@@ -570,12 +547,24 @@ ATURAN:
 
               const SizedBox(height: 24),
 
+              // ── PILIH SAJIAN ────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sectionTitle('Porsi Konsumsi'),
+                    _sectionTitle('Berapa sajian yang kamu konsumsi?'),
+                    const SizedBox(height: 6),
+                    // Keterangan konteks
+                    Text(
+                      widget.packageMl > 0
+                          ? '1 sajian = $takaranPerSajian $satuan · ${widget.portionsInPackage} sajian per kemasan'
+                          : '1 sajian = ${widget.perPortionMg} mg natrium',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        color: _muted,
+                      ),
+                    ),
                     const SizedBox(height: 10),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -587,7 +576,7 @@ ATURAN:
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        '$_selectedPortions Porsi',
+                        '$_selectedSajian Sajian  (${_selectedSajian * takaranPerSajian} $satuan)',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -597,17 +586,20 @@ ATURAN:
                     ),
                     const SizedBox(height: 16),
                     _PortionSlider(
-                      value: _selectedPortions,
+                      value: _selectedSajian,
                       min: 1,
-                      max: widget.portionsInPackage,
-                      onChanged: (v) => setState(() => _selectedPortions = v),
+                      max: 10,
+                      onChanged: (v) => setState(() => _selectedSajian = v),
                       thumbColor: _blue,
+                      enabled: !widget.readOnly,
                     ),
                   ],
                 ),
               ),
+
               const SizedBox(height: 16),
 
+              // ── DETAIL PRODUK ───────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -621,17 +613,25 @@ ATURAN:
                     const SizedBox(height: 8),
                     _infoCard(
                       'Isi Kemasan',
-                      '${widget.packageMl} $satuan (${widget.portionsInPackage} Porsi)',
+                      '${widget.packageMl} $satuan (${widget.portionsInPackage} sajian)',
                     ),
                     const SizedBox(height: 8),
-                    _infoCard('Satu Porsi', '$portionSatuan $satuan'),
+                    _infoCard(
+                      'Takaran per Sajian',
+                      '$takaranPerSajian $satuan',
+                    ),
                     const SizedBox(height: 8),
-                    _infoCard('Natrium per Porsi', '${widget.perPortionMg} mg'),
+                    _infoCard(
+                      'Natrium per Sajian',
+                      '${widget.perPortionMg} mg',
+                    ),
                   ],
                 ),
               ),
+
               const SizedBox(height: 20),
 
+              // ── RINGKASAN KONSUMSI ──────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -650,7 +650,7 @@ ATURAN:
                                 width: 28,
                                 height: 28,
                               ),
-                              'Natrium\nDikonsumsi',
+                              'Total Natrium\nDikonsumsi',
                               '$totalNatrium mg',
                             ),
                           ),
@@ -662,8 +662,8 @@ ATURAN:
                                 width: 28,
                                 height: 28,
                               ),
-                              'Jumlah yang\nkamu konsumsi',
-                              '$_selectedPortions Porsi\n($portionSatuan $satuan)',
+                              'Jumlah Sajian\nDikonsumsi',
+                              '$_selectedSajian Sajian\n(${_selectedSajian * takaranPerSajian} $satuan)',
                             ),
                           ),
                         ],
@@ -672,8 +672,10 @@ ATURAN:
                   ],
                 ),
               ),
+
               const SizedBox(height: 20),
 
+              // ── REKOMENDASI ─────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -688,87 +690,94 @@ ATURAN:
 
               const SizedBox(height: 78),
 
-              // ── Catat Konsumsi ──────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _tombolAktif
-                          ? _blue
-                          : const Color(0xFFD9D9D9),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(26),
-                      ),
-                      elevation: 0,
-                    ),
-                    onPressed: (_saving || !_tombolAktif) ? null : _handleCatat,
-                    child: _saving
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            _sudahDicatat
-                                ? 'Perbarui Konsumsi'
-                                : 'Catat Konsumsi',
-                            style: GoogleFonts.plusJakartaSans(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
-                            ),
-                          ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(26),
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ScanScreen(
-                            apiClient: widget.apiClient,
-                            compareWithProduct: ProductCompareData(
-                              productName: widget.productName,
-                              kategori: widget.kategori,
-                              satuanTakaran: widget.satuanTakaran,
-                              perPortionMg: widget.perPortionMg,
-                              packageMl: widget.packageMl,
-                              portionsInPackage: widget.portionsInPackage,
-                            ),
-                          ),
+              if (!widget.readOnly && !_hideScanFlowButtons) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _tombolAktif
+                            ? _blue
+                            : const Color(0xFFD9D9D9),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(26),
                         ),
-                      );
-                    },
-                    child: Text(
-                      'Bandingkan Produk',
-                      style: GoogleFonts.plusJakartaSans(
-                        color: _blue,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
+                        elevation: 0,
+                      ),
+                      onPressed: (_saving || !_tombolAktif)
+                          ? null
+                          : _handleCatat,
+                      child: _saving
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              _sudahDicatat
+                                  ? 'Perbarui Konsumsi'
+                                  : 'Catat Konsumsi',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(26),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ScanScreen(
+                              apiClient: widget.apiClient,
+                              compareWithProduct: ProductCompareData(
+                                productName: widget.productName,
+                                kategori: widget.kategori,
+                                satuanTakaran: widget.satuanTakaran,
+                                perPortionMg: widget.perPortionMg,
+                                packageMl: widget.packageMl,
+                                portionsInPackage: widget.portionsInPackage,
+                                imagePath:
+                                    widget.imagePath != null &&
+                                        widget.imagePath!.startsWith('/')
+                                    ? widget.imagePath
+                                    : null,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Bandingkan Produk',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: _blue,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
               const SizedBox(height: 16),
             ],
           ),
@@ -832,6 +841,34 @@ ATURAN:
       );
     }
 
+    if (_tipsTeks != null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF8E1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFFFE082)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                _tipsTeks!,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  color: const Color(0xFF7B6000),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     if (_rekomendasi.isEmpty) {
       return Container(
         width: double.infinity,
@@ -842,7 +879,7 @@ ATURAN:
           border: Border.all(color: const Color(0xFFBEE6C9)),
         ),
         child: Text(
-          'Tidak ada rekomendasi yang ditemukan untuk kategori ini.',
+          'Tidak ada rekomendasi untuk kategori ini.',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 13,
             color: const Color(0xFF3C8B3E),
@@ -867,7 +904,7 @@ ATURAN:
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${item.merek} – ${item.namaProduk}',
+                  item.namaProduk,
                   style: GoogleFonts.plusJakartaSans(
                     color: const Color(0xFF3C8B3E),
                     fontWeight: FontWeight.w600,
@@ -886,7 +923,7 @@ ATURAN:
                   ),
                   child: Text(
                     item.sodiumPerSajianMg > 0
-                        ? 'Natrium: ${item.sodiumPerSajianMg} mg per porsi'
+                        ? 'Natrium: ${item.sodiumPerSajianMg} mg per sajian'
                         : 'Pilih produk berlabel rendah sodium',
                     style: GoogleFonts.plusJakartaSans(
                       color: const Color(0xFF3C8B3E),
@@ -914,12 +951,63 @@ ATURAN:
   }
 
   Future<void> _handleCatat() async {
+    if (widget.readOnly) return;
+
+    // ── Cek over limit ──────────────────────────────────────────
+    final totalNatrium = widget.perPortionMg * _selectedSajian;
+    if (totalNatrium > widget.dailyLimitMg) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Color(0xFFE53935)),
+              const SizedBox(width: 8),
+              Text(
+                '$_limitTitle Terlampaui',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Produk ini menyumbang ${((totalNatrium / widget.dailyLimitMg) * 100).round()}% dari ${_limitPhrase}mu (${widget.dailyLimitMg} mg).\n\nTetap catat konsumsi ini?',
+            style: GoogleFonts.plusJakartaSans(fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(
+                'Batal',
+                style: GoogleFonts.plusJakartaSans(color: _muted),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE53935),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(
+                'Tetap Catat',
+                style: GoogleFonts.plusJakartaSans(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+      if (confirm != true) return; // user tekan Batal
+    }
     setState(() => _saving = true);
 
     final int activeUserId = UserSession().getUserId();
-    debugPrint('=== DEBUG CATAT ===');
-    debugPrint('fromHistory: ${widget.fromHistory}');
-    debugPrint('isConsumed: ${widget.isConsumed}');
 
     try {
       final client = widget.apiClient ?? ApiClient();
@@ -928,7 +1016,6 @@ ATURAN:
       final isUpdate = widget.fromHistory && _sudahDicatat;
 
       if (isUpdate) {
-        // ── Mode history: update porsi saja ──────────────────────────────
         final intakeId = int.tryParse(_localHistoryItemId ?? '');
         if (intakeId == null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -948,14 +1035,21 @@ ATURAN:
           intakeId: intakeId,
           userId: activeUserId,
           isConsumed: true,
-          servings: _selectedPortions,
+          servings: _selectedSajian,
         );
       } else {
-        // ── Mode scan baru: simpan dulu baru mark consumed ───────────────
+        debugPrint('=== POST SCAN HISTORY ===');
+        debugPrint('sodiumMg: ${widget.perPortionMg}');
+        debugPrint('servings: $_selectedSajian');
+        debugPrint('productName: ${widget.productName}');
+        debugPrint('kategori: ${widget.kategori}');
+        debugPrint('packageMl: ${widget.packageMl}');
+        debugPrint('portionsInPackage: ${widget.portionsInPackage}');
+        debugPrint('satuanTakaran: ${widget.satuanTakaran}');
         final response = await client.postScanHistory(
           userId: activeUserId,
           sodiumMg: widget.perPortionMg,
-          servings: _selectedPortions,
+          servings: _selectedSajian,
           productName: widget.productName,
           sodiumLevel: _getSodiumLevel(widget.perPortionMg),
           kategori: widget.kategori,
@@ -963,6 +1057,8 @@ ATURAN:
           portionsInPackage: widget.portionsInPackage,
           satuanTakaran: widget.satuanTakaran,
           isConsumed: true,
+          imagePath: widget.imagePath,
+          scanId: widget.scanId,
         );
         _localHistoryItemId = response['id'].toString();
       }
@@ -970,7 +1066,7 @@ ATURAN:
       if (!mounted) return;
       setState(() {
         _sudahDicatat = true;
-        _portionsSaatDicatat = _selectedPortions;
+        _sajianSaatDicatat = _selectedSajian;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1019,7 +1115,6 @@ ATURAN:
     return 'high';
   }
 
-  // ── Helper widget ────────────────────────────────────────────────────────
   Widget _sectionTitle(String text) => Text(
     text,
     style: GoogleFonts.plusJakartaSans(
@@ -1110,26 +1205,6 @@ class _GradientProgressBar extends StatelessWidget {
   final double progress;
   final Color thumbColor;
 
-  List<Color> _gradientColors() {
-    if (progress <= 0.50) {
-      return [const Color(0xFF43A047), const Color(0xFF43A047)];
-    }
-    if (progress <= 0.75) {
-      return [const Color(0xFF43A047), const Color(0xFFFFBF00)];
-    }
-    return [
-      const Color(0xFF43A047),
-      const Color(0xFFFFBF00),
-      const Color(0xFFE53935),
-    ];
-  }
-
-  List<double> _gradientStops() {
-    if (progress <= 0.50) return [0.0, 1.0];
-    if (progress <= 0.75) return [0.0, 1.0];
-    return [0.0, 0.5, 1.0];
-  }
-
   @override
   Widget build(BuildContext context) {
     const barHeight = 16.0;
@@ -1158,9 +1233,19 @@ class _GradientProgressBar extends StatelessWidget {
                     width: filledWidth,
                     height: barHeight,
                     decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(barHeight / 2),
                       gradient: LinearGradient(
-                        colors: _gradientColors(),
-                        stops: _gradientStops(),
+                        colors: const [
+                          Color(0xFF43A047),
+                          Color(0xFFFFBF00),
+                          Color(0xFFE53935),
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                        begin: Alignment.centerLeft,
+                        end: Alignment(
+                          progress > 0 ? (1 / progress).clamp(1.0, 10.0) : 1.0,
+                          0,
+                        ),
                       ),
                     ),
                   ),
@@ -1183,6 +1268,7 @@ class _PortionSlider extends StatelessWidget {
     required this.max,
     required this.onChanged,
     required this.thumbColor,
+    this.enabled = true,
   });
 
   final int value;
@@ -1190,10 +1276,12 @@ class _PortionSlider extends StatelessWidget {
   final int max;
   final ValueChanged<int> onChanged;
   final Color thumbColor;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
-    final fraction = (value - min) / (max - min);
+    final range = max - min;
+    final fraction = range <= 0 ? 0.0 : (value - min) / range;
     return LayoutBuilder(
       builder: (context, constraints) {
         final trackWidth = constraints.maxWidth;
@@ -1255,12 +1343,18 @@ class _PortionSlider extends StatelessWidget {
                     ),
                     showValueIndicator: ShowValueIndicator.never,
                   ),
-                  child: Slider(
-                    value: value.toDouble(),
-                    min: min.toDouble(),
-                    max: max.toDouble(),
-                    divisions: (max - min) > 0 ? (max - min) : null,
-                    onChanged: (v) => onChanged(v.round()),
+                  child: IgnorePointer(
+                    ignoring: !enabled,
+                    child: Slider(
+                      value: value.toDouble().clamp(
+                        min.toDouble(),
+                        math.max(min, max).toDouble(),
+                      ),
+                      min: min.toDouble(),
+                      max: math.max(min, max).toDouble(),
+                      divisions: range > 0 ? range : null,
+                      onChanged: (v) => onChanged(v.round()),
+                    ),
                   ),
                 ),
               ),

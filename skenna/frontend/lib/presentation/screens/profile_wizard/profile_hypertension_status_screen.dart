@@ -25,25 +25,24 @@ class _ProfileHypertensionStatusScreenState
   }
 
   Future<void> _next() async {
-    if (_hasHypertension == null) {
-      return;
-    }
+    if (_hasHypertension == null) return;
     ProfileWizardStore.instance.draft.hasHypertension = _hasHypertension!;
 
+    final draft = ProfileWizardStore.instance.draft;
+    final gender = draft.gender.trim().toLowerCase();
+
     if (_hasHypertension!) {
-      Navigator.pushNamed(context, AppRoutes.profileHypertensionCondition);
-    } else {
-      final draft = ProfileWizardStore.instance.draft;
-      final gender = draft.gender.trim().toLowerCase();
-      if (gender == 'perempuan' || gender == 'female') {
-        Navigator.pushNamed(context, AppRoutes.profilePregnancy);
-      } else {
+      // kalau hipertensi → input tekanan darah dulu
+      Navigator.pushNamed(context, AppRoutes.profileBloodPressure);
+    } else if (gender == 'perempuan' || gender == 'female') {
+      if (_shouldSkipPregnancyQuestion(draft.birthDate!)) {
         final hasil = await klasifikasiNatriumDariDraft(
           birthDate: draft.birthDate!,
           gender: draft.gender,
           hasHypertension: false,
           systolicPressure: draft.systolicPressure,
           diastolicPressure: draft.diastolicPressure,
+          pregnancyStatus: 'tidak_hamil',
         );
         if (!mounted) return;
         Navigator.pushNamedAndRemoveUntil(
@@ -52,8 +51,32 @@ class _ProfileHypertensionStatusScreenState
           (route) => false,
           arguments: {'categoryKey': hasil.categoryKey, 'hasil': hasil},
         );
+        return;
       }
+      Navigator.pushNamed(context, AppRoutes.profilePregnancy);
+    } else {
+      final hasil = await klasifikasiNatriumDariDraft(
+        birthDate: draft.birthDate!,
+        gender: draft.gender,
+        hasHypertension: false,
+        systolicPressure: draft.systolicPressure,
+        diastolicPressure: draft.diastolicPressure,
+        pregnancyStatus: 'tidak_hamil',
+      );
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        routeUntukCategoryKey(hasil.categoryKey),
+        (route) => false,
+        arguments: {'categoryKey': hasil.categoryKey, 'hasil': hasil},
+      );
     }
+  }
+
+  bool _shouldSkipPregnancyQuestion(DateTime birthDate) {
+    // SKI 2023 defines wanita usia subur as ages 10-54 for anthropometry.
+    final usia = hitungUsiaTahun(birthDate);
+    return usia < 10 || usia > 54;
   }
 
   Widget _radioOption({
@@ -106,13 +129,25 @@ class _ProfileHypertensionStatusScreenState
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Text(
-                    label,
-                    style: GoogleFonts.plusJakartaSans(
-                      color: const Color(0xFF2C4A8A),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      height: 1.3,
+                  child: Text.rich(
+                    TextSpan(
+                      style: GoogleFonts.plusJakartaSans(
+                        color: const Color(0xFF2C4A8A),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        height: 1.3,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: label.startsWith('Ya,') ? 'Ya,' : 'Tidak,',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        TextSpan(
+                          text: label.startsWith('Ya')
+                              ? ' saya pernah didiagnosis hipertensi'
+                              : ' saya tidak pernah didiagnosis hipertensi',
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -134,13 +169,39 @@ class _ProfileHypertensionStatusScreenState
     return ProfileStepLayout(
       progress: progress,
       illustrationAsset: 'assets/illustrations/tensi.png',
-      title: 'Punya hipertensi?',
+      title: 'Riwayat Hipertensi',
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 2),
+          Center(
+            child: Text.rich(
+              textAlign: TextAlign.center,
+              TextSpan(
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  color: const Color(0xFF2C4A8A),
+                  fontWeight: FontWeight.w400,
+                ),
+                children: const [
+                  TextSpan(text: 'Apakah pernah '),
+                  TextSpan(
+                    text: 'didiagnosis hipertensi ',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  TextSpan(text: '\noleh '),
+                  TextSpan(
+                    text: 'dokter/tenaga kesehatan?',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
           _radioOption(
             selected: _hasHypertension == true,
-            label: 'Ya, saya punya riwayat hipertensi',
+            label: 'Ya, saya pernah didiagnosis hipertensi',
             onTap: () {
               setState(() {
                 _hasHypertension = true;
@@ -149,7 +210,7 @@ class _ProfileHypertensionStatusScreenState
           ),
           _radioOption(
             selected: _hasHypertension == false,
-            label: 'Tidak, saya tidak punya riwayat hipertensi',
+            label: 'Tidak, saya tidak pernah didiagnosis hipertensi',
             onTap: () {
               setState(() {
                 _hasHypertension = false;
@@ -178,7 +239,11 @@ class _ProfileHypertensionStatusScreenState
               text: 'akurat',
               style: TextStyle(fontWeight: FontWeight.w700),
             ),
-            TextSpan(text: ' hasil analisis dari Skenna'),
+            TextSpan(text: ' hasil analisis dari'),
+            TextSpan(
+              text: ' Skenna',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
           ],
         ),
       ),

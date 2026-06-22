@@ -18,6 +18,8 @@ class _ProfileBloodPressureScreenState
     extends State<ProfileBloodPressureScreen> {
   late final TextEditingController _systolicController;
   late final TextEditingController _diastolicController;
+  late final FocusNode _systolicFocusNode;
+  late final FocusNode _diastolicFocusNode;
 
   @override
   void initState() {
@@ -29,14 +31,28 @@ class _ProfileBloodPressureScreenState
     _diastolicController = TextEditingController(
       text: draft.diastolicPressure?.toString() ?? '',
     );
-    _systolicController.addListener(() => setState(() {}));
+    _systolicFocusNode = FocusNode();
+    _diastolicFocusNode = FocusNode();
+
+    _systolicController.addListener(_onSystolicChanged);
     _diastolicController.addListener(() => setState(() {}));
+  }
+
+  void _onSystolicChanged() {
+    setState(() {});
+    final text = _systolicController.text.trim();
+    // Auto-jump kalau udah 3 digit (misal sistolik biasanya 90-200+)
+    if (text.length == 3) {
+      _diastolicFocusNode.requestFocus();
+    }
   }
 
   @override
   void dispose() {
     _systolicController.dispose();
     _diastolicController.dispose();
+    _systolicFocusNode.dispose();
+    _diastolicFocusNode.dispose();
     super.dispose();
   }
 
@@ -45,6 +61,12 @@ class _ProfileBloodPressureScreenState
         .trim()
         .toLowerCase();
     return gender == 'laki-laki' || gender == 'laki_laki' || gender == 'male';
+  }
+
+  bool _shouldSkipPregnancyQuestion(DateTime birthDate) {
+    // SKI 2023 defines wanita usia subur as ages 10-54 for anthropometry.
+    final usia = hitungUsiaTahun(birthDate);
+    return usia < 10 || usia > 54;
   }
 
   bool get _isFormValid {
@@ -58,12 +80,12 @@ class _ProfileBloodPressureScreenState
       hintText: hintText,
       hintStyle: GoogleFonts.plusJakartaSans(
         color: const Color(0xFFB0B0B0),
-        fontSize: 13,
+        fontSize: 15,
         fontWeight: FontWeight.w400,
       ),
       filled: false,
       fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: Color(0xFFBEC7DB)),
@@ -106,6 +128,27 @@ class _ProfileBloodPressureScreenState
       return;
     }
 
+    final draft = ProfileWizardStore.instance.draft;
+    if (_shouldSkipPregnancyQuestion(draft.birthDate!)) {
+      final hasil = await klasifikasiNatriumDariDraft(
+        birthDate: draft.birthDate!,
+        gender: draft.gender,
+        hasHypertension: true,
+        hypertensionCondition: draft.hypertensionCondition,
+        systolicPressure: systolic,
+        diastolicPressure: diastolic,
+        pregnancyStatus: 'tidak_hamil',
+      );
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        routeUntukCategoryKey(hasil.categoryKey),
+        (route) => false,
+        arguments: {'categoryKey': hasil.categoryKey, 'hasil': hasil},
+      );
+      return;
+    }
+
     Navigator.pushNamed(context, AppRoutes.profilePregnancy);
   }
 
@@ -131,6 +174,25 @@ class _ProfileBloodPressureScreenState
       return;
     }
 
+    final draft = ProfileWizardStore.instance.draft;
+    if (_shouldSkipPregnancyQuestion(draft.birthDate!)) {
+      final hasil = await klasifikasiNatriumDariDraft(
+        birthDate: draft.birthDate!,
+        gender: draft.gender,
+        hasHypertension: true,
+        hypertensionCondition: draft.hypertensionCondition,
+        pregnancyStatus: 'tidak_hamil',
+      );
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        routeUntukCategoryKey(hasil.categoryKey),
+        (route) => false,
+        arguments: {'categoryKey': hasil.categoryKey, 'hasil': hasil},
+      );
+      return;
+    }
+
     Navigator.pushNamed(context, AppRoutes.profilePregnancy);
   }
 
@@ -144,11 +206,39 @@ class _ProfileBloodPressureScreenState
       progress: progress,
       illustrationAsset: 'assets/illustrations/tensi.png',
       title: 'Isi tekanan darah',
+      subtitle: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          style: GoogleFonts.plusJakartaSans(
+            color: const Color(0xFF2C4A8A),
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            height: 1.3,
+          ),
+          children: const [
+            TextSpan(text: 'Semakin '),
+            TextSpan(
+              text: 'lengkap data',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            TextSpan(text: ' yang kamu isi,\nsemakin '),
+            TextSpan(
+              text: 'akurat',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            TextSpan(text: ' hasil analisis dari'),
+            TextSpan(
+              text: ' Skenna',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+      ),
       content: Row(
         children: [
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   'Sistolik',
@@ -160,14 +250,24 @@ class _ProfileBloodPressureScreenState
                 ),
                 const SizedBox(height: 8),
                 SizedBox(
-                  height: 55,
                   child: TextField(
                     controller: _systolicController,
+                    focusNode: _systolicFocusNode,
                     keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.next,
+                    maxLength: 3,
+                    buildCounter:
+                        (
+                          context, {
+                          required currentLength,
+                          required isFocused,
+                          maxLength,
+                        }) => null, // sembunyiin counter "0/3"
+                    onSubmitted: (_) => _diastolicFocusNode.requestFocus(),
                     style: GoogleFonts.plusJakartaSans(
                       color: const Color(0xFF2C4A8A),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                     decoration: _inputDecoration('Isi sistolik'),
                   ),
@@ -178,7 +278,7 @@ class _ProfileBloodPressureScreenState
           const SizedBox(width: 16),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   'Diastolik',
@@ -190,10 +290,20 @@ class _ProfileBloodPressureScreenState
                 ),
                 const SizedBox(height: 8),
                 SizedBox(
-                  height: 55,
                   child: TextField(
                     controller: _diastolicController,
+                    focusNode: _diastolicFocusNode,
                     keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.done,
+                    maxLength: 3,
+                    buildCounter:
+                        (
+                          context, {
+                          required currentLength,
+                          required isFocused,
+                          maxLength,
+                        }) => null,
+                    onSubmitted: (_) => _diastolicFocusNode.unfocus(),
                     style: GoogleFonts.plusJakartaSans(
                       color: const Color(0xFF2C4A8A),
                       fontSize: 16,

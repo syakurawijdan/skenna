@@ -27,6 +27,12 @@ class _ProfilePregnancyScreenState extends State<ProfilePregnancyScreen> {
           Navigator.pop(context);
         }
       });
+    } else if (_shouldSkipPregnancyQuestion) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _navigateToResult(statusKehamilan: 'tidak_hamil');
+        }
+      });
     }
   }
 
@@ -35,6 +41,15 @@ class _ProfilePregnancyScreenState extends State<ProfilePregnancyScreen> {
         .trim()
         .toLowerCase();
     return gender == 'laki-laki' || gender == 'laki_laki' || gender == 'male';
+  }
+
+  bool get _shouldSkipPregnancyQuestion {
+    final birthDate = ProfileWizardStore.instance.draft.birthDate;
+    if (birthDate == null) return false;
+
+    // SKI 2023 defines wanita usia subur as ages 10-54 for anthropometry.
+    final usia = hitungUsiaTahun(birthDate);
+    return usia < 10 || usia > 54;
   }
 
   String? _normalizeUiPregnancyStatus(String? value) {
@@ -153,7 +168,7 @@ class _ProfilePregnancyScreenState extends State<ProfilePregnancyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isMale) {
+    if (_isMale || _shouldSkipPregnancyQuestion) {
       return Scaffold(
         backgroundColor: Colors.white,
         body: const SafeArea(
@@ -175,16 +190,6 @@ class _ProfilePregnancyScreenState extends State<ProfilePregnancyScreen> {
       title: 'Sedang hamil atau menyusui?',
       content: Column(
         children: [
-          // Text(
-          //   'Informasi ini digunakan untuk menyesuaikan rekomendasi batas konsumsi natrium harian sesuai kondisi Anda.',
-          //   textAlign: TextAlign.center,
-          //   style: GoogleFonts.plusJakartaSans(
-          //     color: const Color(0xFF2C4A8A),
-          //     fontSize: 14,
-          //     fontWeight: FontWeight.w400,
-          //     height: 1.35,
-          //   ),
-          // ),
           const SizedBox(height: 16),
           _optionCard(
             selected: _statusKehamilan == 'pregnant',
@@ -226,7 +231,11 @@ class _ProfilePregnancyScreenState extends State<ProfilePregnancyScreen> {
               text: 'akurat',
               style: TextStyle(fontWeight: FontWeight.w700),
             ),
-            TextSpan(text: ' hasil analisis dari Skenna'),
+            TextSpan(text: ' hasil analisis dari'),
+            TextSpan(
+              text: ' Skenna',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
           ],
         ),
       ),

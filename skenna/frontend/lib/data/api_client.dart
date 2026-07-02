@@ -84,8 +84,9 @@ class ApiClient {
   // ===========================================================================
 
   String get baseUrl {
-    if (_apiBaseUrlFromEnv.isNotEmpty) {
-      return _apiBaseUrlFromEnv;
+    final configuredBaseUrl = _apiBaseUrlFromEnv.trim();
+    if (configuredBaseUrl.isNotEmpty) {
+      return _trimTrailingSlash(configuredBaseUrl);
     }
 
     if (kIsWeb) return 'http://localhost:8000';
@@ -93,6 +94,84 @@ class ApiClient {
       return 'http://10.0.2.2:8000';
     }
     return 'http://192.168.1.9:8000';
+  }
+
+  static String _trimTrailingSlash(String value) {
+    return value.endsWith('/') ? value.substring(0, value.length - 1) : value;
+  }
+
+  void _logRequest(String method, Uri uri) {
+    print('API BASE URL = $baseUrl');
+    print('Request URL = $uri');
+    print('Request Method = $method');
+  }
+
+  Future<http.Response> _get(
+    Uri uri, {
+    Map<String, String>? headers,
+  }) {
+    _logRequest('GET', uri);
+    return _client.get(uri, headers: headers);
+  }
+
+  Future<http.Response> _post(
+    Uri uri, {
+    Map<String, String>? headers,
+    Object? body,
+    Encoding? encoding,
+  }) {
+    _logRequest('POST', uri);
+    return _client.post(
+      uri,
+      headers: headers,
+      body: body,
+      encoding: encoding,
+    );
+  }
+
+  Future<http.Response> _put(
+    Uri uri, {
+    Map<String, String>? headers,
+    Object? body,
+    Encoding? encoding,
+  }) {
+    _logRequest('PUT', uri);
+    return _client.put(
+      uri,
+      headers: headers,
+      body: body,
+      encoding: encoding,
+    );
+  }
+
+  Future<http.Response> _patch(
+    Uri uri, {
+    Map<String, String>? headers,
+    Object? body,
+    Encoding? encoding,
+  }) {
+    _logRequest('PATCH', uri);
+    return _client.patch(
+      uri,
+      headers: headers,
+      body: body,
+      encoding: encoding,
+    );
+  }
+
+  Future<http.Response> _delete(
+    Uri uri, {
+    Map<String, String>? headers,
+    Object? body,
+    Encoding? encoding,
+  }) {
+    _logRequest('DELETE', uri);
+    return _client.delete(
+      uri,
+      headers: headers,
+      body: body,
+      encoding: encoding,
+    );
   }
 
   String imageUrl(String? imagePath) {
@@ -108,7 +187,7 @@ class ApiClient {
     final uri = Uri.parse('$baseUrl/api/v1/sodium/classify');
     final body = jsonEncode({'sodium_mg': sodiumMg, 'serving_size_g': 100});
     final res = await _sendWithAuthRetry(
-      (headers) => _client.post(uri, headers: headers, body: body),
+      (headers) => _post(uri, headers: headers, body: body),
     );
     return _decodeMap(res);
   }
@@ -116,7 +195,7 @@ class ApiClient {
   // Auto-set current user ID setelah buat demo user
   Future<Map<String, dynamic>> createDemoUser() async {
     final uri = Uri.parse('$baseUrl/api/v1/users/demo');
-    final res = await _client.post(
+    final res = await _post(
       uri,
       headers: {'Content-Type': 'application/json'},
     );
@@ -150,7 +229,7 @@ class ApiClient {
     });
 
     final res = await _sendWithAuthRetry(
-      (headers) => _client.post(uri, headers: headers, body: body),
+      (headers) => _post(uri, headers: headers, body: body),
     );
     return _decodeMap(res);
   }
@@ -173,13 +252,12 @@ class ApiClient {
       if (productName != null && productName.trim().isNotEmpty)
         'product_name': productName,
       if (kategori != null && kategori.trim().isNotEmpty) 'kategori': kategori,
-      if (sodiumPerPortionMg != null)
-        'sodium_mg': sodiumPerPortionMg.round(),
+      if (sodiumPerPortionMg != null) 'sodium_mg': sodiumPerPortionMg.round(),
       if (scanId != null) 'scan_id': scanId,
     };
     final encodedBody = jsonEncode(body);
     final res = await _sendWithAuthRetry(
-      (headers) => _client.post(uri, headers: headers, body: encodedBody),
+      (headers) => _post(uri, headers: headers, body: encodedBody),
     ).timeout(const Duration(seconds: 50));
     return _decodeMap(res);
   }
@@ -191,7 +269,7 @@ class ApiClient {
     String? productName,
   }) async {
     final uri = Uri.parse('$baseUrl/api/v1/rekomendasi-produk');
-    final res = await _client.post(
+    final res = await _post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
@@ -230,7 +308,7 @@ class ApiClient {
       if (pregnancyStatus != null) 'pregnancy_status': pregnancyStatus,
     };
 
-    final res = await _client.put(
+    final res = await _put(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(body),
@@ -250,7 +328,7 @@ class ApiClient {
     final effectiveUserId = userId ?? await currentUserId;
     final uri = Uri.parse('$baseUrl/api/v1/users/$effectiveUserId/full-name');
 
-    final res = await _client.put(
+    final res = await _put(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'full_name': fullName}),
@@ -265,7 +343,7 @@ class ApiClient {
       '$baseUrl/api/v1/history/intake?user_id=$effectiveUserId',
     );
     final res = await _sendWithAuthRetry(
-      (headers) => _client.get(uri, headers: headers),
+      (headers) => _get(uri, headers: headers),
     );
     final body = _decodeJson(res);
     if (body is List<dynamic>) return body;
@@ -280,7 +358,7 @@ class ApiClient {
       '$baseUrl/api/v1/history/consumed-today?user_id=$effectiveUserId',
     );
     final res = await _sendWithAuthRetry(
-      (headers) => _client.get(uri, headers: headers),
+      (headers) => _get(uri, headers: headers),
     );
     final body = _decodeJson(res);
     if (body is List<dynamic>) return body;
@@ -293,7 +371,7 @@ class ApiClient {
       '$baseUrl/api/v1/history/scans?user_id=$effectiveUserId',
     );
     final res = await _sendWithAuthRetry(
-      (headers) => _client.get(uri, headers: headers),
+      (headers) => _get(uri, headers: headers),
     );
     final body = _decodeJson(res);
     if (body is List<dynamic>) return body;
@@ -308,7 +386,7 @@ class ApiClient {
       '$baseUrl/api/v1/history/dashboard?user_id=$effectiveUserId',
     );
     final res = await _sendWithAuthRetry(
-      (headers) => _client.get(uri, headers: headers),
+      (headers) => _get(uri, headers: headers),
     );
     return _decodeMap(res);
   }
@@ -319,7 +397,7 @@ class ApiClient {
       '$baseUrl/api/v1/chat/history?user_id=$effectiveUserId',
     );
     final res = await _sendWithAuthRetry(
-      (headers) => _client.get(uri, headers: headers),
+      (headers) => _get(uri, headers: headers),
     );
     final body = _decodeJson(res);
     if (body is List<dynamic>) {
@@ -376,7 +454,7 @@ class ApiClient {
       if (scanId != null) 'scan_id': scanId,
     };
 
-    final res = await _client.post(
+    final res = await _post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(body),
@@ -394,7 +472,7 @@ class ApiClient {
     debugPrint('=== REGISTER BASE URL: $baseUrl'); // tambah ini
     debugPrint('=== REGISTER ENV URL: $_apiBaseUrlFromEnv');
     final uri = Uri.parse('$baseUrl/api/v1/auth/register');
-    final res = await _client.post(
+    final res = await _post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
@@ -426,7 +504,7 @@ class ApiClient {
     required String password,
   }) async {
     final uri = Uri.parse('$baseUrl/api/v1/auth/login');
-    final res = await _client.post(
+    final res = await _post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'password': password}),
@@ -458,7 +536,7 @@ class ApiClient {
     String purpose = 'register',
   }) async {
     final uri = Uri.parse('$baseUrl/api/v1/auth/send-otp');
-    final res = await _client.post(
+    final res = await _post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'purpose': purpose}),
@@ -468,7 +546,7 @@ class ApiClient {
 
   Future<void> verifyOtp({required String email, required String otp}) async {
     final uri = Uri.parse('$baseUrl/api/v1/auth/verify-otp');
-    final res = await _client.post(
+    final res = await _post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'otp': otp}),
@@ -480,7 +558,7 @@ class ApiClient {
     final effectiveUserId = userId ?? await currentUserId;
     final uri = Uri.parse('$baseUrl/api/v1/users/$effectiveUserId/profile');
     final res = await _sendWithAuthRetry(
-      (headers) => _client.get(uri, headers: headers),
+      (headers) => _get(uri, headers: headers),
     );
     debugPrint('=== getUserProfile status: ${res.statusCode}');
     debugPrint('=== getUserProfile body: ${res.body}'); // ← sudah ada
@@ -490,7 +568,7 @@ class ApiClient {
   Future<Map<String, dynamic>> getUserAccount([int? userId]) async {
     final effectiveUserId = userId ?? await currentUserId;
     final uri = Uri.parse('$baseUrl/api/v1/users/$effectiveUserId');
-    final res = await _client.get(uri);
+    final res = await _get(uri);
     return _decodeMap(res);
   }
 
@@ -503,7 +581,7 @@ class ApiClient {
     final uri = Uri.parse(
       '$baseUrl/api/v1/users/$effectiveUserId/change-password',
     );
-    final res = await _client.post(
+    final res = await _post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
@@ -523,7 +601,7 @@ class ApiClient {
     required String newPassword,
   }) async {
     final uri = Uri.parse('$baseUrl/api/v1/auth/reset-password');
-    final res = await _client.post(
+    final res = await _post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'new_password': newPassword}),
@@ -535,7 +613,8 @@ class ApiClient {
         if (body is Map<String, dynamic> && body['detail'] != null) {
           message = body['detail'].toString();
         }
-      } catch (_) {
+      } catch (e) {
+        print('resetPassword response JSON parse error = $e');
         // Keep default message when the body is not JSON.
       }
       throw ApiException(res.statusCode, message, body: res.body);
@@ -550,7 +629,8 @@ class ApiClient {
         if (body is Map<String, dynamic> && body['detail'] != null) {
           message = body['detail'].toString();
         }
-      } catch (_) {
+      } catch (e) {
+        print('API error response JSON parse error = $e');
         // Keep default API error message when the body is not JSON.
       }
       throw ApiException(response.statusCode, message, body: response.body);
@@ -594,7 +674,7 @@ class ApiClient {
       if (imagePath2 != null) 'image_path2': imagePath2,
     });
     debugPrint('body: $body');
-    final res = await _client.patch(
+    final res = await _patch(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: body,
@@ -618,7 +698,7 @@ class ApiClient {
   }) async {
     final effectiveUserId = userId ?? await currentUserId;
     final uri = Uri.parse('$baseUrl/api/v1/history/intake/$intakeId');
-    final res = await _client.put(
+    final res = await _put(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
@@ -644,7 +724,7 @@ class ApiClient {
     final uri = Uri.parse(
       '$baseUrl/api/v1/history/intake/$intakeId?user_id=$effectiveUserId',
     );
-    final res = await _client.delete(uri);
+    final res = await _delete(uri);
     return _decodeMap(res);
   }
 
@@ -654,7 +734,7 @@ class ApiClient {
     required String kategori,
   }) async {
     final uri = Uri.parse('$baseUrl/api/v1/cv/scan/$scanId');
-    final res = await _client.patch(
+    final res = await _patch(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'nama_produk': namaProduk, 'kategori': kategori}),
@@ -667,12 +747,13 @@ class ApiClient {
     if (refreshToken != null && refreshToken.isNotEmpty) {
       try {
         final uri = Uri.parse('$baseUrl/api/v1/auth/logout');
-        await _client.post(
+        await _post(
           uri,
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({'refresh_token': refreshToken}),
         );
-      } catch (_) {
+      } catch (e) {
+        print('Logout request failed = $e');
         // Local logout should still succeed when the network is unavailable.
       }
     }
@@ -706,7 +787,7 @@ class ApiClient {
 
     try {
       final uri = Uri.parse('$baseUrl/api/v1/auth/refresh');
-      final res = await _client.post(
+      final res = await _post(
         uri,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'refresh_token': refreshToken}),
@@ -718,7 +799,8 @@ class ApiClient {
       if (newAccessToken == null || newAccessToken.isEmpty) return false;
       await UserSession().setAccessToken(newAccessToken);
       return true;
-    } catch (_) {
+    } catch (e) {
+      print('Refresh token request failed = $e');
       return false;
     }
   }

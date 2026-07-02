@@ -70,7 +70,9 @@ class _LoginScreenState extends State<LoginScreen> {
       await _routeAfterLogin(userId);
     } on ApiException catch (e) {
       if (!mounted) return;
-      if (e.statusCode == HttpStatus.unauthorized) {
+      if (e.statusCode == HttpStatus.notFound) {
+        _showValidation('Email belum terdaftar');
+      } else if (e.statusCode == HttpStatus.unauthorized) {
         _showValidation('Email atau password salah');
       } else if (e.statusCode == HttpStatus.unprocessableEntity) {
         _showValidation('Data tidak valid. Periksa kembali email/password.');

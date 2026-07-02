@@ -13,7 +13,16 @@ config = context.config
 fileConfig(config.config_file_name)
 config.set_main_option("sqlalchemy.url", settings.database_url)
 
-target_metadata = None
+from app.db.base import Base
+from app.models.user import User
+from app.models.user_profile import UserProfile
+from app.models.chat_session import ChatSession
+from app.models.food_label_scan import FoodLabelScan
+from app.models.intake_history import IntakeHistory
+from app.models.otp_verification import OtpVerification
+from app.models.refresh_token import RefreshToken
+
+target_metadata = Base.metadata
 
 
 def run_migrations_offline():

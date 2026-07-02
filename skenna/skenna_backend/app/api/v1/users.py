@@ -1,38 +1,110 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.core.security import hash_password, verify_password
+from app.core.deps import get_current_user
+from app.models.user import User
 from app.repositories.user_repository import UserRepository
-from app.schemas.user import UserProfileUpsertRequest, UserProfileUpsertResponse
-from app.schemas.user import UserCreateRequest
-from app.schemas.user import UserCreateRequest, UserProfileUpsertRequest, UserProfileUpsertResponse
-from fastapi import APIRouter, Depends, HTTPException
+from app.schemas.user import (
+    ChangePasswordRequest,
+    UserFullNameUpdateRequest,
+    UserProfileUpsertRequest,
+    UserProfileUpsertResponse,
+)
 
 router = APIRouter()
 
 
-@router.post("/demo")
-def create_demo_user(db: Session = Depends(get_db)) -> dict[str, int | str]:
-	user = UserRepository.get_or_create_demo_user(db)
-	return {"id": user.id, "email": user.email, "full_name": user.full_name}
+@router.put("/profile", response_model=UserProfileUpsertResponse)
+def upsert_user_profile(
+	payload: UserProfileUpsertRequest,
+	db: Session = Depends(get_db),
+	current_user: User = Depends(get_current_user),
+) -> UserProfileUpsertResponse:
+	return _upsert_profile_for_user(db, current_user.id, payload)
 
-@router.post("/register")
-def register_user(
-    payload: UserCreateRequest,
-    db: Session = Depends(get_db)
-) -> dict:
-    user = UserRepository.create_user(db, full_name=payload.full_name)
-    return {"id": user.id, "full_name": user.full_name}
 
 @router.put("/{user_id}/profile", response_model=UserProfileUpsertResponse)
-def upsert_user_profile(
+def upsert_user_profile_by_id(
 	user_id: int,
 	payload: UserProfileUpsertRequest,
 	db: Session = Depends(get_db),
 ) -> UserProfileUpsertResponse:
+	return _upsert_profile_for_user(db, user_id, payload)
+
+
+@router.put("/{user_id}/full-name", response_model=UserProfileUpsertResponse)
+def update_user_full_name(
+	user_id: int,
+	payload: UserFullNameUpdateRequest,
+	db: Session = Depends(get_db),
+) -> UserProfileUpsertResponse:
+	user = UserRepository.update_full_name(db, user_id, payload.full_name)
+	if user is None:
+		raise HTTPException(status_code=404, detail="User not found")
+	return UserProfileUpsertResponse(
+		user_id=user.id,
+		full_name=user.full_name,
+		message="Full name saved",
+	)
+
+
+@router.post("/{user_id}/change-password")
+def change_password(
+	user_id: int,
+	payload: ChangePasswordRequest,
+	db: Session = Depends(get_db),
+) -> dict:
+	user = UserRepository.get_by_id(db, user_id)
+	if user is None:
+		raise HTTPException(status_code=404, detail="User not found")
+	if not verify_password(payload.old_password, user.hashed_password):
+		raise HTTPException(status_code=401, detail="Password lama salah")
+	user.hashed_password = hash_password(payload.new_password)
+	db.commit()
+	return {"message": "Password changed"}
+
+@router.get("/profile")
+def get_user_profile(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    return _get_profile_for_user(db, current_user.id)
+
+
+@router.get("/{user_id}/profile")
+def get_user_profile_by_id(
+    user_id: int,
+    db: Session = Depends(get_db),
+) -> dict:
+    return _get_profile_for_user(db, user_id)
+
+
+@router.get("/{user_id}")
+def get_user_account(
+	user_id: int,
+	db: Session = Depends(get_db),
+) -> dict:
+	user = UserRepository.get_by_id(db, user_id)
+	if user is None:
+		raise HTTPException(status_code=404, detail="User not found")
+	return {
+		"user_id": user.id,
+		"full_name": user.full_name,
+		"email": user.email,
+	}
+
+
+def _upsert_profile_for_user(
+	db: Session,
+	user_id: int,
+	payload: UserProfileUpsertRequest,
+) -> UserProfileUpsertResponse:
 	print(f"[PROFILE] user_id={user_id}, gender={payload.gender}, full_name={payload.full_name}")
-	user = UserRepository.get_or_create_by_id(db, user_id)
-	user.full_name = payload.full_name.strip()
+	user = UserRepository.get_by_id(db, user_id)
+	if user is None:
+		raise HTTPException(status_code=404, detail="User not found")
 
 	UserRepository.upsert_profile(
 		db,
@@ -44,9 +116,9 @@ def upsert_user_profile(
 		systolic_pressure=payload.systolic_pressure,
 		diastolic_pressure=payload.diastolic_pressure,
 		pregnancy_status=payload.pregnancy_status,
+		full_name=payload.full_name,
 	)
 
-	db.commit()
 	db.refresh(user)
 	return UserProfileUpsertResponse(
 		user_id=user.id,
@@ -54,13 +126,12 @@ def upsert_user_profile(
 		message="Profile saved",
 	)
 
-@router.get("/{user_id}/profile")
-def get_user_profile(
-    user_id: int,
-    db: Session = Depends(get_db),
-) -> dict:
-    user = UserRepository.get_or_create_by_id(db, user_id)
+
+def _get_profile_for_user(db: Session, user_id: int) -> dict:
+    user = UserRepository.get_by_id(db, user_id)
     profile = UserRepository.get_profile(db, user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
     
     if profile is None:
         raise HTTPException(status_code=404, detail="Profile not found")
@@ -71,4 +142,9 @@ def get_user_profile(
         "gender": profile.gender,
         "birth_date": str(profile.birth_date),
         "has_hypertension": profile.has_hypertension,
+        "hypertension_condition": profile.hypertension_condition,
+        "systolic_pressure": profile.systolic_pressure,
+        "diastolic_pressure": profile.diastolic_pressure,
+        "pregnancy_status": profile.pregnancy_status,
+        "updated_at": profile.updated_at.isoformat() if profile.updated_at else None,
     }

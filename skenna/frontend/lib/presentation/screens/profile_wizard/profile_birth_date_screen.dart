@@ -112,7 +112,7 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
       filled: false,
       fillColor: Colors.white,
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: Color(0xFFBEC7DB)),
@@ -149,35 +149,10 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
     final birthDate = DateTime(year, month, day);
     ProfileWizardStore.instance.draft.birthDate = birthDate;
 
-    final today = DateTime.now();
-    int age = today.year - birthDate.year;
-    if (today.month < birthDate.month ||
-        (today.month == birthDate.month && today.day < birthDate.day)) {
-      age--;
-    }
-
-    if (age < 18) {
-      final hasil = await klasifikasiNatriumDariDraft(
-        birthDate: birthDate,
-        gender: ProfileWizardStore.instance.draft.gender,
-        hasHypertension: false,
-      );
-      if (!mounted) return;
-      FocusScope.of(context).unfocus();
-      await Future<void>.delayed(const Duration(milliseconds: 80));
-      if (!mounted) return;
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        routeUntukCategoryKey(hasil.categoryKey),
-        (route) => false,
-        arguments: {'categoryKey': hasil.categoryKey, 'hasil': hasil},
-      );
-    } else {
-      FocusScope.of(context).unfocus();
-      await Future<void>.delayed(const Duration(milliseconds: 80));
-      if (!mounted) return;
-      Navigator.pushNamed(context, AppRoutes.profileHypertensionStatus);
-    }
+    FocusScope.of(context).unfocus();
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    if (!mounted) return;
+    Navigator.pushNamed(context, AppRoutes.profileHypertensionStatus);
   }
 
   Widget _field({
@@ -217,7 +192,7 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
           },
           style: GoogleFonts.plusJakartaSans(
             color: const Color(0xFF2C4A8A),
-            fontSize: 18,
+            fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
           decoration: _inputDecoration(
@@ -300,7 +275,11 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
               text: 'akurat',
               style: TextStyle(fontWeight: FontWeight.w700),
             ),
-            TextSpan(text: ' hasil analisis dari Skenna'),
+            TextSpan(text: ' hasil analisis dari'),
+            TextSpan(
+              text: ' Skenna',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
           ],
         ),
       ),

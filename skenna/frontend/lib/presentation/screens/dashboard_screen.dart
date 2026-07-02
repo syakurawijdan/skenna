@@ -9,6 +9,7 @@ import '../../data/user_session.dart';
 import '../../domain/natrium_classifier.dart';
 import '../navigation/app_routes.dart';
 import '../widgets/profile_avatar_image.dart';
+import '../widgets/natrium_warning_dialog.dart';
 
 enum DashboardGender { male, female }
 
@@ -117,10 +118,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String? _userName;
   DashboardGender _gender = DashboardGender.male;
   int _dailyLimitMg = 2000;
+  int _akgReferenceMg = 1500;
   bool _isHardMaximum = true;
   int _consumedTodayMg = 0;
   int _productsScannedToday = 0;
   bool _isLoading = true;
+  int? _systolicPressure;
+  int? _diastolicPressure;
+  String? _escKategori;
 
   @override
   void initState() {
@@ -177,18 +182,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
         diastolicPressure: profile['diastolic_pressure'] as int?,
         pregnancyStatus: profile['pregnancy_status'] as String?,
       );
-
+      debugPrint('=== batasNatrium: ${hasil.batasNatrium}');
+      debugPrint('=== akgReferenceMg: ${hasil.akgReferenceMg}');
+      debugPrint('=== isHardMaximum: ${hasil.isHardMaximum}');
+      debugPrint('=== profile gender: ${profile['gender']}');
+      debugPrint(
+        '=== profile has_hypertension: ${profile['has_hypertension']}',
+      );
+      debugPrint('=== profile birth_date: ${profile['birth_date']}');
+      debugPrint('=== profile systolic: ${profile['systolic_pressure']}');
+      debugPrint('=== profile diastolic: ${profile['diastolic_pressure']}');
       if (!mounted) return;
       setState(() {
         _userName = profile['full_name'] as String?;
         _gender = _resolveDashboardGender(profile['gender'] as String? ?? '');
         _dailyLimitMg = hasil.batasNatrium;
+        _akgReferenceMg = hasil.akgReferenceMg ?? hasil.batasNatrium;
         _isHardMaximum = hasil.isHardMaximum;
         _consumedTodayMg =
             (stats['total_sodium_consumed_today'] as num?)?.round() ?? 0;
         _productsScannedToday =
             (stats['products_scanned_today'] as num?)?.round() ?? 0;
         _isLoading = false;
+        _systolicPressure = profile['systolic_pressure'] as int?;
+        _diastolicPressure = profile['diastolic_pressure'] as int?;
+        _escKategori = hasil.escKategori;
+        _checkAndShowWarning();
       });
     } catch (e) {
       debugPrint('Dashboard load failed: $e');
@@ -209,7 +228,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _formatMg(int value) => formatNatriumMg(value);
 
   void _openChatbot(BuildContext context, {String? question}) {
-    Navigator.pushNamed(context, AppRoutes.chatbot, arguments: question);
+    Navigator.pushNamed(
+      context,
+      AppRoutes.chatbot,
+      arguments: {'initialQuestion': question},
+    );
   }
 
   Future<void> _openEditProfile(BuildContext context) async {
@@ -241,8 +264,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  void _checkAndShowWarning() {
+    if (_consumedTodayMg >= _dailyLimitMg && _dailyLimitMg > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => NatriumWarningDialog(isHardMaximum: _isHardMaximum),
+        );
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     final palette = _palette;
     final displayName = _displayName(palette);
     final remainingMg = math.max(0, _dailyLimitMg - _consumedTodayMg);
@@ -254,7 +296,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         top: false,
         bottom: false,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 35, 16, 150),
+          padding: const EdgeInsets.fromLTRB(16, 55, 16, 150),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 362),
@@ -270,8 +312,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           customBorder: const CircleBorder(),
                           onTap: () => _openEditProfile(context),
                           child: SizedBox(
-                            width: 68,
-                            height: 68,
+                            width: 65,
+                            height: 65,
                             child: ProfileAvatarImage(
                               asset: palette.profileAsset,
                               size: 68,
@@ -319,8 +361,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           customBorder: const CircleBorder(),
                           onTap: () => _openEditProfile(context),
                           child: SizedBox(
-                            width: 42,
-                            height: 42,
+                            width: 40,
+                            height: 40,
                             child: Center(
                               child: SvgPicture.asset(
                                 'assets/icons/edit-2.svg',
@@ -351,6 +393,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   _NatriumRecapCard(
                     palette: palette,
                     dailyLimitMg: _dailyLimitMg,
+                    akgReferenceMg: _akgReferenceMg,
                     isHardMaximum: _isHardMaximum,
                     consumedTodayMg: _consumedTodayMg,
                     isLoading: _isLoading,
@@ -361,12 +404,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Expanded(
                         child: _MiniInfoCard(
-                          title: 'Scan Produk',
-                          subtitle: 'Jumlah produk yang\nkamu scan hari ini',
+                          title: 'Total Konsumsi',
+                          subtitle: 'Jumlah produk yang\n dikonsumsi hari ini',
                           value: _isLoading
                               ? '-'
                               : _productsScannedToday.toString(),
-                          unit: 'Items',
+                          unit: 'Produk',
                           titleColor: const Color(0xFF213868),
                           bodyColor: const Color(0xFF2C4A8A),
                           valueColor: const Color(0xFF233B6E),
@@ -384,7 +427,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           unit: 'Mg/Na',
                           titleColor: const Color(0xFFE53935),
                           bodyColor: const Color(0xFFE53935),
-                          valueColor: const Color(0xFFB72E2A),
+                          valueColor: const Color(0xFFE53935),
                           iconBg: const Color(0xFFFBE1E1),
                           icon: 'assets/icons/timer.svg',
                           valueChipColor: const Color(0xFFFCE2E4),
@@ -393,6 +436,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
+                  if (_systolicPressure != null &&
+                      _diastolicPressure != null &&
+                      _escKategori != null) ...[
+                    Text(
+                      'Status Hipertensi',
+                      style: GoogleFonts.plusJakartaSans(
+                        color: const Color(0xFF213868),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        height: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _HypertensionStatusCard(
+                      systolic: _systolicPressure!,
+                      diastolic: _diastolicPressure!,
+                      escKategori: _escKategori!,
+                      onEditTap: () => _openEditProfile(context),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                   Text(
                     'Tanya Skenny',
                     style: GoogleFonts.plusJakartaSans(
@@ -402,7 +466,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 1,
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
                   _SkennyCard(
                     palette: palette,
                     onChatTap: () => _openChatbot(context),
@@ -429,6 +493,7 @@ class _NatriumRecapCard extends StatelessWidget {
     required this.onTapProduct,
     required this.palette,
     required this.dailyLimitMg,
+    required this.akgReferenceMg,
     required this.isHardMaximum,
     required this.consumedTodayMg,
     required this.isLoading,
@@ -440,6 +505,7 @@ class _NatriumRecapCard extends StatelessWidget {
   final bool isHardMaximum;
   final int consumedTodayMg;
   final bool isLoading;
+  final int akgReferenceMg;
 
   static const double _cardRadius = 24;
   static const double _buttonWidth = 137;
@@ -454,9 +520,11 @@ class _NatriumRecapCard extends StatelessWidget {
         ? 0.0
         : consumedTodayMg / dailyLimitMg;
     final akgPercentage = (akgProgress * 100).round();
-    final limitLabel = isHardMaximum ? 'Batas Harianmu' : 'Kebutuhan Harianmu';
+    final limitLabel = isHardMaximum
+        ? 'Batas Harianmu'
+        : 'Kebutuhan Natrium Harianmu';
     final progressLabel = isHardMaximum
-        ? 'Asupan natrium minimum'
+        ? 'Kebutuhan natrium harian'
         : 'Asupan natrium tercukupi';
 
     return LayoutBuilder(
@@ -575,6 +643,7 @@ class _NatriumRecapCard extends StatelessWidget {
                                               height: 1,
                                             ),
                                       ),
+
                                       TextSpan(
                                         text: '  Mg/Na',
                                         style: GoogleFonts.plusJakartaSans(
@@ -611,7 +680,7 @@ class _NatriumRecapCard extends StatelessWidget {
                                       child: Text(
                                         isLoading
                                             ? '-'
-                                            : '${formatNatriumMg(consumedTodayMg)} / ${formatNatriumMg(dailyLimitMg)} mg',
+                                            : '${formatNatriumMg(consumedTodayMg)} / ${formatNatriumMg(akgReferenceMg)} mg',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: textTheme.bodyMedium?.copyWith(
@@ -1065,7 +1134,7 @@ class _SkennyCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
-                  height: 38,
+                  height: 40,
                   child: ElevatedButton(
                     onPressed: onChatTap,
                     style: ElevatedButton.styleFrom(
@@ -1080,7 +1149,7 @@ class _SkennyCard extends StatelessWidget {
                       style: GoogleFonts.plusJakartaSans(
                         color: Colors.white,
                         fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                         height: 1,
                       ),
                     ),
@@ -1183,6 +1252,187 @@ class _SkennyQuestionChip extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _HypertensionStatusCard extends StatelessWidget {
+  const _HypertensionStatusCard({
+    required this.systolic,
+    required this.diastolic,
+    required this.escKategori,
+    required this.onEditTap,
+  });
+
+  final int systolic;
+  final int diastolic;
+  final String escKategori;
+  final VoidCallback onEditTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFFFE0E0)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x140F172A),
+            blurRadius: 14,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            escKategori,
+            style: GoogleFonts.plusJakartaSans(
+              color: const Color(0xFFE53935),
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text.rich(
+            TextSpan(
+              style: GoogleFonts.plusJakartaSans(
+                color: const Color(0xFFE53935),
+                fontSize: 13,
+                height: 1.2,
+              ),
+              children: [
+                const TextSpan(
+                  text: 'Disarankan ',
+                  style: TextStyle(fontWeight: FontWeight.w400),
+                ),
+                const TextSpan(
+                  text: 'membatasi asupan natrium harian',
+                  style: TextStyle(fontWeight: FontWeight.w400),
+                ),
+                const TextSpan(
+                  text: '.',
+                  style: TextStyle(fontWeight: FontWeight.w400),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _BloodPressureChip(
+                  label: 'Sistolik',
+                  value: '$systolic',
+                  unit: 'mmHg',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _BloodPressureChip(
+                  label: 'Diastolik',
+                  value: '$diastolic',
+                  unit: 'mmHg',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: ElevatedButton(
+              onPressed: onEditTap,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE53935),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(22),
+                ),
+              ),
+              child: Text(
+                'Edit Tekanan Darah',
+                style: GoogleFonts.plusJakartaSans(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  height: 1,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BloodPressureChip extends StatelessWidget {
+  const _BloodPressureChip({
+    required this.label,
+    required this.value,
+    required this.unit,
+  });
+
+  final String label;
+  final String value;
+  final String unit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFCEBEB),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.plusJakartaSans(
+              color: const Color(0xFFE53935),
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                value,
+                style: GoogleFonts.plusJakartaSans(
+                  color: const Color(0xFFE53935),
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(width: 3),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Text(
+                  unit,
+                  style: GoogleFonts.plusJakartaSans(
+                    color: const Color(0xFFE53935),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

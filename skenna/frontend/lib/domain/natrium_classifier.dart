@@ -1,12 +1,31 @@
 // ignore_for_file: non_constant_identifier_names
 
 import 'dart:convert';
-import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 enum KategoriNatrium { hijau, kuning, merah }
+
+class SodiumCategoryKey {
+  static const normalAnak = 'normal_anak';
+  static const normalDewasa = 'normal_dewasa';
+  static const hipertensiDewasa = 'hipertensi_dewasa';
+  static const hipertensiAnak = 'hipertensi_anak';
+  static const hipertensiHamilRemaja = 'hipertensi_hamil_remaja';
+  static const hamilDewasa = 'hamil_dewasa';
+  static const hamilRemaja = 'hamil_remaja';
+
+  static const values = <String>{
+    normalAnak,
+    normalDewasa,
+    hipertensiDewasa,
+    hipertensiAnak,
+    hipertensiHamilRemaja,
+    hamilDewasa,
+    hamilRemaja,
+  };
+}
 
 @immutable
 class HasilKlasifikasi {
@@ -14,11 +33,92 @@ class HasilKlasifikasi {
     required this.batasNatrium,
     required this.kategori,
     required this.hamilDenganHT,
+    this.categoryKey = SodiumCategoryKey.normalDewasa,
+    this.usia = 0,
+    this.akgReferenceMg,
+    this.escKategori,
+    this.sistolik,
+    this.diastolik,
+    this.isPregnantOrBreastfeeding = false,
+    this.hasHypertension = false,
+    this.isHardMaximum = true,
   });
 
   final int batasNatrium;
   final KategoriNatrium kategori;
   final bool hamilDenganHT;
+  final String categoryKey;
+  final int usia;
+  final int? akgReferenceMg;
+  final String? escKategori;
+  final int? sistolik;
+  final int? diastolik;
+  final bool isPregnantOrBreastfeeding;
+  final bool hasHypertension;
+  final bool isHardMaximum;
+}
+
+@immutable
+class SodiumResolvedCategory {
+  const SodiumResolvedCategory({
+    required this.categoryKey,
+    required this.bucket,
+  });
+
+  final String categoryKey;
+  final KategoriNatrium bucket;
+}
+
+class SodiumCategoryResolver {
+  static SodiumResolvedCategory resolve({
+    required int age,
+    required bool hasHypertension,
+    required bool isPregnantOrBreastfeeding,
+    int? systolic,
+    int? diastolic,
+  }) {
+    if (age < 16) {
+      if (hasHypertension && isPregnantOrBreastfeeding) {
+        return const SodiumResolvedCategory(
+          categoryKey: SodiumCategoryKey.hipertensiHamilRemaja,
+          bucket: KategoriNatrium.merah,
+        );
+      }
+      if (hasHypertension) {
+        return const SodiumResolvedCategory(
+          categoryKey: SodiumCategoryKey.hipertensiAnak,
+          bucket: KategoriNatrium.merah,
+        );
+      }
+      if (isPregnantOrBreastfeeding) {
+        return const SodiumResolvedCategory(
+          categoryKey: SodiumCategoryKey.hamilRemaja,
+          bucket: KategoriNatrium.kuning,
+        );
+      }
+      return const SodiumResolvedCategory(
+        categoryKey: SodiumCategoryKey.normalAnak,
+        bucket: KategoriNatrium.hijau,
+      );
+    }
+
+    if (hasHypertension) {
+      return const SodiumResolvedCategory(
+        categoryKey: SodiumCategoryKey.hipertensiDewasa,
+        bucket: KategoriNatrium.merah,
+      );
+    }
+    if (isPregnantOrBreastfeeding) {
+      return const SodiumResolvedCategory(
+        categoryKey: SodiumCategoryKey.hamilDewasa,
+        bucket: KategoriNatrium.kuning,
+      );
+    }
+    return const SodiumResolvedCategory(
+      categoryKey: SodiumCategoryKey.normalDewasa,
+      bucket: KategoriNatrium.hijau,
+    );
+  }
 }
 
 class SodiumRuleBook {
@@ -37,6 +137,79 @@ class SodiumRuleBook {
     return SodiumRuleBook._(raw: decoded);
   }
 
+  int limitForCategory(String categoryKey, int usia, String gender) {
+    switch (categoryKey) {
+      case SodiumCategoryKey.normalAnak:
+      case SodiumCategoryKey.hipertensiAnak:
+      case SodiumCategoryKey.hipertensiHamilRemaja:
+      case SodiumCategoryKey.hamilRemaja:
+        return akgUntukUsia(usia, gender);
+      case SodiumCategoryKey.hipertensiDewasa:
+        return _intValue(['referensi', 'aha', 'nilai'], fallback: 1500);
+      case SodiumCategoryKey.normalDewasa:
+      case SodiumCategoryKey.hamilDewasa:
+      default:
+        return _intValue(['referensi', 'who', 'nilai'], fallback: 2000);
+    }
+  }
+
+  int akgUntukUsia(int usia, String gender) {
+    final table = raw['akg_usia_kurang_16'];
+    if (table is Map<String, dynamic>) {
+      for (final row in table.values) {
+        if (row is! Map<String, dynamic>) continue;
+        final minUsia = (row['usia_min_tahun'] as num?)?.toInt();
+        final maxUsia = (row['usia_max_tahun'] as num?)?.toInt();
+        if (minUsia == null || maxUsia == null) continue;
+        if (usia < minUsia || usia > maxUsia) continue;
+
+        final nilaiMg = row['nilai_mg'];
+        if (nilaiMg is int) return nilaiMg;
+        if (nilaiMg is num) return nilaiMg.toInt();
+
+        final normalizedGender = _normalizeGender(gender);
+        final genderKey = normalizedGender == 'perempuan'
+            ? 'perempuan_mg'
+            : 'laki_laki_mg';
+        final genderValue = row[genderKey];
+        if (genderValue is int) return genderValue;
+        if (genderValue is num) return genderValue.toInt();
+      }
+    }
+
+    return _akgFallbackForAgeAndGender(usia, gender);
+  }
+
+  int adultAkgReferenceForAge(int usia) {
+    // TODO: confirm final AKG table with product owner before defense
+    if (usia <= 18) return 1700;
+    if (usia <= 64) return 1500;
+    if (usia <= 80) return 1300;
+    return 1100;
+  }
+
+  String escKategori(int? sistolik, int? diastolik) {
+    if (sistolik == null || diastolik == null) {
+      return 'Tidak diketahui';
+    }
+    if (sistolik >= 180 || diastolik >= 110) {
+      return 'Hipertensi Grade 3';
+    }
+    if (sistolik >= 160 || diastolik >= 100) {
+      return 'Hipertensi Grade 2';
+    }
+    if (sistolik >= 140 || diastolik >= 90) {
+      return 'Hipertensi Grade 1';
+    }
+    if (sistolik >= 130 || diastolik >= 85) {
+      return 'High Normal';
+    }
+    if (sistolik >= 120 || diastolik >= 80) {
+      return 'Normal';
+    }
+    return 'Optimal';
+  }
+
   int _intValue(List<String> path, {required int fallback}) {
     dynamic current = raw;
     for (final key in path) {
@@ -48,100 +221,6 @@ class SodiumRuleBook {
     }
     if (current is int) return current;
     if (current is num) return current.toInt();
-    return fallback;
-  }
-
-  List<dynamic> _listValue(List<String> path) {
-    dynamic current = raw;
-    for (final key in path) {
-      if (current is Map<String, dynamic> && current.containsKey(key)) {
-        current = current[key];
-      } else {
-        return const [];
-      }
-    }
-    return current is List<dynamic> ? current : const [];
-  }
-
-  int batasAkgUntukUsia(int usia) {
-    final rows = (raw['tabel_batas_natrium'] as List<dynamic>? ?? const []);
-    for (final row in rows) {
-      if (row is! Map<String, dynamic>) continue;
-      final minUsia = (row['usia_min'] as num?)?.toInt();
-      final maxUsia = row['usia_max'] as num?;
-      if (minUsia == null) continue;
-      final cocokMin = usia >= minUsia;
-      final cocokMax = maxUsia == null || usia <= maxUsia.toInt();
-      if (cocokMin && cocokMax) {
-        final value = row['akg_batas_tercukupi_mg'];
-        if (value is int) return value;
-        if (value is num) return value.toInt();
-      }
-    }
-    return _intValue([
-      'aturan_dewasa',
-      'batas_maksimum_who',
-      'nilai',
-    ], fallback: 2000);
-  }
-
-  int batasDewasa() => _intValue([
-    'aturan_dewasa',
-    'batas_maksimum_who',
-    'nilai',
-  ], fallback: 2000);
-
-  int batasRiwayatHt(String riwayatHt, int batasUsia) {
-    final normalized = _normalizeRiwayatHT(riwayatHt);
-    final rows = _listValue(['aturan_dewasa', 'batas_riwayat_hipertensi']);
-
-    if (normalized == 'ya_riwayat_saja' || normalized == 'ya_terkontrol') {
-      return batasUsia - 300;
-    }
-    if (normalized == 'ya_aktif_terkontrol') {
-      return 1500;
-    }
-    if (normalized == 'ya_tidak_terkontrol') {
-      return 1200;
-    }
-
-    for (final row in rows) {
-      if (row is! Map<String, dynamic>) continue;
-      if (row['riwayat_ht'] == normalized) {
-        final value = row['batas_mg'];
-        if (value is int) return value;
-        if (value is num) return value.toInt();
-      }
-    }
-    return 9999;
-  }
-
-  int batasTd(int? sistolik, int? diastolik) {
-    if (sistolik == null || diastolik == null) return 9999;
-    final rows = _listValue(['aturan_dewasa', 'batas_tekanan_darah']);
-    for (final row in rows) {
-      if (row is! Map<String, dynamic>) continue;
-      final batas = row['batas_mg'];
-      final stage = row['stage']?.toString() ?? '';
-      if (stage == 'krisis' && (sistolik >= 180 || diastolik >= 120)) {
-        return _asInt(batas, fallback: 1000);
-      }
-      if (stage == 'stage_2' && (sistolik >= 140 || diastolik >= 90)) {
-        return _asInt(batas, fallback: 1200);
-      }
-      if (stage == 'stage_1' && (sistolik >= 130 || diastolik >= 80)) {
-        return _asInt(batas, fallback: 1500);
-      }
-      if (stage == 'elevated' && sistolik >= 120 && diastolik < 80) {
-        return _asInt(batas, fallback: 1800);
-      }
-    }
-    return 9999;
-  }
-
-  static int _asInt(dynamic value, {required int fallback}) {
-    if (value is int) return value;
-    if (value is num) return value.toInt();
     return fallback;
   }
 }
@@ -170,6 +249,9 @@ String _normalizeRiwayatHT(String riwayatHT) {
       return 'ya_riwayat_saja';
     case 'ya_aktif_terkontrol':
     case 'aktif_terkontrol':
+    case 'controlled':
+    case 'terkontrol':
+    case 'ya_terkontrol':
       return 'ya_aktif_terkontrol';
     case 'ya':
     case 'iya':
@@ -177,10 +259,11 @@ String _normalizeRiwayatHT(String riwayatHT) {
     case 'true':
     case '1':
     case 'ada':
+    case 'uncontrolled':
+    case 'aktif_tidak_terkontrol':
+    case 'tidak_terkontrol':
+    case 'ya_tidak_terkontrol':
       return 'ya_tidak_terkontrol';
-    case 'terkontrol':
-    case 'ya_terkontrol':
-      return 'ya_terkontrol';
     case 'tidak':
     case 'no':
     case 'false':
@@ -195,10 +278,13 @@ String _normalizeRiwayatHT(String riwayatHT) {
 String _normalizeStatusKehamilan(String statusKehamilan) {
   final normalized = _normalizeToken(statusKehamilan);
   switch (normalized) {
+    case 'pregnant':
+    case 'hamil':
     case 'hamil_normal':
+      return 'hamil_normal';
+    case 'breastfeeding':
     case 'menyusui':
-    case 'tidak_hamil':
-      return normalized;
+      return 'menyusui';
     default:
       return 'tidak_hamil';
   }
@@ -216,84 +302,53 @@ int hitungUsiaTahun(DateTime birthDate, {DateTime? asOf}) {
   return age;
 }
 
-int hitungBatasUsia(int usia) {
-  if (usia <= 0) return 9999;
-  if (usia <= 1) return 120;
-  if (usia <= 2) return 370;
+int _akgFallbackForAgeAndGender(int usia, String gender) {
+  // TODO: confirm final AKG table with product owner before defense
+  // NOTE: 0-11 months intentionally collapses into the 0-5-month value (120mg) since `usia` is integer years, not months. Accepted by product owner - see sodium_rules.json's 6_11_bulan note.
+  if (usia <= 0) return 120;
   if (usia <= 3) return 800;
   if (usia <= 6) return 900;
   if (usia <= 9) return 1000;
-  if (usia <= 12) return 1300;
+  if (usia <= 12) {
+    return _normalizeGender(gender) == 'perempuan' ? 1400 : 1300;
+  }
   if (usia <= 15) return 1500;
-  if (usia <= 18) return 1700;
-  if (usia <= 29) return 1500;
-  if (usia <= 49) return 1500;
-  if (usia <= 64) return 1500;
-  if (usia <= 80) return 1300;
-  return 1100;
+  return 2000;
 }
 
-int hitungBatasTD(int? sistolik, int? diastolik) {
-  if (sistolik == null || diastolik == null) return 9999;
-  if (sistolik >= 180 || diastolik >= 120) return 1000;
-  if (sistolik >= 140 || diastolik >= 90) return 1200;
-  if (sistolik >= 130 || diastolik >= 80) return 1500;
-  if (sistolik >= 120 && diastolik < 80) return 1800;
-  return 9999;
+bool _riwayatImpliesHypertension(String riwayatHT) {
+  return _normalizeRiwayatHT(riwayatHT) != 'tidak_ada';
 }
 
-int hitungBatasHT(String riwayatHT, int batasUsia) {
-  switch (_normalizeRiwayatHT(riwayatHT)) {
-    case 'ya_tidak_terkontrol':
-      return 1200;
-    case 'ya_terkontrol':
-      return batasUsia - 300;
-    case 'tidak_ada':
-    default:
-      return 9999;
-  }
+bool _isPregnantOrBreastfeeding(String statusKehamilan) {
+  final normalized = _normalizeStatusKehamilan(statusKehamilan);
+  return normalized == 'hamil_normal' || normalized == 'menyusui';
 }
 
-int terapkanKehamilan(int batasPrimer, String statusKehamilan) {
-  switch (_normalizeStatusKehamilan(statusKehamilan)) {
-    case 'hamil_normal':
-    case 'menyusui':
-      return math.max(batasPrimer, 1500);
-    default:
-      return batasPrimer;
-  }
-}
-
-KategoriNatrium tentukanKategori(
-  String gender,
-  String riwayatHT,
-  String statusKehamilan,
-) {
-  final normalizedGender = _normalizeGender(gender);
-  final punyaHT = _normalizeRiwayatHT(riwayatHT) != 'tidak_ada';
-  final normalizedStatusKehamilan = _normalizeStatusKehamilan(statusKehamilan);
-  final sedangHamil =
-      normalizedGender == 'perempuan' &&
-      (normalizedStatusKehamilan == 'hamil_normal' ||
-          normalizedStatusKehamilan == 'menyusui');
-
-  if (punyaHT) {
-    return KategoriNatrium.merah;
-  }
-  if (sedangHamil) {
-    return KategoriNatrium.kuning;
-  }
-  return KategoriNatrium.hijau;
-}
-
-String routeUntukKategori(KategoriNatrium kategori) {
-  switch (kategori) {
+String routeUntukCategoryKey(String categoryKey) {
+  switch (_bucketForCategoryKey(categoryKey)) {
     case KategoriNatrium.hijau:
       return '/sodium-safe';
     case KategoriNatrium.kuning:
       return '/sodium-pregnant';
     case KategoriNatrium.merah:
       return '/sodium-unsafe';
+  }
+}
+
+KategoriNatrium _bucketForCategoryKey(String categoryKey) {
+  switch (categoryKey) {
+    case SodiumCategoryKey.hipertensiDewasa:
+    case SodiumCategoryKey.hipertensiAnak:
+    case SodiumCategoryKey.hipertensiHamilRemaja:
+      return KategoriNatrium.merah;
+    case SodiumCategoryKey.hamilDewasa:
+    case SodiumCategoryKey.hamilRemaja:
+      return KategoriNatrium.kuning;
+    case SodiumCategoryKey.normalAnak:
+    case SodiumCategoryKey.normalDewasa:
+    default:
+      return KategoriNatrium.hijau;
   }
 }
 
@@ -342,9 +397,8 @@ String _mapHypertensionConditionToRiwayatHt({
     case 'ya_riwayat_saja':
       return 'ya_riwayat_saja';
     case 'ya_aktif_terkontrol':
-      return 'ya_aktif_terkontrol';
     case 'ya_terkontrol':
-      return 'ya_riwayat_saja';
+      return 'ya_aktif_terkontrol';
     case 'ya_tidak_terkontrol':
       return 'ya_tidak_terkontrol';
     default:
@@ -353,18 +407,7 @@ String _mapHypertensionConditionToRiwayatHt({
 }
 
 String _mapPregnancyStatusToStatusKehamilan(String? pregnancyStatus) {
-  final normalized = _normalizeToken(pregnancyStatus ?? '');
-  switch (normalized) {
-    case 'pregnant':
-    case 'hamil':
-    case 'hamil_normal':
-      return 'hamil_normal';
-    case 'breastfeeding':
-    case 'menyusui':
-      return 'menyusui';
-    default:
-      return 'tidak_hamil';
-  }
+  return _normalizeStatusKehamilan(pregnancyStatus ?? '');
 }
 
 Future<HasilKlasifikasi> klasifikasiNatriumDariDraft({
@@ -406,44 +449,43 @@ Future<HasilKlasifikasi> klasifikasiNatriumDariAsset({
   }
 
   final usia = hitungUsiaTahun(resolvedTanggalLahir);
-  if (usia < 18) {
-    return HasilKlasifikasi(
-      batasNatrium: ruleBook.batasAkgUntukUsia(usia),
-      kategori: KategoriNatrium.hijau,
-      hamilDenganHT: false,
-    );
-  }
-
   final resolvedStatusKehamilan =
       statusKehamilan != null && statusKehamilan.isNotEmpty
       ? statusKehamilan
       : status_kehamilan;
-  final batasUsia = ruleBook.batasDewasa();
-  final batasTd = ruleBook.batasTd(sistolik, diastolik);
-  final batasHt = ruleBook.batasRiwayatHt(riwayat_ht, batasUsia);
-  final normalizedRiwayatHt = _normalizeRiwayatHT(riwayat_ht);
-  final batasFinal = normalizedRiwayatHt == 'ya_tidak_terkontrol'
-      ? 1200
-      : math.max(math.min(batasUsia, math.min(batasTd, batasHt)), 1000);
-  final kategori = tentukanKategori(
-    gender,
-    riwayat_ht,
-    resolvedStatusKehamilan,
-  );
   final normalizedGender = _normalizeGender(gender);
-  final normalizedStatusKehamilan = _normalizeStatusKehamilan(
-    resolvedStatusKehamilan,
-  );
-  final hamilDenganHT =
+  final normalizedRiwayatHt = _normalizeRiwayatHT(riwayat_ht);
+  final pregnantOrBreastfeeding =
       normalizedGender == 'perempuan' &&
-      normalizedRiwayatHt != 'tidak_ada' &&
-      (normalizedStatusKehamilan == 'hamil_normal' ||
-          normalizedStatusKehamilan == 'menyusui');
+      _isPregnantOrBreastfeeding(resolvedStatusKehamilan);
+  final hasHypertension = normalizedRiwayatHt != 'tidak_ada';
+
+  final resolved = SodiumCategoryResolver.resolve(
+    age: usia,
+    hasHypertension: hasHypertension,
+    isPregnantOrBreastfeeding: pregnantOrBreastfeeding,
+    systolic: sistolik,
+    diastolic: diastolik,
+  );
+  final limit = ruleBook.limitForCategory(resolved.categoryKey, usia, gender);
+  final akgReference = usia >= 16
+      ? ruleBook.adultAkgReferenceForAge(usia)
+      : ruleBook.akgUntukUsia(usia, gender);
+  final hamilDenganHT = pregnantOrBreastfeeding && hasHypertension;
 
   return HasilKlasifikasi(
-    batasNatrium: batasFinal,
-    kategori: kategori,
+    batasNatrium: limit,
+    kategori: resolved.bucket,
     hamilDenganHT: hamilDenganHT,
+    categoryKey: resolved.categoryKey,
+    usia: usia,
+    akgReferenceMg: akgReference,
+    escKategori: ruleBook.escKategori(sistolik, diastolik),
+    sistolik: sistolik,
+    diastolik: diastolik,
+    isPregnantOrBreastfeeding: pregnantOrBreastfeeding,
+    hasHypertension: hasHypertension,
+    isHardMaximum: usia >= 16,
   );
 }
 
@@ -455,30 +497,40 @@ HasilKlasifikasi klasifikasiNatrium({
   int? diastolik,
   String statusKehamilan = 'tidak_hamil',
 }) {
-  final batasUsia = hitungBatasUsia(usia);
-  final batasTD = hitungBatasTD(sistolik, diastolik);
-  final batasHT = hitungBatasHT(riwayatHT, batasUsia);
-  final normalizedRiwayatHt = _normalizeRiwayatHT(riwayatHT);
-
-  var batasPrimer = normalizedRiwayatHt == 'ya_tidak_terkontrol'
-      ? 1200
-      : math.min(batasUsia, math.min(batasTD, batasHT));
-
-  if (_normalizeGender(gender) == 'perempuan') {
-    batasPrimer = terapkanKehamilan(batasPrimer, statusKehamilan);
-  }
-
-  final batasFinal = math.max(batasPrimer, 1000);
-  final kategori = tentukanKategori(gender, riwayatHT, statusKehamilan);
-  final hamilDenganHT =
-      _normalizeGender(gender) == 'perempuan' &&
-      normalizedRiwayatHt != 'tidak_ada' &&
-      (_normalizeStatusKehamilan(statusKehamilan) == 'hamil_normal' ||
-          _normalizeStatusKehamilan(statusKehamilan) == 'menyusui');
+  final normalizedGender = _normalizeGender(gender);
+  final hasHypertension = _riwayatImpliesHypertension(riwayatHT);
+  final pregnantOrBreastfeeding =
+      normalizedGender == 'perempuan' &&
+      _isPregnantOrBreastfeeding(statusKehamilan);
+  final resolved = SodiumCategoryResolver.resolve(
+    age: usia,
+    hasHypertension: hasHypertension,
+    isPregnantOrBreastfeeding: pregnantOrBreastfeeding,
+    systolic: sistolik,
+    diastolic: diastolik,
+  );
+  final fallbackRuleBook = SodiumRuleBook._(raw: const {});
+  final limit = fallbackRuleBook.limitForCategory(
+    resolved.categoryKey,
+    usia,
+    gender,
+  );
+  final akgReference = usia >= 16
+      ? fallbackRuleBook.adultAkgReferenceForAge(usia)
+      : fallbackRuleBook.akgUntukUsia(usia, gender);
 
   return HasilKlasifikasi(
-    batasNatrium: batasFinal,
-    kategori: kategori,
-    hamilDenganHT: hamilDenganHT,
+    batasNatrium: limit,
+    kategori: resolved.bucket,
+    hamilDenganHT: pregnantOrBreastfeeding && hasHypertension,
+    categoryKey: resolved.categoryKey,
+    usia: usia,
+    akgReferenceMg: akgReference,
+    escKategori: fallbackRuleBook.escKategori(sistolik, diastolik),
+    sistolik: sistolik,
+    diastolik: diastolik,
+    isPregnantOrBreastfeeding: pregnantOrBreastfeeding,
+    hasHypertension: hasHypertension,
+    isHardMaximum: usia >= 16,
   );
 }

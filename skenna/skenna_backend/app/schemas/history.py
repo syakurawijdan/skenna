@@ -38,6 +38,8 @@ class IntakeCreateRequest(BaseModel):
     package_ml2: int = 0
     portions_in_package2: int = 1
     satuan_takaran2: str = "g"
+    image_path: Optional[str] = None
+    image_path2: Optional[str] = None
 
 class IntakeHistoryResponse(BaseModel):
     id: int
@@ -49,6 +51,7 @@ class IntakeHistoryResponse(BaseModel):
     is_consumed: bool
     servings: int = 1 
     consumed_at: datetime
+    image_path: Optional[str] = None
     
     class Config:
         from_attributes = True 
@@ -56,8 +59,22 @@ class IntakeHistoryResponse(BaseModel):
 class IntakeUpdateRequest(BaseModel):
     user_id: int
     is_consumed: bool
-    servings: int | None = None        
+    servings: int | None = None
     consumed_at: datetime | None = None
+    food_name: str | None = None
+    sodium_mg: float | None = None
+    product_name2: str | None = None
+    sodium_mg2: float | None = None
+    image_path: str | None = None     
+    image_path2: str | None = None
+
+class IntakeFullUpdateRequest(BaseModel):
     user_id: int
-    is_consumed: bool
+    food_name: str
+    kategori: str | None = None
+    sodium_mg: float
+    sodium_level: str
     servings: int = 1
+    package_ml: int = 0
+    portions_in_package: int = 1
+    satuan_takaran: str = "g"

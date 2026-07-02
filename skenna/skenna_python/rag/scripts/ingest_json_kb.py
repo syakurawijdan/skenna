@@ -10,8 +10,7 @@ writes normalized outputs to:
 - ``processed_text/<topic>/``: one JSON file per document with combined text
 - ``chunks/<topic>/``: one JSONL file per document with retrieval-ready chunks
 
-This lets the curated JSON become the primary knowledge base while keeping the
-existing docstore/index pipeline unchanged.
+This lets the curated JSON become the primary knowledge base for ChromaDB indexing.
 """
 
 from __future__ import annotations

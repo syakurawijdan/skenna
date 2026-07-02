@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +9,8 @@ import '../../domain/natrium_classifier.dart';
 import '../navigation/app_routes.dart';
 import '../widgets/custom_dropdown.dart';
 import '../widgets/profile_avatar_image.dart';
+import '../widgets/profile_save_result_popup.dart';
+import '../widgets/logout_confirm_dialog.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -47,9 +51,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool? _hasHypertension;
   String? _hypertensionCondition;
   String? _pregnancyStatus;
+  String? _email;
   int? _day;
   int? _month;
   int? _year;
+  Map<String, dynamic>? _original;
 
   @override
   void initState() {
@@ -58,6 +64,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _monthCtrl.addListener(() => setState(() {}));
     _yearCtrl.addListener(() => setState(() {}));
     _loadProfile();
+    _nameController.addListener(() => setState(() {}));
+    _systolicController.addListener(() => setState(() {}));
+    _diastolicController.addListener(() => setState(() {}));
   }
 
   @override
@@ -120,9 +129,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
       await ApiClient.setCurrentUserId(userId);
       final profile = await _apiClient.getUserProfile(userId);
+      String? email;
+      try {
+        final account = await _apiClient.getUserAccount();
+        email = account['email'] as String?;
+      } catch (_) {}
       final birthDate = DateTime.parse(profile['birth_date'] as String);
       if (!mounted) return;
       setState(() {
+        _email = email;
         _nameController.text = profile['full_name'] as String? ?? '';
         _gender = profile['gender'] as String?;
         _hasHypertension = profile['has_hypertension'] as bool? ?? false;
@@ -141,6 +156,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         _monthCtrl.text = birthDate.month.toString().padLeft(2, '0');
         _yearCtrl.text = birthDate.year.toString();
         _loading = false;
+        _original = _buildSnapshot();
       });
     } catch (e) {
       if (!mounted) return;
@@ -221,7 +237,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ? diastolic
         : null;
     final effectivePregnancyStatus = _isFemale
-        ? (_shouldShowPregnancyQuestion ? _pregnancyStatus : 'tidak_hamil')
+        ? (_shouldShowPregnancyQuestion ? _pregnancyStatus : 'none')
         : null;
 
     setState(() => _saving = true);
@@ -255,14 +271,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         pregnancyStatus: effectivePregnancyStatus,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profil berhasil diperbarui')),
+      setState(() {
+        _saving = false;
+        _original = _buildSnapshot();
+      });
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => ProfileSaveResultPopup(
+          isSuccess: true,
+          onDismissed: () {
+            if (mounted) Navigator.pop(context, true);
+          },
+        ),
       );
-      Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      _showMessage('Gagal menyimpan profil: $e');
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const ProfileSaveResultPopup(isSuccess: false),
+      );
     }
   }
 
@@ -274,6 +304,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+    );
+  }
+
+  Future<void> _logout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => const LogoutConfirmDialog(),
+    );
+    if (confirm != true) return;
+
+    await _apiClient.logout();
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      AppRoutes.welcome,
+      (route) => false,
     );
   }
 
@@ -315,6 +361,123 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: _border),
       ),
+    );
+  }
+
+  InputDecoration _accountFieldDecoration({Widget? suffixIcon}) {
+    const disabledFill = Color(0xFFF0F2F7);
+    const disabledBorder = Color(0xFFE1E5EF);
+
+    return InputDecoration(
+      filled: true,
+      fillColor: disabledFill,
+      suffixIcon: suffixIcon,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: disabledBorder),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: disabledBorder),
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: disabledBorder),
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.plusJakartaSans(
+        color: _blue,
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+
+  Widget _accountTextField({
+    required String label,
+    required String value,
+    Widget? suffixIcon,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            color: _blue,
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 55,
+          child: TextFormField(
+            initialValue: value,
+            readOnly: true,
+            enableInteractiveSelection: false,
+            style: GoogleFonts.plusJakartaSans(
+              color: const Color(0xFF5E6B84),
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+            decoration: _accountFieldDecoration(suffixIcon: suffixIcon),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _accountSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle('Informasi Akun'),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF5F6FA),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _accountTextField(
+                label: 'Email',
+                value: _email ?? '-',
+                suffixIcon: const Icon(
+                  Icons.lock_outline,
+                  color: Color(0xFFB0B0B0),
+                ),
+              ),
+              const SizedBox(height: 18),
+              _accountTextField(
+                label: 'Password',
+                value: '••••••••',
+                suffixIcon: TextButton(
+                  onPressed: () =>
+                      Navigator.pushNamed(context, AppRoutes.changePassword),
+                  child: Text(
+                    'Ganti',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: _blue,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -484,6 +647,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (m == null || _monthCtrl.text.isEmpty) return null;
     if (m < 1 || m > 12) return 'Bulan tidak valid';
     return null;
+  }
+
+  Map<String, dynamic> _buildSnapshot() => {
+    'name': _nameController.text.trim(),
+    'gender': _gender,
+    'day': _dayCtrl.text.trim(),
+    'month': _monthCtrl.text.trim(),
+    'year': _yearCtrl.text.trim(),
+    'hasHypertension': _hasHypertension,
+    'hypertensionCondition': _hypertensionCondition,
+    'systolic': _systolicController.text.trim(),
+    'diastolic': _diastolicController.text.trim(),
+    'pregnancyStatus': _pregnancyStatus,
+  };
+
+  bool get _hasChanges {
+    if (_original == null) return false;
+    return _buildSnapshot().toString() != _original.toString();
   }
 
   // ── Label field ────────────────────────────────────────────────────────────
@@ -737,7 +918,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: _loading
             ? const Center(child: CircularProgressIndicator(color: _blue))
             : SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(24, 24, 24, 40),
+                padding: EdgeInsets.fromLTRB(16, 24, 16, 40),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -793,6 +974,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                     ),
                     SizedBox(height: sectionGap),
+                    _accountSection(),
+                    SizedBox(height: sectionGap),
+                    _sectionTitle('Informasi Profil'),
+                    const SizedBox(height: 12),
                     _label('Nama panggilan'),
                     TextField(
                       controller: _nameController,
@@ -947,7 +1132,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     // Jarak statis yang aman antara form terakhir dengan tombol
                     const SizedBox(height: 40),
 
-                    // ── Tombol Simpan Perubahan (Ikut ter-scroll & Bebas Overflow) ──
                     Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 343),
@@ -955,7 +1139,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           width: double.infinity,
                           height: 55,
                           child: FilledButton(
-                            onPressed: _saving ? null : _save,
+                            onPressed: (_saving || !_hasChanges) ? null : _save,
                             style: FilledButton.styleFrom(
                               backgroundColor: const Color(0xFF2C4A8A),
                               disabledBackgroundColor: const Color(0xFFD9D9D9),
@@ -978,11 +1162,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                     'Simpan Perubahan',
                                     style: GoogleFonts.plusJakartaSans(
                                       color: Colors.white,
-                                      fontSize: 19,
+                                      fontSize: 18,
                                       fontWeight: FontWeight.w600,
                                       height: 1,
                                     ),
                                   ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 343),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 55,
+                          child: TextButton(
+                            onPressed: _logout,
+                            style: TextButton.styleFrom(
+                              foregroundColor: const Color(0xFFE53935),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                            ),
+                            child: Text(
+                              'Keluar',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: const Color(0xFFE53935),
+                                fontSize: 19,
+                                fontWeight: FontWeight.w600,
+                                height: 1,
+                              ),
+                            ),
                           ),
                         ),
                       ),

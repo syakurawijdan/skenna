@@ -6,6 +6,17 @@ import '../widgets/custom_dropdown.dart';
 import 'hasil_scan_aman_screen.dart';
 import '../../domain/natrium_classifier.dart';
 
+String _sodiumLevelLabel(KategoriNatrium kategori) {
+  switch (kategori) {
+    case KategoriNatrium.hijau:
+      return 'low';
+    case KategoriNatrium.kuning:
+      return 'medium';
+    case KategoriNatrium.merah:
+      return 'high';
+  }
+}
+
 class ScanConfirmationSheet extends StatefulWidget {
   final Map<String, dynamic> dataGizi;
   final int userId;
@@ -31,12 +42,13 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
     DropdownItem(value: 'mie_instan', label: 'Mie & Pasta Instan'),
     DropdownItem(value: 'keripik_snack', label: 'Snack & Keripik'),
     DropdownItem(value: 'makanan_kaleng', label: 'Makanan Kaleng'),
-    DropdownItem(value: 'biskuit_roti', label: 'Roti & Biskuit'),
+    DropdownItem(value: 'biskuit_roti', label: 'Roti'),
     DropdownItem(value: 'frozen_food', label: 'Frozen Food'),
     DropdownItem(value: 'sereal', label: 'Sereal & Oatmeal'),
     DropdownItem(value: 'biskuit', label: 'Biskuit & Wafer'),
     DropdownItem(value: 'susu', label: 'Susu & Produk Susu'),
     DropdownItem(value: 'minuman_kemasan', label: 'Minuman Kemasan'),
+    DropdownItem(value: 'saus_bumbu', label: 'Saus & Bumbu'),
     DropdownItem(value: 'lainnya', label: 'Lainnya'),
   ];
 
@@ -56,7 +68,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
 
   static InputBorder get _focusedBorder => OutlineInputBorder(
     borderRadius: BorderRadius.circular(10),
-    borderSide: const BorderSide(color: _blue, width: 2),
+    borderSide: const BorderSide(color: _blue, width: 1),
   );
 
   static InputBorder get _errorBorder => OutlineInputBorder(
@@ -97,6 +109,8 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
   // ── Apakah mode perbandingan? ──
   bool get _isModePerbandingan => widget.compareWithProduct != null;
 
+  bool get _isBumbuCategory => _kategori == 'saus_bumbu';
+
   bool get _formValid =>
       _namaController.text.trim().isNotEmpty &&
       _sodiumController.text.trim().isNotEmpty &&
@@ -107,6 +121,11 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
   @override
   void initState() {
     super.initState();
+    final initialKategori =
+        '${widget.dataGizi['kategori'] ?? widget.dataGizi['category'] ?? ''}';
+    if (_categoryItems.any((item) => item.value == initialKategori)) {
+      _kategori = initialKategori;
+    }
     _namaController = TextEditingController(
       text: widget.dataGizi['nama_produk'] ?? '',
     );
@@ -160,6 +179,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
     // ── Ambil daily limit user ──
     int dailyLimit = 2000; // ← deklarasi di sini
     bool isHardMaximum = true;
+    String sodiumLevelLabel = 'medium';
     try {
       final profile = await widget.apiClient.getUserProfile(widget.userId);
       final birthDateStr = profile['birth_date'] as String?;
@@ -175,6 +195,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
         );
         dailyLimit = hasil.batasNatrium;
         isHardMaximum = hasil.isHardMaximum;
+        sodiumLevelLabel = _sodiumLevelLabel(hasil.kategori);
       }
     } catch (e) {
       debugPrint('Gagal fetch daily limit: $e');
@@ -217,6 +238,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
             perPortionMg: double.tryParse(_sodiumController.text)?.toInt() ?? 0,
             dailyLimitMg: dailyLimit, // ← sudah terisi
             isHardMaximum: isHardMaximum,
+            sodiumLevel: sodiumLevelLabel,
             satuanTakaran:
                 (widget.dataGizi['satuan_takaran'] as String?)?.isNotEmpty ==
                     true
@@ -328,7 +350,10 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                   selectedValue: _kategori,
                 );
                 if (selected == null) return;
-                setState(() => _kategori = selected);
+                setState(() {
+                  _kategori = selected;
+                  if (_isBumbuCategory) _jumlahKonsumsi = 1;
+                });
               },
             ),
             const SizedBox(height: 14),
@@ -366,7 +391,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildLabel('Isi per sajian'),
+                      _buildLabel('Sajian per kemasan'),
                       TextField(
                         controller: _porsiController,
                         keyboardType: TextInputType.number,
@@ -399,11 +424,45 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
               ),
               onChanged: (_) => setState(() => _sodiumError = false),
             ),
-            const SizedBox(height: 14),
+            if (!_isBumbuCategory) ...[
+              const SizedBox(height: 14),
+              // ← TAMBAH header di atas preview box
+              Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Estimasi Total Natrium',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _blue,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDFE4ED),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '= ${(double.tryParse(_sodiumController.text) ?? 0).toInt() * _jumlahKonsumsi} mg natrium',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: _blue,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+              const SizedBox(height: 8),
+            ],
 
-            // ── Jumlah konsumsi — HANYA tampil di mode normal ──
-            if (!_isModePerbandingan) ...[
-              _buildLabel('Isi per sajian'),
+            if (!_isModePerbandingan && !_isBumbuCategory) ...[
+              _buildLabel('Berapa sajian yang kamu konsumsi?'),
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(color: const Color(0xFFD9D9D9)),
@@ -420,7 +479,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                     ),
                     Expanded(
                       child: Text(
-                        '$_jumlahKonsumsi Kemasan',
+                        '$_jumlahKonsumsi Sajian',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
@@ -430,7 +489,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                       ),
                     ),
                     IconButton(
-                      onPressed: _jumlahKonsumsi < 9
+                      onPressed: _jumlahKonsumsi < 10
                           ? () => setState(() => _jumlahKonsumsi++)
                           : null,
                       icon: const Icon(Icons.add),
@@ -478,8 +537,8 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
     child: Text(
       text,
       style: GoogleFonts.plusJakartaSans(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
+        fontSize: 13,
+        fontWeight: FontWeight.w400,
         color: const Color(0xFFAAAAAA),
       ),
     ),

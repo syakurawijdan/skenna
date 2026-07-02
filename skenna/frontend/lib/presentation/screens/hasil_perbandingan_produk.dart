@@ -5,7 +5,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../app_shell.dart';
 import 'scan_screen.dart';
 import '../../data/api_client.dart';
+import '../../domain/kategori_label.dart';
 import '../../../data/user_session.dart';
+import '../widgets/stop_natrium_dialog.dart';
+import '../widgets/yakin_makan_dialog.dart';
+import '../widgets/unsaved_changes_dialog.dart';
 
 // ════════════════════════════════════════════════════════════════════════════
 // Model data produk untuk perbandingan
@@ -30,9 +34,6 @@ class ProductCompareData {
   });
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// HasilBandingkanScreen
-// ════════════════════════════════════════════════════════════════════════════
 class HasilBandingkanScreen extends StatefulWidget {
   const HasilBandingkanScreen({
     super.key,
@@ -43,6 +44,11 @@ class HasilBandingkanScreen extends StatefulWidget {
     this.apiClient,
     this.readOnly = false,
     this.originalProduct,
+    this.sodiumLevel = 'medium',
+    this.fromHistory = false,
+    this.historyItemId,
+    this.isConsumed = false,
+    this.selectedProductName,
   });
 
   final ProductCompareData productA;
@@ -52,6 +58,11 @@ class HasilBandingkanScreen extends StatefulWidget {
   final ApiClient? apiClient;
   final bool readOnly;
   final ProductCompareData? originalProduct;
+  final String sodiumLevel;
+  final bool fromHistory;
+  final String? historyItemId;
+  final bool isConsumed;
+  final String? selectedProductName;
 
   @override
   State<HasilBandingkanScreen> createState() => _HasilBandingkanScreenState();
@@ -68,13 +79,25 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
 
   late TabController _tabController;
   bool _saving = false;
-  // 0 = belum pilih, 1 = produk A, 2 = produk B
   int _selectedProduct = 0;
+  int _selectedProductSaatDicatat = 0;
+  bool _statusDikonsumsi = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    if (widget.fromHistory) {
+      if (widget.selectedProductName == widget.productB.productName) {
+        _selectedProduct = 2;
+        _selectedProductSaatDicatat = 2;
+        _tabController.index = 1;
+      } else {
+        _selectedProduct = 1;
+        _selectedProductSaatDicatat = 1;
+      }
+    }
+    _statusDikonsumsi = widget.isConsumed;
   }
 
   @override
@@ -91,6 +114,20 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
       _aLebihRendah ? widget.productA : widget.productB;
   ProductCompareData get _loser =>
       _aLebihRendah ? widget.productB : widget.productA;
+
+  bool get _pilihanBerubah => _selectedProduct != _selectedProductSaatDicatat;
+  bool get _adaPerubahanBelumDisimpan {
+    if (widget.readOnly) return false;
+    if (!_statusDikonsumsi) return false;
+    return _pilihanBerubah;
+  }
+
+  bool get _tombolAktif {
+    if (widget.readOnly) return false;
+    if (_selectedProduct == 0) return false;
+    if (!_statusDikonsumsi) return true;
+    return _pilihanBerubah;
+  }
 
   double _pct(int mg) => mg / widget.dailyLimitMg;
   String get _limitPhrase =>
@@ -109,21 +146,6 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
     return ((hi - lo) / hi * 100).round().toString();
   }
 
-  String _labelKategori(String k) {
-    const map = {
-      'mie_instan': 'Mie & Pasta Instan',
-      'keripik_snack': 'Snack & Keripik',
-      'saus_bumbu': 'Saus & Bumbu',
-      'minuman_kemasan': 'Minuman Kemasan',
-      'biskuit_roti': 'Roti & Biskuit',
-      'makanan_kaleng': 'Makanan Kaleng',
-      'sereal': 'Sereal & Oatmeal',
-      'frozen_food': 'Frozen Food',
-      'lainnya': 'Lainnya',
-    };
-    return map[k] ?? k;
-  }
-
   // ── BUILD ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -131,101 +153,74 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
     final pctB = _pct(widget.productB.perPortionMg);
     final isAWinner = _aLebihRendah;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // ── HEADER ───────────────────────────────────────────────────
-              _buildHeader(),
+    final totalKemasanA =
+        widget.productA.perPortionMg * widget.productA.portionsInPackage;
+    final totalKemasanB =
+        widget.productB.perPortionMg * widget.productB.portionsInPackage;
 
-              const SizedBox(height: 12),
+    return PopScope(
+      canPop: !_adaPerubahanBelumDisimpan,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldSave = await showDialog<bool>(
+          context: context,
+          barrierColor: Colors.black.withOpacity(0.5),
+          builder: (ctx) => const UnsavedChangesDialog(),
+        );
+        if (shouldSave == null) return;
+        if (shouldSave) {
+          await _handleCatatKonsumsi();
+        } else {
+          if (mounted) Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── HEADER ───────────────────────────────────────────────────
+                _buildHeader(),
 
-              // ── BADGE WINNER + TAGLINE ────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    RichText(
-                      textAlign: TextAlign.center,
-                      text: TextSpan(
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: _blue,
-                        ),
-                        children: [
-                          TextSpan(
-                            text: '${_selisihPersen()}%',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w800,
-                              color: _colorSafe,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const TextSpan(text: ' lebih rendah natrium\n'),
-                          TextSpan(
-                            text: _winner.productName,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                          const TextSpan(text: ' dibanding '),
-                          TextSpan(
-                            text: _loser.productName,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                const SizedBox(height: 12),
 
-              const SizedBox(height: 24),
-
-              // ── KARTU PILIHAN ─────────────────────────────────────────────
-              if (!widget.readOnly) ...[
+                // ── BADGE WINNER + TAGLINE ────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Kamu pilih yang mana?',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: _blue,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: _blue,
+                          ),
                           children: [
-                            Expanded(
-                              child: _buildChoiceCard(
-                                product: widget.productA,
-                                isWinner: isAWinner,
-                                isSelected: _selectedProduct == 1,
-                                onTap: () => setState(() {
-                                  _selectedProduct = 1;
-                                  _tabController.animateTo(0);
-                                }),
+                            TextSpan(
+                              text: '${_selisihPersen()}%',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: _colorSafe,
+                                fontSize: 16,
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildChoiceCard(
-                                product: widget.productB,
-                                isWinner: !isAWinner,
-                                isSelected: _selectedProduct == 2,
-                                onTap: () => setState(() {
-                                  _selectedProduct = 2;
-                                  _tabController.animateTo(1);
-                                }),
+                            const TextSpan(text: ' lebih rendah natrium\n'),
+                            TextSpan(
+                              text: _winner.productName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const TextSpan(text: ' dibanding '),
+                            TextSpan(
+                              text: _loser.productName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ],
@@ -237,142 +232,205 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
 
                 const SizedBox(height: 24),
 
-                // ── KONTRIBUSI HARIAN ─────────────────────────────────────────
-              ],
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Kontribusi Harian',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: _blue,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildKontribusiCard(product: widget.productA, pct: pctA),
-                    const SizedBox(height: 10),
-                    _buildKontribusiCard(product: widget.productB, pct: pctB),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ── DETAIL PRODUK (TAB) ───────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Detail Produk',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: _blue,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTabToggle(),
-                    const SizedBox(height: 12),
-                    AnimatedBuilder(
-                      animation: _tabController,
-                      builder: (_, __) {
-                        final idx = _tabController.index;
-                        return idx == 0
-                            ? _buildDetailTab(widget.productA)
-                            : _buildDetailTab(widget.productB);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // ── CTA ───────────────────────────────────────────────────────
-              if (!widget.readOnly) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _selectedProduct > 0
-                            ? _blue
-                            : const Color(0xFFD9D9D9),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(26),
+                // ── KARTU PILIHAN ─────────────────────────────────────────────
+                if (!widget.readOnly) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Kamu pilih yang mana?',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: _blue,
+                          ),
                         ),
-                        elevation: 0,
-                      ),
-                      onPressed: (_saving || _selectedProduct == 0)
-                          ? null
-                          : _handleCatatKonsumsi,
-                      child: _saving
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
+                        const SizedBox(height: 12),
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                child: _buildChoiceCard(
+                                  product: widget.productA,
+                                  isWinner: isAWinner,
+                                  isSelected: _selectedProduct == 1,
+                                  onTap: () => setState(() {
+                                    _selectedProduct = 1;
+                                    _tabController.animateTo(0);
+                                  }),
+                                ),
                               ),
-                            )
-                          : Text(
-                              _selectedProduct == 0
-                                  ? 'Pilih salah satu produk'
-                                  : 'Catat Konsumsi',
-                              style: GoogleFonts.plusJakartaSans(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildChoiceCard(
+                                  product: widget.productB,
+                                  isWinner: !isAWinner,
+                                  isSelected: _selectedProduct == 2,
+                                  onTap: () => setState(() {
+                                    _selectedProduct = 2;
+                                    _tabController.animateTo(1);
+                                  }),
+                                ),
                               ),
-                            ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
 
+                  const SizedBox(height: 24),
+
+                  // ── KONTRIBUSI HARIAN ─────────────────────────────────────────
+                ],
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: TextButton(
-                      style: TextButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(26),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Kontribusi Harian',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: _blue,
                         ),
                       ),
-                      onPressed: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ScanScreen(
-                            apiClient: widget.apiClient,
-                            compareWithProduct:
-                                widget.originalProduct ?? widget.productA,
+                      const SizedBox(height: 12),
+                      _buildKontribusiCard(
+                        product: widget.productA,
+                        pct: pctA,
+                        isLower: totalKemasanA <= totalKemasanB,
+                      ),
+                      const SizedBox(height: 10),
+                      _buildKontribusiCard(
+                        product: widget.productB,
+                        pct: pctB,
+                        isLower: totalKemasanB < totalKemasanA,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // ── DETAIL PRODUK (TAB) ───────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Detail Produk',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: _blue,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTabToggle(),
+                      const SizedBox(height: 12),
+                      AnimatedBuilder(
+                        animation: _tabController,
+                        builder: (_, __) {
+                          final idx = _tabController.index;
+                          return idx == 0
+                              ? _buildDetailTab(widget.productA)
+                              : _buildDetailTab(widget.productB);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // ── CTA ───────────────────────────────────────────────────────
+                if (!widget.readOnly) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _tombolAktif
+                              ? _blue
+                              : const Color(0xFFD9D9D9),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(26),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: (_saving || !_tombolAktif)
+                            ? null
+                            : _handleCatatKonsumsi,
+                        child: _saving
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                _selectedProduct == 0
+                                    ? 'Pilih salah satu produk'
+                                    : (_statusDikonsumsi
+                                          ? 'Perbarui Konsumsi'
+                                          : 'Catat Konsumsi'),
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(26),
+                          ),
+                        ),
+                        onPressed: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ScanScreen(
+                              apiClient: widget.apiClient,
+                              compareWithProduct:
+                                  widget.originalProduct ?? widget.productA,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'Pilih Produk Lain',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: _blue,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
                           ),
                         ),
                       ),
-                      child: Text(
-                        'Pilih Produk Lain',
-                        style: GoogleFonts.plusJakartaSans(
-                          color: _blue,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                        ),
-                      ),
                     ),
                   ),
-                ),
+                ],
+                const SizedBox(height: 24),
               ],
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
       ),
@@ -417,7 +475,22 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () async {
+                      if (_adaPerubahanBelumDisimpan) {
+                        final shouldSave = await showDialog<bool>(
+                          context: context,
+                          barrierColor: Colors.black.withOpacity(0.5),
+                          builder: (ctx) => const UnsavedChangesDialog(),
+                        );
+                        if (shouldSave == null) return;
+                        if (shouldSave) {
+                          await _handleCatatKonsumsi();
+                          return;
+                        }
+                      }
+                      if (mounted) Navigator.pop(context);
+                    },
+
                     child: Container(
                       width: 40,
                       height: 40,
@@ -563,7 +636,7 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor, width: isSelected ? 2 : 1.2),
+          border: Border.all(color: borderColor, width: 2),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -639,9 +712,12 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
   Widget _buildKontribusiCard({
     required ProductCompareData product,
     required double pct,
+    required bool isLower,
   }) {
     final barColor = _barColor(pct);
     final pctInt = (pct * 100).round();
+    final totalPerKemasan = product.perPortionMg * product.portionsInPackage;
+    final pctKemasan = (totalPerKemasan / widget.dailyLimitMg * 100).round();
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -669,6 +745,15 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
             ),
           ),
           const SizedBox(height: 4),
+          // ← tambah info per sajian
+          Text(
+            'Per sajian: ${product.perPortionMg} mg (1 dari ${product.portionsInPackage} sajian per kemasan)',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              color: _blue.withOpacity(0.6),
+            ),
+          ),
+          const SizedBox(height: 4),
           RichText(
             text: TextSpan(
               style: GoogleFonts.plusJakartaSans(fontSize: 12, color: _blue),
@@ -686,10 +771,46 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
               ],
             ),
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 10),
           _CompareProgressBar(
             progress: pct.clamp(0.0, 1.0),
             barColor: barColor,
+          ),
+          // ← tambah info per kemasan penuh
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: isLower
+                  ? const Color(0xFFE3F1E3)
+                  : const Color(0xFFFBE1E1), // ← warna bg
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: RichText(
+              text: TextSpan(
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  color: isLower
+                      ? const Color(0xFF43A047)
+                      : const Color(0xFFE53935), // ← warna font
+                ),
+                children: [
+                  const TextSpan(text: 'Jika 1 kemasan penuh: '),
+                  TextSpan(
+                    text: '$totalPerKemasan mg',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: isLower
+                          ? const Color(0xFF43A047)
+                          : const Color(0xFFE53935),
+                    ),
+                  ),
+                  TextSpan(text: ' ($pctKemasan% $_limitPhrase)'),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -761,7 +882,7 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
           '${p.packageMl} ${p.satuanTakaran} (${p.portionsInPackage} sajian)',
         ),
         const SizedBox(height: 8),
-        _infoCard('Kategori', _labelKategori(p.kategori)),
+        _infoCard('Kategori', kategoriLabel(p.kategori)),
 
         const SizedBox(height: 8),
         _infoCard('Takaran per Sajian', '$portionSatuan ${p.satuanTakaran}'),
@@ -804,47 +925,125 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
   // ── Catat konsumsi ────────────────────────────────────────────────────────
   Future<void> _handleCatatKonsumsi() async {
     if (widget.readOnly) return;
-    setState(() => _saving = true);
+
     final selectedData = _selectedProduct == 1
         ? widget.productA
         : widget.productB;
+    final otherData = _selectedProduct == 1 ? widget.productB : widget.productA;
+
+    final isUpdate = widget.fromHistory;
+
+    final akanDikonsumsi = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (ctx) => YakinMakanDialog(isUpdate: _statusDikonsumsi),
+    );
+    if (akanDikonsumsi == null) return;
+
+    final client = widget.apiClient ?? ApiClient();
+    final activeUserId = UserSession().getUserId();
+
+    if (akanDikonsumsi) {
+      int consumedToday = 0;
+      try {
+        final stats = await client.getDashboardStats(activeUserId);
+        consumedToday =
+            (stats['total_sodium_consumed_today'] as num?)?.round() ?? 0;
+      } catch (e) {
+        debugPrint('Gagal ambil consumedToday: $e');
+      }
+
+      final produkLama = _selectedProductSaatDicatat == 1
+          ? widget.productA
+          : (_selectedProductSaatDicatat == 2 ? widget.productB : null);
+      final totalNatriumLama = (isUpdate && produkLama != null)
+          ? produkLama.perPortionMg
+          : 0;
+      final totalNatrium = selectedData.perPortionMg;
+      final totalSetelahCatat = consumedToday - totalNatriumLama + totalNatrium;
+
+      if (totalSetelahCatat > widget.dailyLimitMg) {
+        // ← GANTI INI
+        final confirm = await showDialog<bool>(
+          context: context,
+          barrierColor: Colors.black.withOpacity(0.5),
+          builder: (ctx) => StopNatriumDialog(limitPhrase: _limitPhrase),
+        );
+        if (confirm != true) return;
+      }
+    }
+
+    setState(() => _saving = true);
 
     try {
-      final client = widget.apiClient ?? ApiClient();
-      final activeUserId = UserSession().getUserId();
-      final otherData = _selectedProduct == 1
-          ? widget.productB
-          : widget.productA;
       if (activeUserId == 0) return;
 
-      await client.postScanHistory(
-        userId: activeUserId,
-        sodiumMg: selectedData.perPortionMg,
-        servings: 1,
-        productName: selectedData.productName,
-        sodiumLevel: _getSodiumLevel(selectedData.perPortionMg),
-        kategori: selectedData.kategori,
-        type: 'comparison',
-        productName2: otherData.productName,
-        sodiumMg2: otherData.perPortionMg,
-        isConsumed: true,
-        packageMl: selectedData.packageMl,
-        portionsInPackage: selectedData.portionsInPackage,
-        satuanTakaran: selectedData.satuanTakaran,
-        packageMl2: otherData.packageMl,
-        portionsInPackage2: otherData.portionsInPackage,
-        satuanTakaran2: otherData.satuanTakaran,
-        imagePath: selectedData.imagePath,
-        imagePath2: otherData.imagePath,
-      );
+      if (isUpdate) {
+        final intakeId = int.tryParse(widget.historyItemId ?? '');
+        if (intakeId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('ID konsumsi tidak valid, coba scan ulang'),
+              backgroundColor: const Color(0xFFE53935),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+          setState(() => _saving = false);
+          return;
+        }
+        await client.updateIntakeConsumed(
+          intakeId: intakeId,
+          userId: activeUserId,
+          isConsumed: akanDikonsumsi,
+          servings: 1,
+          productName: selectedData.productName,
+          sodiumMg: selectedData.perPortionMg,
+          productName2: otherData.productName,
+          sodiumMg2: otherData.perPortionMg,
+          imagePath: selectedData.imagePath,
+          imagePath2: otherData.imagePath,
+        );
+      } else {
+        await client.postScanHistory(
+          userId: activeUserId,
+          sodiumMg: selectedData.perPortionMg,
+          servings: 1,
+          productName: selectedData.productName,
+          sodiumLevel: widget.sodiumLevel,
+          kategori: selectedData.kategori,
+          type: 'comparison',
+          productName2: otherData.productName,
+          sodiumMg2: otherData.perPortionMg,
+          isConsumed: akanDikonsumsi,
+          packageMl: selectedData.packageMl,
+          portionsInPackage: selectedData.portionsInPackage,
+          satuanTakaran: selectedData.satuanTakaran,
+          packageMl2: otherData.packageMl,
+          portionsInPackage2: otherData.portionsInPackage,
+          satuanTakaran2: otherData.satuanTakaran,
+          imagePath: selectedData.imagePath,
+          imagePath2: otherData.imagePath,
+        );
+      }
 
       if (!mounted) return;
+      setState(() {
+        _statusDikonsumsi = akanDikonsumsi;
+        _selectedProductSaatDicatat = _selectedProduct; // ← tambahkan ini
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Konsumsi ${selectedData.productName} berhasil dicatat ✓',
+            akanDikonsumsi
+                ? 'Konsumsi ${selectedData.productName} berhasil dicatat ✓'
+                : '${selectedData.productName} dicatat sebagai tidak dikonsumsi',
           ),
-          backgroundColor: const Color(0xFF43A047),
+          backgroundColor: akanDikonsumsi
+              ? const Color(0xFF43A047)
+              : const Color(0xFFE53935),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -877,11 +1076,6 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
     }
   }
 
-  String _getSodiumLevel(int mg) {
-    if (mg < 140) return 'low';
-    if (mg < 400) return 'medium';
-    return 'high';
-  }
 }
 
 // ════════════════════════════════════════════════════════════════════════════

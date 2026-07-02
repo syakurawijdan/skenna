@@ -12,8 +12,15 @@ import 'presentation/screens/chatbot_screen.dart';
 import 'presentation/screens/onboarding_1_screen.dart';
 import 'presentation/screens/onboarding_2_screen.dart';
 import 'presentation/screens/onboarding_3_screen.dart';
+import 'presentation/screens/change_password_screen.dart';
 import 'presentation/screens/edit_profile_screen.dart';
 import 'presentation/screens/consumed_today_screen.dart';
+import 'presentation/screens/auth/email_screen.dart';
+import 'presentation/screens/auth/forgot_email_screen.dart';
+import 'presentation/screens/auth/login_screen.dart';
+import 'presentation/screens/auth/otp_verification_screen.dart';
+import 'presentation/screens/auth/password_screen.dart';
+import 'presentation/screens/auth/welcome_screen.dart';
 import 'presentation/screens/profile_wizard/profile_name_screen.dart';
 import 'presentation/screens/profile_wizard/profile_birth_date_screen.dart';
 import 'presentation/screens/profile_wizard/profile_blood_pressure_screen.dart';
@@ -25,9 +32,11 @@ import 'presentation/screens/splash_screen.dart';
 import 'presentation/screens/sodium_result_screen.dart';
 import 'presentation/screens/hasil_scan_aman_screen.dart';
 import 'presentation/screens/hasil_perbandingan_produk.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null);
   await UserSession().init();
   await AppInitService().init();
   runApp(const MainApp());
@@ -41,9 +50,24 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
+  static String _sodiumLevelLabel(KategoriNatrium kategori) {
+    switch (kategori) {
+      case KategoriNatrium.hijau:
+        return 'low';
+      case KategoriNatrium.kuning:
+        return 'medium';
+      case KategoriNatrium.merah:
+        return 'high';
+    }
+  }
+
   static final Map<String, WidgetBuilder> _routes = {
     '/': (_) => const SplashScreen(),
     AppRoutes.splash: (_) => const SplashScreen(),
+    AppRoutes.welcome: (_) => const WelcomeScreen(),
+    AppRoutes.registerEmail: (_) => const EmailScreen(),
+    AppRoutes.forgotPassword: (_) => const ForgotEmailScreen(),
+    AppRoutes.login: (_) => const LoginScreen(),
     AppRoutes.onboarding1: (_) => const Onboarding1Screen(),
     AppRoutes.onboarding2: (_) => const Onboarding2Screen(),
     AppRoutes.onboarding3: (_) => const Onboarding3Screen(),
@@ -52,11 +76,10 @@ class _MainAppState extends State<MainApp> {
     AppRoutes.profileBirthDate: (_) => const ProfileBirthDateScreen(),
     AppRoutes.profileHypertensionStatus: (_) =>
         const ProfileHypertensionStatusScreen(),
-    AppRoutes.profileHypertensionCondition: (_) =>
-        const ProfileHypertensionConditionScreen(),
     AppRoutes.profileBloodPressure: (_) => const ProfileBloodPressureScreen(),
     AppRoutes.profilePregnancy: (_) => const ProfilePregnancyScreen(),
     AppRoutes.dashboard: (_) => const AppShell(),
+    AppRoutes.history: (_) => const AppShell(initialIndex: 2),
     AppRoutes.editProfile: (_) => const EditProfileScreen(),
     AppRoutes.consumedToday: (_) => const ConsumedTodayScreen(),
   };
@@ -184,13 +207,66 @@ class _MainAppState extends State<MainApp> {
   }
 
   static Route<dynamic> _onGenerateRoute(RouteSettings settings) {
+    if (settings.name == AppRoutes.registerPassword) {
+      final email = settings.arguments as String? ?? '';
+      return _buildAnimatedRoute(
+        settings,
+        (_) => PasswordScreen(email: email),
+      );
+    }
+
+    if (settings.name == AppRoutes.otpVerification) {
+      final args = settings.arguments;
+      final email = args is Map<String, dynamic>
+          ? args['email'] as String? ?? ''
+          : args as String? ?? '';
+      final isForgotPassword = args is Map<String, dynamic>
+          ? args['isForgotPassword'] as bool? ?? false
+          : false;
+      return _buildAnimatedRoute(
+        settings,
+        (_) => OtpVerificationScreen(
+          email: email,
+          isForgotPassword: isForgotPassword,
+        ),
+      );
+    }
+
+    if (settings.name == AppRoutes.changePassword) {
+      final email = settings.arguments as String? ?? '';
+      return _buildAnimatedRoute(
+        settings,
+        (_) => ChangePasswordScreen(email: email),
+      );
+    }
+
     if (settings.name == AppRoutes.chatbot) {
-      final initialQuestion = settings.arguments as String?;
+      final args = settings.arguments as Map<String, dynamic>?;
+      double? asDouble(Object? value) {
+        if (value is num) return value.toDouble();
+        return double.tryParse(value?.toString() ?? '');
+      }
+
+      int? asInt(Object? value) {
+        if (value is num) return value.toInt();
+        return int.tryParse(value?.toString() ?? '');
+      }
+
+      final initialQuestion = args?['initialQuestion'] as String?;
       return _buildAnimatedRoute(
         settings,
         (_) => ChatbotScreen(
           apiClient: ApiClient(),
           initialQuestion: initialQuestion,
+          productName: args?['productName'] as String?,
+          perPortionMg: asDouble(args?['perPortionMg']),
+          kategori: args?['kategori'] as String?,
+          scanId: asInt(args?['scanId']),
+          sodiumLevel: args?['sodiumLevel'] as String?,
+          packageMl: asDouble(args?['packageMl']),
+          portionsInPackage: asInt(args?['portionsInPackage']),
+          satuanTakaran: args?['satuanTakaran'] as String?,
+          imagePath: args?['imagePath'] as String?,
         ),
       );
     }
@@ -217,6 +293,9 @@ class _MainAppState extends State<MainApp> {
           builder: (context, snapshot) {
             final hasil = snapshot.data;
             final dailyLimit = hasil?.batasNatrium ?? 2000;
+            final sodiumLevel = hasil == null
+                ? 'medium'
+                : _sodiumLevelLabel(hasil.kategori);
             return HasilScanAmanScreen(
               productName: productName,
               kategori: kategori,
@@ -226,6 +305,7 @@ class _MainAppState extends State<MainApp> {
               portionsInPackage: portionsInPackage,
               dailyLimitMg: dailyLimit,
               isHardMaximum: hasil?.isHardMaximum ?? true,
+              sodiumLevel: sodiumLevel,
               initialServings: initialServings,
               apiClient: ApiClient(),
               fromHistory: fromHistory,
@@ -243,11 +323,15 @@ class _MainAppState extends State<MainApp> {
           builder: (context, snapshot) {
             final hasil = snapshot.data;
             final dailyLimit = hasil?.batasNatrium ?? 2000;
+            final sodiumLevel = hasil == null
+                ? 'medium'
+                : _sodiumLevelLabel(hasil.kategori);
             return HasilBandingkanScreen(
               productA: args['productA'] as ProductCompareData,
               productB: args['productB'] as ProductCompareData,
               dailyLimitMg: dailyLimit,
               isHardMaximum: hasil?.isHardMaximum ?? true,
+              sodiumLevel: sodiumLevel,
               apiClient: ApiClient(),
               originalProduct:
                   args['originalProduct']

@@ -11,6 +11,8 @@ import '../../data/user_session.dart';
 import '../../domain/natrium_classifier.dart';
 import 'hasil_scan_aman_screen.dart';
 import '../widgets/custom_dropdown.dart';
+import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class ConsumedTodayItem {
   const ConsumedTodayItem({
@@ -25,6 +27,8 @@ class ConsumedTodayItem {
     this.packageMl = 0,
     this.portionsInPackage = 1,
     this.satuanTakaran = 'g',
+    this.rekomendasiJson,
+    this.isConsumed = true,
   });
 
   final int id;
@@ -38,6 +42,8 @@ class ConsumedTodayItem {
   final int packageMl;
   final int portionsInPackage;
   final String satuanTakaran;
+  final Map<String, dynamic>? rekomendasiJson;
+  final bool isConsumed;
 
   factory ConsumedTodayItem.fromJson(Map<String, dynamic> json) {
     return ConsumedTodayItem(
@@ -54,6 +60,12 @@ class ConsumedTodayItem {
       packageMl: (json['package_ml'] as num?)?.toInt() ?? 0,
       portionsInPackage: (json['portions_in_package'] as num?)?.toInt() ?? 1,
       satuanTakaran: json['satuan_takaran']?.toString() ?? 'g',
+      rekomendasiJson: json['rekomendasi_json'] != null
+          ? Map<String, dynamic>.from(
+              jsonDecode(json['rekomendasi_json'] as String) as Map,
+            )
+          : null,
+      isConsumed: json['is_consumed'] == true || json['is_consumed'] == 1,
     );
   }
 }
@@ -79,7 +91,7 @@ class _ConsumedTodayScreenState extends State<ConsumedTodayScreen> {
     DropdownItem(value: 'mie_instan', label: 'Mie & Pasta Instan'),
     DropdownItem(value: 'keripik_snack', label: 'Snack & Keripik'),
     DropdownItem(value: 'makanan_kaleng', label: 'Makanan Kaleng'),
-    DropdownItem(value: 'biskuit_roti', label: 'Roti & Biskuit'),
+    DropdownItem(value: 'biskuit_roti', label: 'Roti'),
     DropdownItem(value: 'frozen_food', label: 'Frozen Food'),
     DropdownItem(value: 'sereal', label: 'Sereal & Oatmeal'),
     DropdownItem(value: 'biskuit', label: 'Biskuit & Wafer'),
@@ -190,6 +202,7 @@ class _ConsumedTodayScreenState extends State<ConsumedTodayScreen> {
           packageMl: item.packageMl,
           portionsInPackage: item.portionsInPackage,
           satuanTakaran: item.satuanTakaran,
+          rekomendasiJson: item.rekomendasiJson,
         ),
       ),
     );
@@ -216,23 +229,8 @@ class _ConsumedTodayScreenState extends State<ConsumedTodayScreen> {
   Future<void> _confirmDelete(ConsumedTodayItem item) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Hapus Produk?', style: _ts(18, FontWeight.w700, _navy)),
-        content: Text(
-          'Apakah kamu yakin ingin menghapus ${item.foodName} dari konsumsi hari ini?',
-          style: _ts(14, FontWeight.w400, _navy),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Batal', style: _ts(14, FontWeight.w600, _blue)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('Hapus', style: _ts(14, FontWeight.w700, _danger)),
-          ),
-        ],
-      ),
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (context) => _DeleteConfirmDialog(foodName: item.foodName),
     );
     if (confirm != true) return;
     try {
@@ -253,7 +251,13 @@ class _ConsumedTodayScreenState extends State<ConsumedTodayScreen> {
   }
 
   String _formatTime(DateTime value) {
-    return '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+    final local = value.toLocal();
+    final diff = DateTime.now().difference(local);
+    if (diff.inMinutes < 1) return 'Baru saja';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} menit lalu';
+    if (diff.inHours < 24) return '${diff.inHours} jam lalu';
+    if (diff.inDays == 1) return 'Kemarin';
+    return '${local.day}/${local.month}/${local.year}';
   }
 
   @override
@@ -275,7 +279,7 @@ class _ConsumedTodayScreenState extends State<ConsumedTodayScreen> {
                 SliverFillRemaining(hasScrollBody: false, child: _EmptyState())
               else
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 120),
+                  padding: const EdgeInsets.fromLTRB(20, 25, 20, 120),
                   sliver: SliverList.separated(
                     itemCount: _items.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 14),
@@ -287,6 +291,7 @@ class _ConsumedTodayScreenState extends State<ConsumedTodayScreen> {
                         onDetail: () => _openDetail(item),
                         onEdit: () => _openEdit(item),
                         onDelete: () => _confirmDelete(item),
+                        apiClient: _apiClient,
                       );
                     },
                   ),
@@ -299,31 +304,69 @@ class _ConsumedTodayScreenState extends State<ConsumedTodayScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final now = DateTime.now();
+    const hariList = [
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu',
+    ];
+    const bulanList = [
+      '',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    final hari = hariList[now.weekday - 1];
+    final bulan = bulanList[now.month];
+    final formattedDate = '$hari, ${now.day} $bulan ${now.year}';
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Row(
+      child: Column(
         children: [
-          Material(
-            color: _blueSoft,
-            shape: const CircleBorder(),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: () => Navigator.pop(context, true),
-              child: const SizedBox(
-                width: 40,
-                height: 40,
-                child: Icon(Icons.arrow_back, color: _blue, size: 20),
+          Row(
+            children: [
+              Material(
+                color: _blueSoft,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () => Navigator.pop(context, true),
+                  child: const SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Icon(Icons.arrow_back, color: _blue, size: 20),
+                  ),
+                ),
               ),
-            ),
+              Expanded(
+                child: Text(
+                  'Konsumsi Hari Ini',
+                  textAlign: TextAlign.center,
+                  style: _ts(22, FontWeight.w700, _blue),
+                ),
+              ),
+              const SizedBox(width: 40),
+            ],
           ),
-          Expanded(
-            child: Text(
-              'Konsumsi Hari Ini',
-              textAlign: TextAlign.center,
-              style: _ts(22, FontWeight.w700, _blue),
-            ),
+          const SizedBox(height: 6),
+          Text(
+            formattedDate,
+            style: _ts(13, FontWeight.w500, _blue.withOpacity(0.6)),
           ),
-          const SizedBox(width: 40),
         ],
       ),
     );
@@ -337,6 +380,7 @@ class _ConsumedProductCard extends StatelessWidget {
     required this.onDetail,
     required this.onEdit,
     required this.onDelete,
+    required this.apiClient,
   });
 
   final ConsumedTodayItem item;
@@ -344,6 +388,7 @@ class _ConsumedProductCard extends StatelessWidget {
   final VoidCallback onDetail;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final ApiClient apiClient;
 
   static const _white = Color(0xFFFFFFFF);
   static const _blue = Color(0xFF2C4A8A);
@@ -394,7 +439,11 @@ class _ConsumedProductCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: _ProductImage(path: item.imagePath, size: 64),
+                  child: _ProductImage(
+                    path: item.imagePath,
+                    size: 64,
+                    apiClient: apiClient,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -431,26 +480,14 @@ class _ConsumedProductCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
             child: Row(
               children: [
+                _StatusBadge(consumed: item.isConsumed),
+                const Spacer(),
                 GestureDetector(
                   onTap: onDetail,
                   child: Text(
                     'Lihat Detail',
                     style: _ts(12, FontWeight.w500, _blue),
                   ),
-                ),
-                const Spacer(),
-                _ActionButton(
-                  label: 'Edit',
-                  icon: Icons.edit_rounded,
-                  color: _blue,
-                  onTap: onEdit,
-                ),
-                const SizedBox(width: 8),
-                _ActionButton(
-                  label: 'Hapus',
-                  icon: Icons.delete_outline_rounded,
-                  color: _danger,
-                  onTap: onDelete,
                 ),
               ],
             ),
@@ -587,6 +624,48 @@ class _SodiumLevelBadge extends StatelessWidget {
   }
 }
 
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.consumed});
+  final bool consumed;
+
+  static const _green = Color(0xFF43A047);
+  static const _amber = Color(0xFFFFBF00);
+
+  @override
+  Widget build(BuildContext context) {
+    final color = consumed ? _green : _amber;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            consumed
+                ? Icons.check_circle_outline_rounded
+                : Icons.cancel_outlined,
+            size: 14,
+            color: color,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            consumed ? 'Dikonsumsi' : 'Tidak dikonsumsi',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.label,
@@ -625,24 +704,51 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _ProductImage extends StatelessWidget {
-  const _ProductImage({this.path, required this.size});
+  const _ProductImage({
+    this.path,
+    required this.size,
+    required this.apiClient, // ← tambah parameter ini
+  });
 
   final String? path;
   final double size;
+  final ApiClient apiClient; // ← tambah ini
+
+  static const _blueSoft = Color(0xFFDFE4ED);
+  static const _blueGray = Color(0xFFBEC7DB);
 
   @override
   Widget build(BuildContext context) {
     if (path != null && path!.isNotEmpty) {
+      // Coba baca file lokal dulu
       final file = File(path!);
       if (file.existsSync()) {
         return Image.file(file, width: size, height: size, fit: BoxFit.cover);
       }
+
+      // Fallback ke server URL (sama seperti history_screen)
+      final isServerPath =
+          path!.startsWith('/uploads') || path!.startsWith('http');
+      final imageFullUrl = isServerPath ? apiClient.imageUrl(path) : '';
+      if (imageFullUrl.isNotEmpty) {
+        return Image.network(
+          imageFullUrl,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _placeholder(),
+        );
+      }
     }
+    return _placeholder();
+  }
+
+  Widget _placeholder() {
     return Container(
       width: size,
       height: size,
-      color: const Color(0xFFDFE4ED),
-      child: const Icon(Icons.fastfood_rounded, color: Color(0xFF2C4A8A)),
+      color: _blueSoft,
+      child: Icon(Icons.fastfood_rounded, color: _blueGray, size: 28),
     );
   }
 }
@@ -1769,35 +1875,171 @@ class _SheetDropdown extends StatelessWidget {
 class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return SizedBox.expand(
       child: Padding(
-        padding: const EdgeInsets.all(28),
+        padding: const EdgeInsets.only(bottom: 100),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/illustrations/belum_konsumsi_hariini.png',
+              width: 255,
+              height: 255,
+            ),
+            const SizedBox(height: 4),
+            RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: GoogleFonts.plusJakartaSans(
+                  color: const Color(0xFF2C4A8A).withOpacity(0.7),
+                  fontSize: 16,
+                  height: 1.3,
+                ),
+                children: [
+                  TextSpan(
+                    text: 'Belum ada ',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: const Color(0xFF2C4A8A),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      height: 1.3,
+                    ),
+                  ),
+                  const TextSpan(text: 'yang tercatat'),
+                  TextSpan(
+                    text: ' hari ini.',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: const Color(0xFF2C4A8A),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      height: 1.3,
+                    ),
+                  ),
+                  const TextSpan(text: ' \nyuk,'),
+                  TextSpan(
+                    text: ' mulai scan',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: const Color(0xFF2C4A8A),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      height: 1.3,
+                    ),
+                  ),
+                  const TextSpan(text: ' kemasan produk!'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DeleteConfirmDialog extends StatelessWidget {
+  const _DeleteConfirmDialog({required this.foodName});
+
+  final String foodName;
+
+  static const _blue = Color(0xFF2C4A8A);
+  static const _muted = Color(0xFF9AA3B5);
+  static const _red = Color(0xFFE53935);
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.white,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.restaurant_menu_rounded,
-              size: 72,
-              color: Color(0xFFBEC7DB),
-            ),
-            const SizedBox(height: 18),
             Text(
-              'Belum ada produk',
+              'Yakin Hapus Catatan\nKonsumsi?',
               textAlign: TextAlign.center,
               style: GoogleFonts.plusJakartaSans(
-                color: const Color(0xFF213868),
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
+                color: _blue,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                height: 1.3,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Scan produk dan catat konsumsimu!',
+            const SizedBox(height: 20),
+            Image.asset(
+              'assets/illustrations/delete.png',
+              width: 180,
+              height: 180,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 20),
+            RichText(
               textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                color: const Color(0xFF2C4A8A),
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
+              text: TextSpan(
+                style: GoogleFonts.plusJakartaSans(
+                  color: _blue,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  height: 1.4,
+                ),
+                children: const [
+                  TextSpan(text: 'Riwayat scan yang dipilih '),
+                  TextSpan(
+                    text: 'akan dihapus',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  TextSpan(text: '\ndan '),
+                  TextSpan(
+                    text: 'tidak dapat dipulihkan',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Batal — TextButton muted (tanpa fill)
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                style: TextButton.styleFrom(
+                  foregroundColor: _muted,
+                  overlayColor: _muted.withOpacity(0.1),
+                ),
+                child: Text(
+                  'Batal',
+                  style: GoogleFonts.plusJakartaSans(
+                    color: _muted,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Hapus — FilledButton merah
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(26),
+                  ),
+                ),
+                child: Text(
+                  'Hapus',
+                  style: GoogleFonts.plusJakartaSans(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
           ],

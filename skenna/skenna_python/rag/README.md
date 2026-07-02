@@ -1,6 +1,6 @@
 ## RAG Workspace
 
-Folder ini dipakai untuk menyiapkan knowledge base hipertensi, baik dari PDF mentah maupun JSON terkurasi, lalu mengubahnya menjadi chunk dan index untuk chatbot.
+Folder ini dipakai untuk menyiapkan knowledge base hipertensi, baik dari PDF mentah maupun JSON terkurasi, lalu mengubahnya menjadi chunk dan ChromaDB index untuk chatbot.
 
 ### Struktur Folder
 
@@ -8,7 +8,7 @@ Folder ini dipakai untuk menyiapkan knowledge base hipertensi, baik dari PDF men
 - `knowledge_base/hipertensi/`: tempat JSON terkurasi sebagai sumber utama knowledge base.
 - `processed_text/hipertensi/`: hasil OCR dan teks yang sudah dibersihkan.
 - `chunks/hipertensi/`: hasil pemotongan teks per dokumen atau per section.
-- `index/`: vector index yang dipakai saat retrieval.
+- `chroma/`: persistent ChromaDB collection yang dipakai saat retrieval.
 - `knowledge_base/`: pengelompokan sumber per topik.
 
 ### Topik yang Disediakan
@@ -48,11 +48,11 @@ Aturan sederhana:
 	- menulis teks gabungan ke `processed_text/hipertensi/`
 	- menulis chunk JSONL ke `chunks/hipertensi/`
 	- mengganti output topic lama kecuali Anda menambahkan `--preserve-existing`
-4. Rebuild index supaya chatbot membaca chunk terbaru:
+4. Build ChromaDB index supaya chatbot membaca chunk terbaru:
 
-	`python scripts/rebuild_index.py --topic hipertensi`
+	`python scripts/build_chroma_index.py --topic hipertensi --reset`
 
-#### Opsi B - PDF jurnal mentah (fallback lama)
+#### Opsi B - PDF jurnal mentah
 
 1. Taruh PDF mentah ke `raw_papers/hipertensi/`.
 2. Install dependency Python dari `requirements.txt`.
@@ -66,8 +66,8 @@ Aturan sederhana:
 
 4. Script membersihkan teks dan memecah chunk.
 5. Hasil chunk disimpan ke `chunks/hipertensi/`.
-6. Rebuild index supaya chatbot membaca chunk terbaru:
+6. Build ChromaDB index supaya chatbot membaca chunk terbaru:
 
-	`python scripts/rebuild_index.py --topic hipertensi`
+	`python scripts/build_chroma_index.py --topic hipertensi --reset`
 
-7. Data dimasukkan ke `index/` untuk dipakai chatbot.
+7. Data dimasukkan ke persistent ChromaDB collection untuk dipakai chatbot.

@@ -49,3 +49,8 @@ app.*.map.json
 __pycache__/
 *.pyc
 .env
+skenna_backend/uploads/
+cv_history.txt
+test_env.py
+test_gemini.py
+test_models.py

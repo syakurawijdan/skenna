@@ -80,15 +80,24 @@ class _SodiumLimitSafeScreenState extends State<SodiumLimitSafeScreen> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final topSpacing =
+                (constraints.maxHeight * 0.08).clamp(32.0, 76.0).toDouble();
+            final sectionSpacing =
+                (constraints.maxHeight * 0.03).clamp(18.0, 30.0).toDouble();
+            final illustrationWidth = MediaQuery.sizeOf(context).width;
+            final illustrationHeight = MediaQuery.sizeOf(context).height * 0.30;
+            final contentWidth =
+                (constraints.maxWidth - 32).clamp(0.0, 344.0).toDouble();
+
             return SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Column(
                   children: [
-                    const SizedBox(height: 76),
+                    SizedBox(height: topSpacing),
                     Center(
-                      child: SizedBox(
-                        width: 304,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: contentWidth),
                         child: Text(
                           'Batas Maksimal\nNatrium Harian',
                           textAlign: TextAlign.center,
@@ -101,17 +110,17 @@ class _SodiumLimitSafeScreenState extends State<SodiumLimitSafeScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    SizedBox(height: sectionSpacing),
                     SizedBox(
-                      width: constraints.maxWidth,
-                      height: 250,
+                      width: illustrationWidth,
+                      height: illustrationHeight,
                       child: Image.asset(
                         'assets/illustrations/batasaman.png',
                         fit: BoxFit.cover,
                         alignment: Alignment.center,
                       ),
                     ),
-                    const SizedBox(height: 30),
+                    SizedBox(height: sectionSpacing),
                     Center(
                       child: Text(
                         '${formatNatriumMg(widget.hasil.batasNatrium)} mg',
@@ -126,8 +135,8 @@ class _SodiumLimitSafeScreenState extends State<SodiumLimitSafeScreen> {
                     ),
                     const SizedBox(height: 10),
                     Center(
-                      child: SizedBox(
-                        width: 302,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: contentWidth),
                         child: RichText(
                           textAlign: TextAlign.center,
                           text: TextSpan(
@@ -188,47 +197,52 @@ class _SodiumLimitSafeScreenState extends State<SodiumLimitSafeScreen> {
                     ),
                     const SizedBox(height: 28),
                     Center(
-                      child: SizedBox(
-                        width: 344,
-                        height: 55,
-                        child: FilledButton(
-                          onPressed: _isSaving ? null : _handleSaveAndContinue,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: _blue,
-                            disabledBackgroundColor: const Color(0xFFBEC7DB),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(25),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 55,
+                          child: FilledButton(
+                            onPressed:
+                                _isSaving ? null : _handleSaveAndContinue,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: _blue,
+                              disabledBackgroundColor:
+                                  const Color(0xFFBEC7DB),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                              elevation: 4,
+                              shadowColor: const Color(0x40000000),
                             ),
-                            elevation: 4,
-                            shadowColor: const Color(0x40000000),
-                          ),
-                          child: _isSaving
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
+                            child: _isSaving
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                      strokeWidth: 2,
                                     ),
-                                    strokeWidth: 2,
+                                  )
+                                : Text(
+                                    'Mulai',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                      height: 1,
+                                    ),
                                   ),
-                                )
-                              : Text(
-                                  'Mulai',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                    height: 1,
-                                  ),
-                                ),
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     Center(
-                      child: SizedBox(
-                        width: 320,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: contentWidth),
                         child: Text(
                           'Perhitungan ini mengacu pada standar AKG, WHO, dan\nAHA, berdasarkan data yang kamu isi sebelumnya',
                           textAlign: TextAlign.center,
@@ -241,7 +255,7 @@ class _SodiumLimitSafeScreenState extends State<SodiumLimitSafeScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 48),
+                    SizedBox(height: topSpacing * 0.65),
                   ],
                 ),
               ),

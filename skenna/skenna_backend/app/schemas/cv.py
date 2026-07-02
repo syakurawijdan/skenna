@@ -1,13 +1,21 @@
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
 class CVScanRequest(BaseModel):
-	image_url: str = Field(..., description="URL or local path for image")
-	kategori: str | None = None
+    image_url: str | None = None
+    image_base64: str | None = None
+    kategori: str | None = None
+    user_id: int = Field(..., gt=0)
+
 
 class CVScanResponse(BaseModel):
-	raw_text: str
-	sodium_mg: float
-	sodium_level: str
-	scan_id: int
-
+    raw_text: str
+    sodium_mg: float
+    sodium_level: Optional[str] = None
+    scan_id: Optional[int] = None
+    takaran_saji: Optional[int] = None
+    sajian_per_kemasan: Optional[int] = None
+    satuan_takaran: str
+    image_path: Optional[str] = None

@@ -14,14 +14,19 @@ dependencies:
   google_fonts: ^6.3.2
   http: ^1.2.2
   shared_preferences: ^2.5.5
+  flutter_secure_storage: ^9.0.0
+  flutter_markdown: ^0.7.3
   logger: ^2.7.0
   camera: ^0.11.4
   google_generative_ai: ^0.4.6
+  image: ^4.1.7
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.3
 
 flutter:
   uses-material-design: true
@@ -45,3 +50,15 @@ flutter:
     - assets/icons/video-time.svg
     - assets/icons/material-symbols_readiness-score-outline-kiri.svg
     - assets/icons/material-symbols_readiness-score-outline-kanan.svg
+    - assets/icons/document-text.svg
+    - assets/icons/timer.svg
+    - assets/icons/logo_skenna.png
+    - assets/icons/streamline-ultimate_seasoning-food-bold.svg 
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/logo_skenna.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#28437C"
+  adaptive_icon_foreground: "assets/icons/logo_skenna.png"

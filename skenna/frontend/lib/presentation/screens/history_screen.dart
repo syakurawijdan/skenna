@@ -10,6 +10,7 @@ import 'hasil_perbandingan_produk.dart';
 import 'hasil_scan_aman_screen.dart';
 import '../screens/profile_wizard/profile_wizard_store.dart';
 import '../widgets/custom_dropdown.dart';
+import '../../domain/kategori_label.dart';
 import '../../domain/natrium_classifier.dart';
 import '../../../data/user_session.dart';
 
@@ -209,7 +210,7 @@ class ScanHistoryHelper {
 
 enum HistoryRange { day, week, month }
 
-enum ScanTypeFilter { all, single, comparison }
+enum ScanTypeFilter { all, single, comparison, bumbu }
 
 // ─────────────────────────────────────────────
 // STICKY DELEGATE — Jenis scan tetap kelihatan
@@ -305,6 +306,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ScanTypeFilter.all => true,
           ScanTypeFilter.single => item.type == 'single',
           ScanTypeFilter.comparison => item.type == 'comparison',
+          ScanTypeFilter.bumbu => item.type == 'bumbu',
         };
       }).toList();
 
@@ -343,7 +345,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
       color: _white,
       child: CustomScrollView(
         slivers: [
-          // ✅ Header + Waktu — pakai padding manual ganti SafeArea
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.only(top: topPadding),
@@ -358,8 +359,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
             ),
           ),
-
-          // ✅ "Jenis scan" — STICKY, tetap kelihatan saat scroll
           SliverPersistentHeader(
             pinned: true,
             delegate: _StickyTypeFilterDelegate(
@@ -371,8 +370,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
             ),
           ),
-
-          // ✅ Konten list
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
             sliver: _buildBodySliver(),
@@ -470,7 +467,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
               const SizedBox(width: 10),
               _TypeChip(
-                label: 'Single Item',
+                label: 'Single Produk',
                 iconAsset: 'assets/icons/scan.svg',
                 fallbackIcon: Icons.qr_code_scanner_rounded,
                 isActive: _typeFilter == ScanTypeFilter.single,
@@ -481,12 +478,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
               const SizedBox(width: 10),
               _TypeChip(
-                label: 'Perbandingan',
+                label: 'Perbandingan Produk',
                 iconAsset: 'assets/icons/repeat-circle.svg',
                 fallbackIcon: Icons.compare_arrows_rounded,
                 isActive: _typeFilter == ScanTypeFilter.comparison,
                 onTap: () {
                   setState(() => _typeFilter = ScanTypeFilter.comparison);
+                  _loadHistory();
+                },
+              ),
+              const SizedBox(width: 10),
+              _TypeChip(
+                label: 'Saus & Bumbu',
+                iconAsset:
+                    'assets/icons/streamline-ultimate_seasoning-food.svg',
+                fallbackIcon: Icons.restaurant_menu_rounded,
+                isActive: _typeFilter == ScanTypeFilter.bumbu,
+                onTap: () {
+                  setState(() => _typeFilter = ScanTypeFilter.bumbu);
                   _loadHistory();
                 },
               ),
@@ -514,13 +523,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     final singles = _items.where((e) => e.type == 'single').toList();
     final comparisons = _items.where((e) => e.type == 'comparison').toList();
+    final bumbus = _items.where((e) => e.type == 'bumbu').toList();
 
     final List<Widget> cards = [];
 
     if ((_typeFilter == ScanTypeFilter.all ||
             _typeFilter == ScanTypeFilter.single) &&
         singles.isNotEmpty) {
-      cards.add(_sectionLabel('Single Item'));
+      cards.add(_sectionLabel('Single Produk'));
       cards.add(const SizedBox(height: 10));
       for (final item in singles) {
         cards.add(
@@ -541,13 +551,34 @@ class _HistoryScreenState extends State<HistoryScreen> {
             _typeFilter == ScanTypeFilter.comparison) &&
         comparisons.isNotEmpty) {
       cards.add(const SizedBox(height: 6));
-      cards.add(_sectionLabel('Perbandingan Item'));
+      cards.add(_sectionLabel('Perbandingan Produk'));
       cards.add(const SizedBox(height: 10));
       for (final item in comparisons) {
         cards.add(
           Padding(
             padding: const EdgeInsets.only(bottom: 14),
             child: _ComparisonItemCard(
+              item: item,
+              apiClient: widget.apiClient,
+              timeLabel: _formatTime(item.timestamp),
+              onDetail: () => _openDetail(item),
+            ),
+          ),
+        );
+      }
+    }
+
+    if ((_typeFilter == ScanTypeFilter.all ||
+            _typeFilter == ScanTypeFilter.bumbu) &&
+        bumbus.isNotEmpty) {
+      cards.add(const SizedBox(height: 6));
+      cards.add(_sectionLabel('Saus & Bumbu'));
+      cards.add(const SizedBox(height: 10));
+      for (final item in bumbus) {
+        cards.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: _BumbuItemCard(
               item: item,
               apiClient: widget.apiClient,
               timeLabel: _formatTime(item.timestamp),
@@ -591,7 +622,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 children: [
                   const TextSpan(text: 'Yuk, '),
                   TextSpan(
-                    text: 'Scan produk ',
+                    text: 'scan kemasan produk ',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -607,7 +638,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       color: _blue,
                     ),
                   ),
-                  const TextSpan(text: 'sekarang'),
+                  const TextSpan(text: 'sekarang!'),
                 ],
               ),
             ),
@@ -680,6 +711,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
             isHardMaximum: isHardMaximum,
             apiClient: widget.apiClient,
             readOnly: !isEditable,
+            fromHistory: true,
+            historyItemId: item.id,
+            isConsumed: item.isConsumed,
+            selectedProductName: item.productName,
           ),
         ),
       ).then((_) => _loadHistory());
@@ -707,6 +742,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           packageMl: item.packageMl,
           portionsInPackage: item.portionsInPackage,
           satuanTakaran: item.satuanTakaran,
+          scanDate: item.timestamp,
         ),
       ),
     ).then((_) => _loadHistory());
@@ -836,6 +872,135 @@ class _SingleItemCard extends StatelessWidget {
 // ─────────────────────────────────────────────
 // CARD — Comparison Item
 // ─────────────────────────────────────────────
+
+class _BumbuItemCard extends StatelessWidget {
+  const _BumbuItemCard({
+    required this.item,
+    required this.apiClient,
+    required this.timeLabel,
+    required this.onDetail,
+  });
+
+  final ScanHistoryItem item;
+  final ApiClient apiClient;
+  final String timeLabel;
+  final VoidCallback onDetail;
+
+  static const _white = Color(0xFFFFFFFF);
+  static const _blue = Color(0xFF2C4A8A);
+  static const _navy = Color(0xFF213868);
+  static const _blueSoft = Color(0xFFDFE4ED);
+  static const _gray = Color(0xFFD9D9D9);
+
+  static TextStyle _ts(double size, FontWeight w, Color c) =>
+      GoogleFonts.plusJakartaSans(fontSize: size, fontWeight: w, color: c);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _gray),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+            child: Text(
+              item.productName,
+              style: _ts(17, FontWeight.w700, _navy),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: _ProductImage(
+                    path: item.imagePath,
+                    size: 64,
+                    apiClient: apiClient,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _blueSoft,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${item.sodiumMg} mg natrium/sajian',
+                          style: _ts(13, FontWeight.w600, _blue),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          // _IconChip(
+                          //   fallbackIcon: Icons.category_rounded,
+                          //   label: kategoriLabel(item.kategori),
+                          // ),
+                          _IconChip(
+                            iconAsset: 'assets/icons/video-time.svg',
+                            fallbackIcon: Icons.access_time_rounded,
+                            label: timeLabel,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: _gray),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+            child: Row(
+              children: [
+                // Text(
+                //   'Referensi produk',
+                //   style: _ts(12, FontWeight.w500, _blue),
+                // ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: onDetail,
+                  child: Text(
+                    'Lihat Detail',
+                    style: _ts(12, FontWeight.w500, _blue),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _ComparisonItemCard extends StatelessWidget {
   const _ComparisonItemCard({
@@ -1088,11 +1253,11 @@ class _StatusBadge extends StatelessWidget {
   final bool consumed;
 
   static const _green = Color(0xFF43A047);
-  static const _amber = Color(0xFFFFBF00);
+  static const _red = Color(0xFFE53935);
 
   @override
   Widget build(BuildContext context) {
-    final color = consumed ? _green : _amber;
+    final color = consumed ? _green : _red;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(

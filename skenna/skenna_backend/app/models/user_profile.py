@@ -13,7 +13,7 @@ class UserProfile(Base):
 	__tablename__ = "user_profiles"
 
 	id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-	user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True, index=True)
+	user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True, index=True)
 	gender: Mapped[str] = mapped_column(String(20))
 	birth_date: Mapped[date] = mapped_column(Date)
 	has_hypertension: Mapped[bool] = mapped_column(Boolean, default=False)

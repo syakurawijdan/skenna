@@ -10,4 +10,6 @@ class SodiumClassifyResponse(BaseModel):
 	sodium_mg: float
 	sodium_level: str
 	recommendation: str
+	daily_limit_mg: int
+	limit_source: str
 

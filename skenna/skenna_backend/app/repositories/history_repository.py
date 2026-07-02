@@ -14,6 +14,8 @@ class HistoryRepository:
 		sodium_level: str,
 		scan_id: int | None = None,
 		kategori: str | None = None,
+		image_path: str | None = None,
+		image_path2: str | None = None,
 		servings: int = 1,
 		intake_type: str = 'single',
 		product_name2=None, 
@@ -33,6 +35,8 @@ class HistoryRepository:
 			sodium_mg=sodium_mg,
 			sodium_level=sodium_level,
 			scan_id=scan_id,
+			image_path=image_path,
+			image_path2=image_path2,
 			servings=servings,
 			intake_type=intake_type,
 			product_name2=product_name2,
@@ -61,6 +65,12 @@ class HistoryRepository:
 		user_id: int,
 		is_consumed: bool,
 		servings: int | None = None,
+		food_name: str | None = None,
+		sodium_mg: float | None = None,
+		product_name2: str | None = None,
+		sodium_mg2: float | None = None,
+		image_path: str | None = None,      # ← TAMBAHKAN
+		image_path2: str | None = None,     # ← TAMBAHKAN
 	) -> IntakeHistory | None:
 		item = db.get(IntakeHistory, intake_id)
 		if item is None or item.user_id != user_id:
@@ -69,6 +79,18 @@ class HistoryRepository:
 		if servings is not None:
 			item.servings = servings
 			item.consumed_at = datetime.now(timezone(timedelta(hours=7)))
+		if food_name is not None:
+			item.food_name = food_name
+		if sodium_mg is not None:
+			item.sodium_mg = sodium_mg
+		if product_name2 is not None:
+			item.product_name2 = product_name2
+		if sodium_mg2 is not None:
+			item.sodium_mg2 = sodium_mg2
+		if image_path is not None:
+			item.image_path = image_path       
+		if image_path2 is not None:
+			item.image_path2 = image_path2     
 		db.commit()
 		db.refresh(item)
 		return item

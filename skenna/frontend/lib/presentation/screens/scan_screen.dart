@@ -1,13 +1,18 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image/image.dart' as img;
 import 'package:camera/camera.dart';
-import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skenna/presentation/screens/hasil_perbandingan_produk.dart';
 import '../app_shell.dart';
 import 'scan_confirmation_sheet.dart';
 import 'package:skenna/data/user_session.dart';
+import 'dart:typed_data';
+import '../../data/api_client.dart';
+import '../navigation/app_routes.dart';
+import 'package:flutter/foundation.dart';
+import 'package:skenna/presentation/widgets/ScanFailedDialog.dart';
 
 class ScanScreen extends StatefulWidget {
   final dynamic apiClient;
@@ -26,8 +31,7 @@ class _ScanScreenState extends State<ScanScreen> {
   bool _isLoading = false;
   bool _isProcessing = false;
   bool _isFlashOn = false;
-
-  final String _geminiApiKey = "AIzaSyCWeDw70gMunk_be8IylR2uDhZgGX_E1_4";
+  Uint8List? _frozenFrame;
 
   @override
   void initState() {
@@ -47,134 +51,104 @@ class _ScanScreenState extends State<ScanScreen> {
     final cameras = await availableCameras();
     if (cameras.isEmpty) return;
 
-    _cameraController = CameraController(
+    final controller = CameraController(
       cameras.first,
       ResolutionPreset.medium,
       enableAudio: false,
     );
 
     try {
-      await _cameraController!.initialize();
+      await controller.initialize();
       if (mounted) {
+        _cameraController = controller;
         setState(() => _isCameraInitialized = true);
+      } else {
+        // Widget sudah unmount sebelum init selesai, langsung dispose
+        await controller.dispose();
       }
     } catch (e) {
       debugPrint("Gagal buka kamera: $e");
+      await controller.dispose();
     }
   }
 
   Future<void> _captureAndScan() async {
-    final mockData = {
-      "jenis_produk": "makanan",
-      "satuan_takaran": "g",
-      "isi_kemasan_angka": 180,
-      "isi_kemasan_satuan": "g",
-      "takaran_saji_angka": 20,
-      "sajian_per_kemasan": 9,
-      "sodium_mg": 60,
-    };
-    await _showResultDialog(mockData);
-    return;
-
     if (_isProcessing ||
         _cameraController == null ||
         !_cameraController!.value.isInitialized)
       return;
 
+    HapticFeedback.mediumImpact();
     setState(() {
       _isProcessing = true;
       _isLoading = true;
     });
 
     try {
-      await _cameraController!.pausePreview();
-
       final XFile image = await _cameraController!.takePicture();
-      final imageBytes = await File(image.path).readAsBytes();
-      final base64Image = base64Encode(imageBytes);
+      final bytes = await File(image.path).readAsBytes();
 
-      final String promptText = '''
-Anda adalah sistem OCR pemindai label nilai gizi produk makanan/minuman kemasan.
-Analisis gambar label nilai gizi dan ekstrak data berikut secara akurat.
-Respons WAJIB hanya raw JSON tanpa Markdown backticks, tanpa penjelasan apapun.
+      if (mounted) setState(() => _frozenFrame = bytes);
 
-{
-  "jenis_produk": "makanan" atau "minuman",
-  "satuan_takaran": "g" atau "ml",
-  "isi_kemasan_angka": 85,
-  "isi_kemasan_satuan": "g" atau "ml",
-  "takaran_saji_angka": 85,
-  "sajian_per_kemasan": 1,
-  "sodium_mg": 890
-}
+      final results = await Future.wait([
+        _disposeCamera().then((_) => Uint8List(0)),
+        compute(_compressImageIsolate, bytes),
+      ]);
+      final compressedBytes = results[1];
 
-ATURAN WAJIB:
-1. sodium_mg SELALU dalam miligram (mg).
-   Jika label tulis gram (g), kalikan 1000. Contoh: 0.3g → 300
-2. Jika produk minuman → satuan_takaran "ml", jika makanan padat → "g"
-3. sajian_per_kemasan: jika tidak tertulis, hitung isi_kemasan dibagi 
-   takaran_saji, bulatkan ke bawah
-4. Semua nilai angka harus NUMBER bukan string
-5. Jika ada info yang tidak terbaca, isi dengan null
-''';
+      final result = await widget.apiClient.scanLabel(image.path);
 
-      final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$_geminiApiKey',
-      );
+      // ── Validasi hasil OCR ──
+      final takaranSaji = result['takaran_saji'];
+      final sajianPerKemasan = result['sajian_per_kemasan'];
+      final bool scanGagal = takaranSaji == null || sajianPerKemasan == null;
 
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "contents": [
-            {
-              "parts": [
-                {"text": promptText},
-                {
-                  "inline_data": {
-                    "mime_type": "image/jpeg",
-                    "data": base64Image,
-                  },
-                },
-              ],
-            },
-          ],
-          "generationConfig": {"temperature": 0.1, "maxOutputTokens": 1024},
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final text =
-            decoded['candidates'][0]['content']['parts'][0]['text'] as String;
-
-        // ✅ TAMBAH DI SINI
-        debugPrint("=== RAW GEMINI RESPONSE ===");
-        debugPrint(text);
-        debugPrint("===========================");
-
-        final cleanText = text
-            .replaceAll('```json', '')
-            .replaceAll('```', '')
-            .trim();
-
-        debugPrint("=== CLEAN TEXT ===");
-        debugPrint(cleanText);
-        debugPrint("==================");
-
-        final Map<String, dynamic> dataGizi = jsonDecode(cleanText);
-        _showResultDialog(dataGizi);
-      } else {
-        debugPrint("API Error ${response.statusCode}: ${response.body}");
+      if (scanGagal) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                "API Error ${response.statusCode}: ${jsonDecode(response.body)['error']['message']}",
-              ),
-            ),
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => const ScanFailedDialog(),
           );
+          if (mounted) {
+            setState(() => _frozenFrame = null);
+            await _initializeCamera();
+          }
         }
+        return;
+      }
+
+      final dataGizi = {
+        "nama_produk": result['nama_produk'] ?? result['product_name'] ?? "",
+        "satuan_takaran": result['satuan_takaran'] ?? "g",
+        "takaran_saji_angka": (takaranSaji as num).toInt(),
+        "sajian_per_kemasan": (sajianPerKemasan as num).toInt(),
+        "sodium_mg": result['sodium_mg'] != null
+            ? (result['sodium_mg'] as num).toDouble()
+            : 0.0,
+        "image_path": result['image_path'] as String?,
+        "scan_id": result['scan_id'],
+      };
+
+      await _showResultSheetAfterDispose(dataGizi);
+    } on ApiException catch (e) {
+      if (e.statusCode == 401 && mounted) {
+        await ApiClient.clearCurrentUserId();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sesi kamu telah berakhir, silakan login ulang.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.login,
+          (route) => false,
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Gagal scan: $e")));
       }
     } catch (e) {
       debugPrint("Error detail: $e");
@@ -185,7 +159,6 @@ ATURAN WAJIB:
       }
     } finally {
       if (mounted) {
-        await _cameraController!.resumePreview();
         setState(() {
           _isProcessing = false;
           _isLoading = false;
@@ -194,16 +167,44 @@ ATURAN WAJIB:
     }
   }
 
-  Future<void> _showResultDialog(Map<String, dynamic> data) async {
-    final currentUserId = UserSession().getUserId();
+  Future<void> _showResultSheetAfterDispose(Map<String, dynamic> data) async {
+    if (!mounted) return;
 
-    // Matikan kamera dulu
-    if (_cameraController != null && _cameraController!.value.isInitialized) {
-      await _cameraController!.pausePreview();
-      await _cameraController!.dispose();
-      _cameraController = null;
-      if (mounted) setState(() => _isCameraInitialized = false);
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ScanConfirmationSheet(
+        dataGizi: data,
+        userId: UserSession().getUserId(),
+        apiClient: widget.apiClient,
+        compareWithProduct: widget.compareWithProduct,
+      ),
+    );
+
+    // Sheet ditutup — reinit kamera jika masih mounted
+    if (mounted) {
+      setState(() => _frozenFrame = null);
+      await _initializeCamera();
     }
+  }
+
+  Future<void> _disposeCamera() async {
+    final controller = _cameraController;
+    _cameraController = null;
+    _isFlashOn = false; // reset flag supaya sinkron dengan hardware
+    if (mounted) setState(() => _isCameraInitialized = false);
+
+    if (controller != null && controller.value.isInitialized) {
+      try {
+        await controller.setFlashMode(FlashMode.off); //
+      } catch (_) {}
+      await controller.dispose();
+    }
+  }
+
+  Future<void> _showResultSheet(Map<String, dynamic> data) async {
+    await _disposeCamera();
 
     if (!mounted) return;
 
@@ -213,13 +214,15 @@ ATURAN WAJIB:
       backgroundColor: Colors.transparent,
       builder: (_) => ScanConfirmationSheet(
         dataGizi: data,
-        userId: currentUserId,
+        userId: UserSession().getUserId(),
+        apiClient: widget.apiClient,
         compareWithProduct: widget.compareWithProduct,
       ),
     );
 
-    // Kalau user dismiss sheet tanpa lanjut, resume kamera
+    // Sheet ditutup (dismiss atau navigasi) — reinit kamera jika masih mounted
     if (mounted) {
+      setState(() => _frozenFrame = null);
       await _initializeCamera();
     }
   }
@@ -236,8 +239,16 @@ ATURAN WAJIB:
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── Kamera full screen
-          if (_isCameraInitialized)
+          if (_frozenFrame != null)
+            Image.memory(
+              _frozenFrame!,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            )
+          else if (_isCameraInitialized &&
+              _cameraController != null &&
+              _cameraController!.value.isInitialized)
             CameraPreview(_cameraController!)
           else
             const ColoredBox(color: Colors.black),
@@ -299,7 +310,6 @@ ATURAN WAJIB:
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Tombol back
                       GestureDetector(
                         onTap: () => Navigator.pushAndRemoveUntil(
                           context,
@@ -309,19 +319,17 @@ ATURAN WAJIB:
                         child: Container(
                           width: 40,
                           height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.85),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFDFE4ED),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
-                            Icons.arrow_back_ios_new,
-                            size: 18,
+                            Icons.arrow_back,
+                            size: 20,
                             color: Color(0xFF2C4A8A),
                           ),
                         ),
                       ),
-
-                      // Judul
                       Text(
                         'Scanner',
                         style: GoogleFonts.plusJakartaSans(
@@ -330,15 +338,13 @@ ATURAN WAJIB:
                           color: Colors.white,
                         ),
                       ),
-
-                      // Tombol flash
                       GestureDetector(
                         onTap: _toggleFlash,
                         child: Container(
                           width: 40,
                           height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.85),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFDFE4ED),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -360,7 +366,7 @@ ATURAN WAJIB:
                   child: Center(
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : GestureDetector(
+                        : InkWell(
                             onTap: _captureAndScan,
                             child: Container(
                               width: 72,
@@ -390,7 +396,13 @@ ATURAN WAJIB:
 
   @override
   void dispose() {
-    _cameraController?.dispose(); // ← sudah pakai ?. jadi aman
+    // Matikan flash sebelum dispose supaya tidak "nyangkut" di hardware
+    if (_cameraController != null && _cameraController!.value.isInitialized) {
+      try {
+        _cameraController!.setFlashMode(FlashMode.off);
+      } catch (_) {}
+    }
+    _cameraController?.dispose();
     super.dispose();
   }
 }
@@ -472,4 +484,15 @@ class _CornerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+Uint8List _compressImageIsolate(Uint8List bytes) {
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) return bytes;
+
+  final resized = decoded.width > decoded.height
+      ? img.copyResize(decoded, width: 512)
+      : img.copyResize(decoded, height: 512);
+
+  return img.encodeJpg(resized, quality: 70);
 }

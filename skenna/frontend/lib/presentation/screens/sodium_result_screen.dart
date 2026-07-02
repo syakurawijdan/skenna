@@ -188,21 +188,24 @@ class _SodiumResultScreenState extends State<SodiumResultScreen> {
                     Center(
                       child: ConstrainedBox(
                         constraints: BoxConstraints(maxWidth: contentWidth),
-                        child: Text(
-                          _substitute(entry.deskripsi),
+                        child: _buildRichText(
+                          entry.deskripsi,
+                          entry.boldSpans,
+                          fontSize: 14,
+                          color: _blue,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.plusJakartaSans(
-                            color: _blue,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            height: 1.35,
-                          ),
                         ),
                       ),
                     ),
                     if (boxText != null) ...[
                       const SizedBox(height: 12),
-                      _InfoBox(text: boxText, warna: warna),
+                      _InfoBox(
+                        text: boxText,
+                        boldSpans:
+                            entry.box?.boldSpans.map(_substitute).toList() ??
+                            [],
+                        warna: warna,
+                      ),
                     ],
                     const SizedBox(height: 28),
                     Padding(
@@ -277,7 +280,81 @@ class _SodiumResultScreenState extends State<SodiumResultScreen> {
         (widget.hasil.sistolik == null || widget.hasil.diastolik == null)) {
       return null;
     }
-    return _substitute(box.template);
+    final template = _substitute(box.template);
+    final boldParts = box.boldSpans.map(_substitute).join();
+    return '$template$boldParts';
+  }
+
+  /// Renders [text] as a RichText where substrings in [boldSpans]
+  /// (after placeholder substitution) are FontWeight.w700,
+  /// everything else is FontWeight.w500.
+  Widget _buildRichText(
+    String text,
+    List<String> boldSpans, {
+    required double fontSize,
+    required Color color,
+    required TextAlign textAlign,
+    double height = 1.35,
+  }) {
+    // substitute placeholders first
+    final resolved = _substitute(text);
+    final resolvedBolds = boldSpans.map(_substitute).toList();
+
+    if (resolvedBolds.isEmpty) {
+      return Text(
+        resolved,
+        textAlign: textAlign,
+        style: GoogleFonts.plusJakartaSans(
+          color: color,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w500,
+          height: height,
+        ),
+      );
+    }
+
+    // Build spans
+    final spans = <TextSpan>[];
+    int cursor = 0;
+    while (cursor < resolved.length) {
+      // find earliest bold match from cursor
+      int earliestStart = resolved.length;
+      String? matchedBold;
+      for (final bold in resolvedBolds) {
+        final idx = resolved.indexOf(bold, cursor);
+        if (idx != -1 && idx < earliestStart) {
+          earliestStart = idx;
+          matchedBold = bold;
+        }
+      }
+      if (matchedBold == null) {
+        spans.add(TextSpan(text: resolved.substring(cursor)));
+        break;
+      }
+      if (earliestStart > cursor) {
+        spans.add(TextSpan(text: resolved.substring(cursor, earliestStart)));
+      }
+      spans.add(
+        TextSpan(
+          text: matchedBold,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      );
+      cursor = earliestStart + matchedBold.length;
+    }
+
+    return RichText(
+      textAlign: textAlign,
+      text: TextSpan(
+        style: GoogleFonts.plusJakartaSans(
+          color: color,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w500,
+          height: height,
+        ),
+        children: spans,
+      ),
+    );
   }
 
   String _substitute(String value) {
@@ -334,14 +411,74 @@ class _SodiumResultScreenState extends State<SodiumResultScreen> {
   }
 }
 
+String formatNatriumMg(int mg) {
+  // Use dot as thousands separator (Indonesian convention)
+  if (mg >= 1000) {
+    final thousands = mg ~/ 1000;
+    final remainder = mg % 1000;
+    if (remainder == 0) return '$thousands.000';
+    return '$thousands.${remainder.toString().padLeft(3, '0')}';
+  }
+  return mg.toString();
+}
+
 class _InfoBox extends StatelessWidget {
-  const _InfoBox({required this.text, required this.warna});
+  const _InfoBox({
+    required this.text,
+    required this.boldSpans,
+    required this.warna,
+  });
 
   final String text;
+  final List<String> boldSpans;
   final String warna;
 
   @override
   Widget build(BuildContext context) {
+    final baseStyle = GoogleFonts.plusJakartaSans(
+      color: _SodiumResultScreenState.boxForeground(warna),
+      fontSize: 12,
+      fontWeight: FontWeight.w500,
+      height: 1.25,
+    );
+
+    Widget content;
+    if (boldSpans.isEmpty) {
+      content = Text(text, textAlign: TextAlign.center, style: baseStyle);
+    } else {
+      final spans = <TextSpan>[];
+      int cursor = 0;
+      while (cursor < text.length) {
+        int earliestStart = text.length;
+        String? matchedBold;
+        for (final bold in boldSpans) {
+          final idx = text.indexOf(bold, cursor);
+          if (idx != -1 && idx < earliestStart) {
+            earliestStart = idx;
+            matchedBold = bold;
+          }
+        }
+        if (matchedBold == null) {
+          spans.add(TextSpan(text: text.substring(cursor)));
+          break;
+        }
+        if (earliestStart > cursor) {
+          spans.add(TextSpan(text: text.substring(cursor, earliestStart)));
+        }
+        spans.add(
+          TextSpan(
+            text: matchedBold,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        );
+        cursor = earliestStart + matchedBold.length;
+      }
+      content = RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(style: baseStyle, children: spans),
+      );
+    }
+
     return Container(
       constraints: const BoxConstraints(maxWidth: 344),
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -350,16 +487,7 @@ class _InfoBox extends StatelessWidget {
         color: _SodiumResultScreenState.boxBackground(warna),
         borderRadius: BorderRadius.circular(18),
       ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: GoogleFonts.plusJakartaSans(
-          color: _SodiumResultScreenState.boxForeground(warna),
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          height: 1.25,
-        ),
-      ),
+      child: content,
     );
   }
 }
@@ -404,12 +532,14 @@ class _UiCategory {
     required this.header,
     required this.warna,
     required this.deskripsi,
+    required this.boldSpans,
     required this.box,
   });
 
   final String header;
   final String warna;
   final String deskripsi;
+  final List<String> boldSpans;
   final _UiBox? box;
 
   factory _UiCategory.fromJson(Map<String, dynamic> json) {
@@ -418,6 +548,9 @@ class _UiCategory {
       header: json['header'] as String? ?? '',
       warna: json['warna'] as String? ?? 'hijau',
       deskripsi: json['deskripsi'] as String? ?? '',
+      boldSpans: (json['deskripsi_bold_spans'] as List<dynamic>? ?? [])
+          .map((e) => e as String)
+          .toList(),
       box: rawBox is Map
           ? _UiBox.fromJson(Map<String, dynamic>.from(rawBox))
           : null,
@@ -426,15 +559,23 @@ class _UiCategory {
 }
 
 class _UiBox {
-  const _UiBox({required this.tipe, required this.template});
+  const _UiBox({
+    required this.tipe,
+    required this.template,
+    required this.boldSpans,
+  });
 
   final String tipe;
   final String template;
+  final List<String> boldSpans;
 
   factory _UiBox.fromJson(Map<String, dynamic> json) {
     return _UiBox(
       tipe: json['tipe'] as String? ?? '',
       template: json['template'] as String? ?? '',
+      boldSpans: (json['template_bold_spans'] as List<dynamic>? ?? [])
+          .map((e) => e as String)
+          .toList(),
     );
   }
 }

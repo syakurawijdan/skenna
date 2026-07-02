@@ -133,7 +133,7 @@ class _ProfileBloodPressureScreenState
       final hasil = await klasifikasiNatriumDariDraft(
         birthDate: draft.birthDate!,
         gender: draft.gender,
-        hasHypertension: true,
+        hasHypertension: draft.hasHypertension,
         hypertensionCondition: draft.hypertensionCondition,
         systolicPressure: systolic,
         diastolicPressure: diastolic,
@@ -179,7 +179,7 @@ class _ProfileBloodPressureScreenState
       final hasil = await klasifikasiNatriumDariDraft(
         birthDate: draft.birthDate!,
         gender: draft.gender,
-        hasHypertension: true,
+        hasHypertension: draft.hasHypertension,
         hypertensionCondition: draft.hypertensionCondition,
         pregnancyStatus: 'tidak_hamil',
       );

@@ -40,6 +40,7 @@ class IntakeCreateRequest(BaseModel):
     satuan_takaran2: str = "g"
     image_path: Optional[str] = None
     image_path2: Optional[str] = None
+    rekomendasi_json: Optional[str] = None
 
 class IntakeHistoryResponse(BaseModel):
     id: int

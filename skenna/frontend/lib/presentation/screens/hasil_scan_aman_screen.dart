@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -168,14 +169,18 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
       });
     }
 
-    if (!widget.fromHistory && !widget.readOnly && _isBumbu) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _saveBumbuReferenceIfNeeded();
-      });
-    }
-
     if (widget.rekomendasiJson != null) {
       _parseRekomendasiFromJson(widget.rekomendasiJson!);
+      if (!widget.fromHistory && !widget.readOnly && _isBumbu) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _saveBumbuReferenceIfNeeded();
+        });
+      }
+    } else if (!widget.fromHistory && !widget.readOnly && _isBumbu) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await _loadRekomendasi();
+        await _saveBumbuReferenceIfNeeded();
+      });
     } else {
       _loadRekomendasi();
     }
@@ -1172,6 +1177,20 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
 
     try {
       final client = widget.apiClient ?? ApiClient();
+
+      final rekoPayload = jsonEncode({
+        'rekomendasi': _rekomendasi
+            .map(
+              (r) => {
+                'nama_produk': r.namaProduk,
+                'sodium_per_sajian_mg': r.sodiumPerSajianMg,
+                'alasan': r.alasan,
+              },
+            )
+            .toList(),
+        if (_tipsTeks != null) 'tips': _tipsTeks,
+      });
+
       final response = await client.postScanHistory(
         userId: activeUserId,
         sodiumMg: widget.perPortionMg,
@@ -1186,6 +1205,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
         isConsumed: false,
         imagePath: widget.imagePath,
         scanId: widget.scanId,
+        rekomendasiJson: rekoPayload,
       );
       if (!mounted) return;
       setState(() {

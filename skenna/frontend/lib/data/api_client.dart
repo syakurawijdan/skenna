@@ -106,10 +106,7 @@ class ApiClient {
     print('Request Method = $method');
   }
 
-  Future<http.Response> _get(
-    Uri uri, {
-    Map<String, String>? headers,
-  }) {
+  Future<http.Response> _get(Uri uri, {Map<String, String>? headers}) {
     _logRequest('GET', uri);
     return _client.get(uri, headers: headers);
   }
@@ -121,12 +118,7 @@ class ApiClient {
     Encoding? encoding,
   }) {
     _logRequest('POST', uri);
-    return _client.post(
-      uri,
-      headers: headers,
-      body: body,
-      encoding: encoding,
-    );
+    return _client.post(uri, headers: headers, body: body, encoding: encoding);
   }
 
   Future<http.Response> _put(
@@ -136,12 +128,7 @@ class ApiClient {
     Encoding? encoding,
   }) {
     _logRequest('PUT', uri);
-    return _client.put(
-      uri,
-      headers: headers,
-      body: body,
-      encoding: encoding,
-    );
+    return _client.put(uri, headers: headers, body: body, encoding: encoding);
   }
 
   Future<http.Response> _patch(
@@ -151,12 +138,7 @@ class ApiClient {
     Encoding? encoding,
   }) {
     _logRequest('PATCH', uri);
-    return _client.patch(
-      uri,
-      headers: headers,
-      body: body,
-      encoding: encoding,
-    );
+    return _client.patch(uri, headers: headers, body: body, encoding: encoding);
   }
 
   Future<http.Response> _delete(
@@ -195,10 +177,7 @@ class ApiClient {
   // Auto-set current user ID setelah buat demo user
   Future<Map<String, dynamic>> createDemoUser() async {
     final uri = Uri.parse('$baseUrl/api/v1/users/demo');
-    final res = await _post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-    );
+    final res = await _post(uri, headers: {'Content-Type': 'application/json'});
     if (res.statusCode >= 400) {
       throw Exception(
         'Failed to create demo user: ${res.statusCode} ${res.body}',
@@ -426,6 +405,7 @@ class ApiClient {
     String satuanTakaran2 = 'g',
     String? imagePath,
     int? scanId,
+    String? rekomendasiJson,
   }) async {
     final effectiveUserId = userId ?? await currentUserId;
     final uri = Uri.parse('$baseUrl/api/v1/history/intake');

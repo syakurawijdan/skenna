@@ -237,12 +237,21 @@ async def create_intake(payload: IntakeCreateRequest, db: Session = Depends(get_
         image_path2=payload.image_path2,
     )
 
-    try:
-        reko = await get_rekomendasi(payload.kategori or 'lainnya', int(payload.sodium_mg))
-        item.rekomendasi_json = json.dumps(reko)
+    if payload.rekomendasi_json:
+        item.rekomendasi_json = payload.rekomendasi_json
         db.commit()
-    except Exception as e:
-        print(f"=== REKO ERROR (non-fatal): {e}")
+    else:
+        try:
+            reko = await get_rekomendasi(
+                payload.kategori or 'lainnya',
+                int(payload.sodium_mg),
+                user_id=payload.user_id,
+                product_name=payload.food_name,
+            )
+            item.rekomendasi_json = json.dumps(reko)
+            db.commit()
+        except Exception as e:
+            print(f"=== REKO ERROR (non-fatal): {e}")
 
     return {"id": item.id, "message": "ok"}
 

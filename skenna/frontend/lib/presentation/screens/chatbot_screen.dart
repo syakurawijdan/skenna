@@ -136,6 +136,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   int _userId = 0;
   int _educationPart = 0;
 
+  bool get _isBumbuCategory {
+    final kategori = widget.kategori?.toLowerCase().trim() ?? '';
+    return kategori == 'saus_bumbu' ||
+        kategori == 'bumbu' ||
+        kategori.contains('saus') ||
+        kategori.contains('bumbu');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -609,6 +617,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Future<void> _recordScanConsumption() async {
+    if (_isBumbuCategory) return;
     if (_savingScanConsumption) return;
 
     final productName = widget.productName?.trim();
@@ -752,7 +761,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     ],
                   ),
                 ),
-                if (widget.productName != null && !_bannerDismissed)
+                if (widget.productName != null &&
+                    !_isBumbuCategory &&
+                    !_bannerDismissed)
                   _ScanConsumptionBanner(
                     productName: widget.productName!,
                     saving: _savingScanConsumption,

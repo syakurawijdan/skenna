@@ -432,6 +432,7 @@ class ApiClient {
       if (imagePath != null) 'image_path': imagePath,
       if (imagePath2 != null) 'image_path2': imagePath2,
       if (scanId != null) 'scan_id': scanId,
+      if (rekomendasiJson != null) 'rekomendasi_json': rekomendasiJson,
     };
 
     final res = await _post(

@@ -19,3 +19,15 @@ class UserProfileUpsertResponse(BaseModel):
 	user_id: int
 	full_name: str
 	message: str
+
+
+class UserFullNameUpdateRequest(BaseModel):
+	full_name: str = Field(..., min_length=1, max_length=120)
+
+
+class ChangePasswordRequest(BaseModel):
+	old_password: str
+	new_password: str = Field(..., min_length=8)
+
+class UserCreateRequest(BaseModel):
+    full_name: str

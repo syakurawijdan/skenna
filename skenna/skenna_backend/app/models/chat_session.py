@@ -10,7 +10,7 @@ class ChatSession(Base):
 	__tablename__ = "chat_session"
 
 	id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-	user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+	user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
 	question: Mapped[str] = mapped_column(Text)
 	answer: Mapped[str] = mapped_column(Text)
 	sources: Mapped[str] = mapped_column(Text, default="[]")

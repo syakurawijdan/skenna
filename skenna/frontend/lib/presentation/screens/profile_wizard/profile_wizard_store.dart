@@ -27,7 +27,11 @@ class ProfileWizardStore {
   ProfileWizardStore._();
 
   static final ProfileWizardStore instance = ProfileWizardStore._();
-  final ProfileWizardDraft draft = ProfileWizardDraft();
+  ProfileWizardDraft draft = ProfileWizardDraft();
+
+  void reset() {
+    draft = ProfileWizardDraft();
+  }
 
   double progressForStep(ProfileWizardStep step) {
     final total = _totalSteps();
@@ -65,11 +69,6 @@ class ProfileWizardStore {
         gender == 'laki-laki' || gender == 'laki_laki' || gender == 'male';
     final isFemale = gender == 'perempuan' || gender == 'female';
     final hasHypertension = draft.hasHypertension;
-    final birthDate = draft.birthDate;
-
-    if (birthDate != null && _calculateAge(birthDate) < 18) {
-      return 3;
-    }
 
     if (isMale) {
       if (hasHypertension == false) {

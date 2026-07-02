@@ -1,284 +1,85 @@
 {
   "metadata": {
-    "nama_sistem": "Klasifikasi Batas Natrium Harian",
-    "versi": "1.0",
-    "format": "rule_table",
-    "tujuan": "Menentukan batas natrium harian berdasarkan kelompok usia dan faktor klinis"
+    "nama_sistem": "SKENNA",
+    "versi": "2.1",
+    "sumber_akg": "Permenkes No. 28 Tahun 2019, Lampiran I Tabel 3 (Angka Kecukupan Mineral)"
   },
   "referensi": {
-    "akg_kemenkes_pmk_28_2019": {
-      "fungsi": "Batas tercukupi / AI",
-      "catatan": "Dipakai untuk anak dan remaja < 18 tahun"
+    "akg_kemenkes_2019": {
+      "fungsi": "Kebutuhan natrium harian"
     },
-    "who_sodium_guideline_2012": {
-      "fungsi": "Batas maksimal anjuran",
-      "catatan": "Dipakai untuk dewasa >= 18 tahun"
+    "who": {
+      "fungsi": "Batas maksimal natrium populasi umum",
+      "nilai": 2000
     },
-    "aha_acc_2025": {
-      "fungsi": "Ambang tekanan darah dan klasifikasi hipertensi",
-      "catatan": "Dipakai sebagai faktor klinis"
+    "aha": {
+      "fungsi": "Batas natrium hipertensi",
+      "nilai": 1500
     },
-    "perhi_2019": {
-      "fungsi": "Konteks hipertensi Indonesia",
-      "catatan": "Dipakai sebagai konteks klinis"
+    "esc": {
+      "fungsi": "Klasifikasi tekanan darah"
     }
   },
-  "input": {
-    "tanggal_lahir": {
-      "tipe": "DateTime",
-      "wajib": true,
-      "keterangan": "Untuk menghitung usia"
+  "akg_usia_kurang_16": {
+    "_todo": "confirm final AKG table with product owner before defense",
+    "0_5_bulan": { "usia_min_tahun": 0, "usia_max_tahun": 0, "nilai_mg": 120, "catatan": "0-5 bulan, tidak ada split gender" },
+    "6_11_bulan": { "usia_min_tahun": 0, "usia_max_tahun": 0, "nilai_mg": 370, "catatan": "Catatan: bracket ini saat ini tidak terjangkau karena sistem menggunakan granularitas usia tahun (bukan bulan); usia 0-11 bulan otomatis masuk bracket 0_5_bulan (120mg). Ini keputusan yang disengaja, bukan bug." },
+    "1_3_tahun": { "usia_min_tahun": 1, "usia_max_tahun": 3, "nilai_mg": 800, "catatan": "tidak ada split gender" },
+    "4_6_tahun": { "usia_min_tahun": 4, "usia_max_tahun": 6, "nilai_mg": 900, "catatan": "tidak ada split gender" },
+    "7_9_tahun": { "usia_min_tahun": 7, "usia_max_tahun": 9, "nilai_mg": 1000, "catatan": "tidak ada split gender" },
+    "10_12_tahun": {
+      "usia_min_tahun": 10,
+      "usia_max_tahun": 12,
+      "laki_laki_mg": 1300,
+      "perempuan_mg": 1400,
+      "catatan": "WAJIB split gender, nilai berbeda"
     },
-    "gender": {
-      "tipe": "String",
-      "nilai": ["laki_laki", "perempuan"],
-      "wajib": true
-    },
-    "riwayat_ht": {
-      "tipe": "String",
-      "nilai": [
-        "tidak_ada",
-        "ya_riwayat_saja",
-        "ya_aktif_terkontrol",
-        "ya_tidak_terkontrol"
-      ],
-      "wajib": true
-    },
-    "sistolik": {
-      "tipe": "int|null",
-      "wajib": false
-    },
-    "diastolik": {
-      "tipe": "int|null",
-      "wajib": false
-    },
-    "status_kehamilan": {
-      "tipe": "String",
-      "nilai": ["tidak_hamil", "hamil", "menyusui"],
-      "wajib": false
+    "13_15_tahun": {
+      "usia_min_tahun": 13,
+      "usia_max_tahun": 15,
+      "laki_laki_mg": 1500,
+      "perempuan_mg": 1500,
+      "catatan": "nilai sama di kedua gender, tetap eksplisit untuk konsistensi struktur"
     }
   },
-  "output": {
-    "batasNatrium": {
-      "tipe": "int",
-      "satuan": "mg/hari"
-    },
-    "kategori": {
-      "tipe": "String",
-      "nilai": ["hijau", "kuning", "merah"]
-    },
-    "isAnakAnak": {
-      "tipe": "bool"
-    },
-    "hamilDenganHT": {
-      "tipe": "bool"
-    }
-  },
-  "tabel_batas_natrium": [
-    {
-      "kelompok_usia": "0 - 5 bulan",
-      "usia_min": 0,
-      "usia_max": 0,
-      "akg_batas_tercukupi_mg": 120,
-      "who_batas_maksimal_mg": null,
-      "yang_ditampilkan_sistem_mg": 120,
-      "faktor_klinis_aktif": false
-    },
-    {
-      "kelompok_usia": "6 - 11 bulan",
-      "usia_min": 0,
-      "usia_max": 1,
-      "akg_batas_tercukupi_mg": 370,
-      "who_batas_maksimal_mg": null,
-      "yang_ditampilkan_sistem_mg": 370,
-      "faktor_klinis_aktif": false
-    },
-    {
-      "kelompok_usia": "1 - 3 tahun",
-      "usia_min": 1,
-      "usia_max": 3,
-      "akg_batas_tercukupi_mg": 800,
-      "who_batas_maksimal_mg": 1000,
-      "yang_ditampilkan_sistem_mg": 800,
-      "faktor_klinis_aktif": false
-    },
-    {
-      "kelompok_usia": "4 - 6 tahun",
-      "usia_min": 4,
-      "usia_max": 6,
-      "akg_batas_tercukupi_mg": 900,
-      "who_batas_maksimal_mg": 1000,
-      "yang_ditampilkan_sistem_mg": 900,
-      "faktor_klinis_aktif": false
-    },
-    {
-      "kelompok_usia": "7 - 9 tahun",
-      "usia_min": 7,
-      "usia_max": 9,
-      "akg_batas_tercukupi_mg": 1000,
-      "who_batas_maksimal_mg": 1100,
-      "yang_ditampilkan_sistem_mg": 1000,
-      "faktor_klinis_aktif": false
-    },
-    {
-      "kelompok_usia": "10 - 12 tahun",
-      "usia_min": 10,
-      "usia_max": 12,
-      "akg_batas_tercukupi_mg": 1300,
-      "who_batas_maksimal_mg": 1300,
-      "yang_ditampilkan_sistem_mg": 1300,
-      "faktor_klinis_aktif": false
-    },
-    {
-      "kelompok_usia": "13 - 15 tahun",
-      "usia_min": 13,
-      "usia_max": 15,
-      "akg_batas_tercukupi_mg": 1500,
-      "who_batas_maksimal_mg": 1500,
-      "yang_ditampilkan_sistem_mg": 1500,
-      "faktor_klinis_aktif": false
-    },
-    {
-      "kelompok_usia": "16 - 17 tahun",
-      "usia_min": 16,
-      "usia_max": 17,
-      "akg_batas_tercukupi_mg": 1700,
-      "who_batas_maksimal_mg": 1700,
-      "yang_ditampilkan_sistem_mg": 1700,
-      "faktor_klinis_aktif": false
-    },
-    {
-      "kelompok_usia": ">= 18 tahun",
-      "usia_min": 18,
-      "usia_max": null,
-      "akg_batas_tercukupi_mg": 1500,
-      "who_batas_maksimal_mg": 2000,
-      "yang_ditampilkan_sistem_mg": 2000,
-      "faktor_klinis_aktif": true
-    }
-  ],
-  "aturan_dewasa": {
-    "batas_maksimum_who": {
-      "nilai": 2000,
-      "keterangan": "Batas maksimal anjuran natrium untuk dewasa"
-    },
-    "batas_tekanan_darah": [
-      {
-        "urutan": 1,
-        "kondisi": "sistolik >= 180 atau diastolik >= 120",
-        "batas_mg": 1000,
-        "stage": "krisis",
-        "keterangan": "batas paling ketat"
+  "natrium_rules": {
+    "usia_kurang_16": {
+      "normal": {
+        "gunakan": "AKG"
       },
-      {
-        "urutan": 2,
-        "kondisi": "sistolik >= 140 atau diastolik >= 90",
-        "batas_mg": 1200,
-        "stage": "stage_2",
-        "keterangan": "hipertensi stage 2"
-      },
-      {
-        "urutan": 3,
-        "kondisi": "sistolik >= 130 atau diastolik >= 80",
-        "batas_mg": 1500,
-        "stage": "stage_1",
-        "keterangan": "hipertensi stage 1"
-      },
-      {
-        "urutan": 4,
-        "kondisi": "sistolik >= 120 dan diastolik < 80",
-        "batas_mg": 1800,
-        "stage": "elevated",
-        "keterangan": "tekanan darah naik"
-      },
-      {
-        "urutan": 5,
-        "kondisi": "normal atau tidak diisi",
-        "batas_mg": 9999,
-        "stage": "normal",
-        "keterangan": "tidak membatasi"
+      "hipertensi": {
+        "gunakan": "AKG",
+        "tambahkan_peringatan": true,
+        "catatan": "Hipertensi pada usia <16 TIDAK mengubah angka batas, hanya menaikkan severity warna ke merah dan peringatan"
       }
-    ],
-    "batas_riwayat_hipertensi": [
-      {
-        "urutan": 1,
-        "riwayat_ht": "tidak_ada",
-        "batas_mg": 9999,
-        "keterangan": "tidak ada pembatasan dari riwayat HT"
+    },
+    "usia_16_keatas": {
+      "normal": {
+        "batas_natrium_mg": 2000,
+        "sumber": "WHO"
       },
-      {
-        "urutan": 2,
-        "riwayat_ht": "ya_riwayat_saja",
-        "batas_mg": 1700,
-        "keterangan": "batas usia dikurangi 300"
-      },
-      {
-        "urutan": 3,
-        "riwayat_ht": "ya_aktif_terkontrol",
-        "batas_mg": 1500,
-        "keterangan": "override langsung target klinis terkontrol"
-      },
-      {
-        "urutan": 4,
-        "riwayat_ht": "ya_tidak_terkontrol",
-        "batas_mg": 1200,
-        "keterangan": "override absolut 1200 mg (tidak ikut minimum/maximum rule lain)"
+      "hipertensi": {
+        "batas_natrium_mg": 1500,
+        "sumber": "AHA"
       }
-    ]
-  },
-  "aturan_override": [
-    {
-      "prioritas": 1,
-      "kondisi": "usia >= 18 && riwayat_ht == ya_tidak_terkontrol",
-      "aksi": "batasNatrium = 1200",
-      "tipe": "absolute_override"
-    }
-  ],
-  "aturan_prioritas": {
-    "usia_kurang_dari_18": {
-      "langkah": [
-        "Abaikan semua faktor klinis",
-        "Ambil AKG sesuai kelompok usia",
-        "Set kategori = hijau",
-        "Set isAnakAnak = true"
-      ]
-    },
-    "usia_18_ke_atas": {
-      "langkah": [
-        "Jika riwayat_ht == ya_tidak_terkontrol, langsung set batas final = 1200 mg (override absolut)",
-        "Tetapkan batas usia dewasa = 2000 mg",
-        "Hitung batas tekanan darah",
-        "Hitung batas riwayat hipertensi",
-        "Ambil nilai minimum dari ketiganya",
-        "Batas final = maksimum dari hasil minimum dan 1000 mg"
-      ]
     }
   },
-  "aturan_kategori": [
-    {
-      "nama": "merah",
-      "kondisi": "riwayat_ht != tidak_ada",
-      "label_ui": "Ketat",
-      "prioritas": 1
+  "kehamilan_menyusui": {
+    "hamil": {
+      "tambahan_natrium_mg": 0,
+      "mengubah_batas": false
     },
-    {
-      "nama": "kuning",
-      "kondisi": "gender == perempuan && status_kehamilan in [hamil, menyusui] && riwayat_ht == tidak_ada",
-      "label_ui": "Perlu Diperhatikan",
-      "prioritas": 2
-    },
-    {
-      "nama": "hijau",
-      "kondisi": "selain itu",
-      "label_ui": "Normal",
-      "prioritas": 3
+    "menyusui": {
+      "tambahan_natrium_mg": 0,
+      "mengubah_batas": false
     }
-  ],
-  "catatan_khusus": {
-    "label_anak": "Anjuran Konsumsi Natrium",
-    "hamil_dengan_ht": {
-      "true_jika": "gender == perempuan && riwayat_ht != tidak_ada && status_kehamilan in [hamil, menyusui]",
-      "catatan_ui": "Anda memiliki riwayat hipertensi dan sedang hamil/menyusui. Konsultasikan dengan dokter Anda."
-    }
-  }
+  },
+  "tekanan_darah_esc": [
+    { "nama": "Optimal", "sistolik": "<120", "diastolik": "<80" },
+    { "nama": "Normal", "sistolik": "120-129", "diastolik": "80-84" },
+    { "nama": "High Normal", "sistolik": "130-139", "diastolik": "85-89" },
+    { "nama": "Hipertensi Grade 1", "sistolik": "140-159", "diastolik": "90-99" },
+    { "nama": "Hipertensi Grade 2", "sistolik": "160-179", "diastolik": "100-109" },
+    { "nama": "Hipertensi Grade 3", "sistolik": ">=180", "diastolik": ">=110" }
+  ]
 }

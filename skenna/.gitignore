@@ -44,3 +44,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+.venv/
+__pycache__/
+*.pyc
+.env
+skenna_backend/uploads/
+cv_history.txt
+test_env.py
+test_gemini.py
+test_models.py

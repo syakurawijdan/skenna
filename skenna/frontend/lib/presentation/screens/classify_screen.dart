@@ -47,9 +47,10 @@ class _ClassifyScreenState extends State<ClassifyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
@@ -73,6 +74,7 @@ class _ClassifyScreenState extends State<ClassifyScreen> {
           const SizedBox(height: 16),
           Text(_result),
         ],
+        ),
       ),
     );
   }

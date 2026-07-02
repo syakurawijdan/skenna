@@ -3,7 +3,7 @@ from app.services.sodium_classifier_service import SodiumClassifierService
 
 
 def test_sodium_classifier_low_level() -> None:
-    level, _ = SodiumClassifierService.classify(100)
+    level, _ = SodiumClassifierService.classify(100, daily_limit_mg=2000)
     assert level == "low"
 
 

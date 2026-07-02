@@ -19,17 +19,23 @@ if (-not (Test-Path $pythonExe)) {
     exit 1
 }
 
+Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force
+Start-Sleep -Seconds 1
 Start-Process powershell -ArgumentList @(
     "-NoExit",
     "-Command",
     "Set-Location '$backendPath'; & '$pythonExe' -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
 )
 
+Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force
+Start-Sleep -Seconds 1
 Start-Process powershell -ArgumentList @(
     "-NoExit",
     "-Command",
     "Set-Location '$frontendPath'; `$env:PUB_CACHE='$pubCachePath'; flutter run --dart-define=API_BASE_URL=$ApiBaseUrl"
 )
+
+
 
 Write-Host "Started backend and frontend."
 Write-Host "Backend:  http://127.0.0.1:8000"

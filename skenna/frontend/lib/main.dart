@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:device_preview/device_preview.dart';
+// import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:skenna/data/user_session.dart';
 
 import 'data/api_client.dart';
 import 'domain/app_init_service.dart';
@@ -12,6 +12,15 @@ import 'presentation/screens/chatbot_screen.dart';
 import 'presentation/screens/onboarding_1_screen.dart';
 import 'presentation/screens/onboarding_2_screen.dart';
 import 'presentation/screens/onboarding_3_screen.dart';
+import 'presentation/screens/change_password_screen.dart';
+import 'presentation/screens/edit_profile_screen.dart';
+import 'presentation/screens/consumed_today_screen.dart';
+import 'presentation/screens/auth/email_screen.dart';
+import 'presentation/screens/auth/forgot_email_screen.dart';
+import 'presentation/screens/auth/login_screen.dart';
+import 'presentation/screens/auth/otp_verification_screen.dart';
+import 'presentation/screens/auth/password_screen.dart';
+import 'presentation/screens/auth/welcome_screen.dart';
 import 'presentation/screens/profile_wizard/profile_name_screen.dart';
 import 'presentation/screens/profile_wizard/profile_birth_date_screen.dart';
 import 'presentation/screens/profile_wizard/profile_blood_pressure_screen.dart';
@@ -20,17 +29,17 @@ import 'presentation/screens/profile_wizard/profile_hypertension_condition_scree
 import 'presentation/screens/profile_wizard/profile_hypertension_status_screen.dart';
 import 'presentation/screens/profile_wizard/profile_pregnancy_screen.dart';
 import 'presentation/screens/splash_screen.dart';
-import 'presentation/screens/sodium_limit_pregnant_screen.dart';
-import 'presentation/screens/sodium_limit_safe_screen.dart';
-import 'presentation/screens/sodium_limit_unsafe_screen.dart';
+import 'presentation/screens/sodium_result_screen.dart';
+import 'presentation/screens/hasil_scan_aman_screen.dart';
+import 'presentation/screens/hasil_perbandingan_produk.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() {
-  runApp(
-    DevicePreview(
-      enabled: !kReleaseMode,
-      builder: (context) => const MainApp(),
-    ),
-  );
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null);
+  await UserSession().init();
+  await AppInitService().init();
+  runApp(const MainApp());
 }
 
 class MainApp extends StatefulWidget {
@@ -41,16 +50,24 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
-  late Future<void> _initFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _initFuture = AppInitService().init();
+  static String _sodiumLevelLabel(KategoriNatrium kategori) {
+    switch (kategori) {
+      case KategoriNatrium.hijau:
+        return 'low';
+      case KategoriNatrium.kuning:
+        return 'medium';
+      case KategoriNatrium.merah:
+        return 'high';
+    }
   }
 
   static final Map<String, WidgetBuilder> _routes = {
+    '/': (_) => const SplashScreen(),
     AppRoutes.splash: (_) => const SplashScreen(),
+    AppRoutes.welcome: (_) => const WelcomeScreen(),
+    AppRoutes.registerEmail: (_) => const EmailScreen(),
+    AppRoutes.forgotPassword: (_) => const ForgotEmailScreen(),
+    AppRoutes.login: (_) => const LoginScreen(),
     AppRoutes.onboarding1: (_) => const Onboarding1Screen(),
     AppRoutes.onboarding2: (_) => const Onboarding2Screen(),
     AppRoutes.onboarding3: (_) => const Onboarding3Screen(),
@@ -59,11 +76,12 @@ class _MainAppState extends State<MainApp> {
     AppRoutes.profileBirthDate: (_) => const ProfileBirthDateScreen(),
     AppRoutes.profileHypertensionStatus: (_) =>
         const ProfileHypertensionStatusScreen(),
-    AppRoutes.profileHypertensionCondition: (_) =>
-        const ProfileHypertensionConditionScreen(),
     AppRoutes.profileBloodPressure: (_) => const ProfileBloodPressureScreen(),
     AppRoutes.profilePregnancy: (_) => const ProfilePregnancyScreen(),
     AppRoutes.dashboard: (_) => const AppShell(),
+    AppRoutes.history: (_) => const AppShell(initialIndex: 2),
+    AppRoutes.editProfile: (_) => const EditProfileScreen(),
+    AppRoutes.consumedToday: (_) => const ConsumedTodayScreen(),
   };
 
   static Route<dynamic> _buildAnimatedRoute(
@@ -165,14 +183,161 @@ class _MainAppState extends State<MainApp> {
     );
   }
 
+  static Future<HasilKlasifikasi?> _getDailyClassification() async {
+    try {
+      final userId = UserSession().getUserId();
+      if (userId == 0) return null;
+
+      final profile = await ApiClient().getUserProfile(userId);
+      final birthDateStr = profile['birth_date'] as String?;
+      if (birthDateStr == null) return null;
+
+      return klasifikasiNatriumDariDraft(
+        birthDate: DateTime.parse(birthDateStr),
+        gender: profile['gender'] as String? ?? '',
+        hasHypertension: profile['has_hypertension'] as bool? ?? false,
+        hypertensionCondition: profile['hypertension_condition'] as String?,
+        systolicPressure: profile['systolic_pressure'] as int?,
+        diastolicPressure: profile['diastolic_pressure'] as int?,
+        pregnancyStatus: profile['pregnancy_status'] as String?,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Route<dynamic> _onGenerateRoute(RouteSettings settings) {
+    if (settings.name == AppRoutes.registerPassword) {
+      final email = settings.arguments as String? ?? '';
+      return _buildAnimatedRoute(
+        settings,
+        (_) => PasswordScreen(email: email),
+      );
+    }
+
+    if (settings.name == AppRoutes.otpVerification) {
+      final args = settings.arguments;
+      final email = args is Map<String, dynamic>
+          ? args['email'] as String? ?? ''
+          : args as String? ?? '';
+      final isForgotPassword = args is Map<String, dynamic>
+          ? args['isForgotPassword'] as bool? ?? false
+          : false;
+      return _buildAnimatedRoute(
+        settings,
+        (_) => OtpVerificationScreen(
+          email: email,
+          isForgotPassword: isForgotPassword,
+        ),
+      );
+    }
+
+    if (settings.name == AppRoutes.changePassword) {
+      final email = settings.arguments as String? ?? '';
+      return _buildAnimatedRoute(
+        settings,
+        (_) => ChangePasswordScreen(email: email),
+      );
+    }
+
     if (settings.name == AppRoutes.chatbot) {
-      final initialQuestion = settings.arguments as String?;
+      final args = settings.arguments as Map<String, dynamic>?;
+      double? asDouble(Object? value) {
+        if (value is num) return value.toDouble();
+        return double.tryParse(value?.toString() ?? '');
+      }
+
+      int? asInt(Object? value) {
+        if (value is num) return value.toInt();
+        return int.tryParse(value?.toString() ?? '');
+      }
+
+      final initialQuestion = args?['initialQuestion'] as String?;
       return _buildAnimatedRoute(
         settings,
         (_) => ChatbotScreen(
           apiClient: ApiClient(),
           initialQuestion: initialQuestion,
+          productName: args?['productName'] as String?,
+          perPortionMg: asDouble(args?['perPortionMg']),
+          kategori: args?['kategori'] as String?,
+          scanId: asInt(args?['scanId']),
+          sodiumLevel: args?['sodiumLevel'] as String?,
+          packageMl: asDouble(args?['packageMl']),
+          portionsInPackage: asInt(args?['portionsInPackage']),
+          satuanTakaran: args?['satuanTakaran'] as String?,
+          imagePath: args?['imagePath'] as String?,
+        ),
+      );
+    }
+
+    if (settings.name == AppRoutes.hasilScanAman ||
+        settings.name == AppRoutes.hasilScanWaspada ||
+        settings.name == AppRoutes.hasilScanBahaya) {
+      final args = settings.arguments as Map<String, dynamic>?;
+      final productName = args?['productName'] as String? ?? 'Produk';
+      final kategori = args?['kategori'] as String? ?? 'lainnya';
+      final userId = args?['userId'] as int? ?? UserSession().getUserId();
+      final perPortionMg = args?['sodiumMg'] as int? ?? 0;
+      final portionsInPackage = args?['porsiPerKemasan'] as int? ?? 1;
+      final packageMl =
+          (args?['takaranPerPorsi'] as int? ?? 250) *
+          (args?['porsiPerKemasan'] as int? ?? 1);
+      final initialServings = args?['jumlahKonsumsi'] as int? ?? 1;
+      final fromHistory = args?['fromHistory'] as bool? ?? false;
+
+      return _buildAnimatedRoute(
+        settings,
+        (_) => FutureBuilder<HasilKlasifikasi?>(
+          future: _getDailyClassification(),
+          builder: (context, snapshot) {
+            final hasil = snapshot.data;
+            final dailyLimit = hasil?.batasNatrium ?? 2000;
+            final sodiumLevel = hasil == null
+                ? 'medium'
+                : _sodiumLevelLabel(hasil.kategori);
+            return HasilScanAmanScreen(
+              productName: productName,
+              kategori: kategori,
+              userId: userId,
+              perPortionMg: perPortionMg,
+              packageMl: packageMl,
+              portionsInPackage: portionsInPackage,
+              dailyLimitMg: dailyLimit,
+              isHardMaximum: hasil?.isHardMaximum ?? true,
+              sodiumLevel: sodiumLevel,
+              initialServings: initialServings,
+              apiClient: ApiClient(),
+              fromHistory: fromHistory,
+            );
+          },
+        ),
+      );
+    }
+    if (settings.name == AppRoutes.hasilBandingkan) {
+      final args = settings.arguments as Map<String, dynamic>;
+      return _buildAnimatedRoute(
+        settings,
+        (_) => FutureBuilder<HasilKlasifikasi?>(
+          future: _getDailyClassification(),
+          builder: (context, snapshot) {
+            final hasil = snapshot.data;
+            final dailyLimit = hasil?.batasNatrium ?? 2000;
+            final sodiumLevel = hasil == null
+                ? 'medium'
+                : _sodiumLevelLabel(hasil.kategori);
+            return HasilBandingkanScreen(
+              productA: args['productA'] as ProductCompareData,
+              productB: args['productB'] as ProductCompareData,
+              dailyLimitMg: dailyLimit,
+              isHardMaximum: hasil?.isHardMaximum ?? true,
+              sodiumLevel: sodiumLevel,
+              apiClient: ApiClient(),
+              originalProduct:
+                  args['originalProduct']
+                      as ProductCompareData?, // ← tambah ini
+            );
+          },
         ),
       );
     }
@@ -180,7 +345,15 @@ class _MainAppState extends State<MainApp> {
     if (settings.name == AppRoutes.sodiumSafe ||
         settings.name == AppRoutes.sodiumUnsafe ||
         settings.name == AppRoutes.sodiumPregnant) {
-      final hasil = settings.arguments as HasilKlasifikasi?;
+      final args = settings.arguments;
+      final hasil = args is Map<String, dynamic>
+          ? args['hasil'] as HasilKlasifikasi?
+          : args is HasilKlasifikasi
+          ? args
+          : null;
+      final categoryKey = args is Map<String, dynamic>
+          ? args['categoryKey'] as String? ?? hasil?.categoryKey
+          : hasil?.categoryKey;
       if (hasil == null) {
         return _buildAnimatedRoute(
           settings,
@@ -190,21 +363,13 @@ class _MainAppState extends State<MainApp> {
         );
       }
 
-      if (settings.name == AppRoutes.sodiumSafe) {
-        return _buildAnimatedRoute(
-          settings,
-          (_) => SodiumLimitSafeScreen(hasil: hasil),
-        );
-      }
-      if (settings.name == AppRoutes.sodiumUnsafe) {
-        return _buildAnimatedRoute(
-          settings,
-          (_) => SodiumLimitUnsafeScreen(hasil: hasil),
-        );
-      }
       return _buildAnimatedRoute(
         settings,
-        (_) => SodiumLimitPregnantScreen(hasil: hasil),
+        (_) => SodiumResultScreen(
+          categoryKey: categoryKey ?? hasil.categoryKey,
+          hasil: hasil,
+          dailyLimitMg: hasil.batasNatrium,
+        ),
       );
     }
 
@@ -217,24 +382,19 @@ class _MainAppState extends State<MainApp> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<void>(
-      future: _initFuture,
-      builder: (context, snapshot) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          locale: DevicePreview.locale(context),
-          builder: DevicePreview.appBuilder,
-          title: 'Skenna Sodium',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-            useMaterial3: true,
-            textTheme: GoogleFonts.urbanistTextTheme(),
-          ),
-          initialRoute: AppRoutes.splash,
-          onGenerateRoute: _onGenerateRoute,
-          onUnknownRoute: _notFoundRoute,
-        );
-      },
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      // locale: DevicePreview.locale(context),
+      // builder: DevicePreview.appBuilder,
+      title: 'Skenna Sodium',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        useMaterial3: true,
+        textTheme: GoogleFonts.urbanistTextTheme(),
+      ),
+      initialRoute: '/',
+      onGenerateRoute: _onGenerateRoute,
+      onUnknownRoute: _notFoundRoute,
     );
   }
 }

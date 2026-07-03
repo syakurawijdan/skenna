@@ -825,50 +825,48 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                 if (_isBumbu)
                   const SizedBox.shrink()
                 else if (!widget.readOnly) ...[
-                  if (!widget.fromHistory && !widget.isFromHistory) ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _tombolAktif
-                                ? _blue
-                                : const Color(0xFFD9D9D9),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(26),
-                            ),
-                            elevation: 0,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _tombolAktif
+                              ? _blue
+                              : const Color(0xFFD9D9D9),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(26),
                           ),
-                          onPressed: (_saving || !_tombolAktif)
-                              ? null
-                              : _handleCatat,
-                          child: _saving
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(
-                                  _statusDikonsumsi
-                                      ? 'Perbarui Konsumsi'
-                                      : 'Catat Konsumsi',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 16,
-                                  ),
-                                ),
+                          elevation: 0,
                         ),
+                        onPressed: (_saving || !_tombolAktif)
+                            ? null
+                            : _handleCatat,
+                        child: _saving
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                _statusDikonsumsi
+                                    ? 'Perbarui Konsumsi'
+                                    : 'Catat Konsumsi',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                ),
+                              ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                  ],
-                  if (widget.fromHistory || widget.isFromHistory)
+                  ),
+                  const SizedBox(height: 12),
+                  if (widget.isFromHistory)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: SizedBox(

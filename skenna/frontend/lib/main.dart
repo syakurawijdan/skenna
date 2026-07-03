@@ -252,6 +252,13 @@ class _MainAppState extends State<MainApp> {
         return int.tryParse(value?.toString() ?? '');
       }
 
+      bool asBool(Object? value) {
+        if (value is bool) return value;
+        if (value is num) return value != 0;
+        final text = value?.toString().toLowerCase().trim();
+        return text == 'true' || text == '1';
+      }
+
       final initialQuestion = args?['initialQuestion'] as String?;
       return _buildAnimatedRoute(
         settings,
@@ -267,6 +274,7 @@ class _MainAppState extends State<MainApp> {
           portionsInPackage: asInt(args?['portionsInPackage']),
           satuanTakaran: args?['satuanTakaran'] as String?,
           imagePath: args?['imagePath'] as String?,
+          isConsumptionRecorded: asBool(args?['isConsumptionRecorded']),
         ),
       );
     }

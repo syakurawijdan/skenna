@@ -97,6 +97,7 @@ class ChatbotScreen extends StatefulWidget {
     this.portionsInPackage,
     this.satuanTakaran,
     this.imagePath,
+    this.isConsumptionRecorded = false,
   });
 
   final ApiClient apiClient;
@@ -110,6 +111,7 @@ class ChatbotScreen extends StatefulWidget {
   final int? portionsInPackage;
   final String? satuanTakaran;
   final String? imagePath;
+  final bool isConsumptionRecorded;
 
   @override
   State<ChatbotScreen> createState() => _ChatbotScreenState();
@@ -763,6 +765,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ),
                 if (widget.productName != null &&
                     !_isBumbuCategory &&
+                    !widget.isConsumptionRecorded &&
                     !_bannerDismissed)
                   _ScanConsumptionBanner(
                     productName: widget.productName!,

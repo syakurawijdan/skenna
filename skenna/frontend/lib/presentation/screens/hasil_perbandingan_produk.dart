@@ -351,49 +351,51 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
 
                 // ── CTA ───────────────────────────────────────────────────────
                 if (!widget.readOnly) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _tombolAktif
-                              ? _blue
-                              : const Color(0xFFD9D9D9),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(26),
+                  if (!widget.fromHistory) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _tombolAktif
+                                ? _blue
+                                : const Color(0xFFD9D9D9),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(26),
+                            ),
+                            elevation: 0,
                           ),
-                          elevation: 0,
+                          onPressed: (_saving || !_tombolAktif)
+                              ? null
+                              : _handleCatatKonsumsi,
+                          child: _saving
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  _selectedProduct == 0
+                                      ? 'Pilih salah satu produk'
+                                      : (_statusDikonsumsi
+                                            ? 'Perbarui Konsumsi'
+                                            : 'Catat Konsumsi'),
+                                  style: GoogleFonts.plusJakartaSans(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                  ),
+                                ),
                         ),
-                        onPressed: (_saving || !_tombolAktif)
-                            ? null
-                            : _handleCatatKonsumsi,
-                        child: _saving
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                _selectedProduct == 0
-                                    ? 'Pilih salah satu produk'
-                                    : (_statusDikonsumsi
-                                          ? 'Perbarui Konsumsi'
-                                          : 'Catat Konsumsi'),
-                                style: GoogleFonts.plusJakartaSans(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16,
-                                ),
-                              ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
+                  ],
 
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),

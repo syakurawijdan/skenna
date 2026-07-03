@@ -12,7 +12,7 @@ class ProfileStepLayout extends StatelessWidget {
     this.onNext,
     Widget? child,
     Widget? content,
-    required this.illustrationAsset,
+    this.illustrationAsset,
     this.primaryButton,
     this.secondaryAction,
     this.showProgress = true,
@@ -27,7 +27,7 @@ class ProfileStepLayout extends StatelessWidget {
   final String? nextLabel;
   final VoidCallback? onNext;
   final Widget child;
-  final String illustrationAsset;
+  final String? illustrationAsset;
   final Widget? primaryButton;
   final Widget? secondaryAction;
   final bool showProgress;
@@ -189,27 +189,30 @@ class ProfileStepLayout extends StatelessWidget {
                       ],
                     ),
 
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOut,
-                    height: isKeyboardVisible
-                        ? 0
-                        : mediaQuery.size.height * 0.30,
-                    child: isKeyboardVisible
-                        ? const SizedBox.shrink()
-                        : Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Image.asset(
-                              illustrationAsset,
-                              fit: BoxFit.contain,
+                  if (illustrationAsset != null)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                      height: isKeyboardVisible
+                          ? 0
+                          : mediaQuery.size.height * 0.30,
+                      child: isKeyboardVisible
+                          ? const SizedBox.shrink()
+                          : Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: Image.asset(
+                                illustrationAsset!,
+                                fit: BoxFit.contain,
+                              ),
                             ),
-                          ),
-                  ),
+                    ),
 
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: EdgeInsets.only(
-                      top: isKeyboardVisible ? 150 : 0,
+                      top: isKeyboardVisible
+                          ? 150
+                          : (illustrationAsset == null ? 40 : 0),
                       bottom: 16,
                     ),
                     child: Text(

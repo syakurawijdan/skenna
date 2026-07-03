@@ -195,11 +195,11 @@ class _ChangePasswordFromProfileScreenState
     return ProfileStepLayout(
       showBack: true,
       showProgress: false,
-      illustrationAsset: 'assets/illustrations/reset_pwd.png',
       title: 'Ganti Password',
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          SizedBox(height: MediaQuery.of(context).size.height * 0.08),
           _passwordField(
             label: 'Password lama',
             controller: _oldPasswordController,
@@ -208,7 +208,7 @@ class _ChangePasswordFromProfileScreenState
             onToggle: () =>
                 setState(() => _obscureOldPassword = !_obscureOldPassword),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           _passwordField(
             label: 'Password baru',
             controller: _newPasswordController,
@@ -218,7 +218,7 @@ class _ChangePasswordFromProfileScreenState
             onToggle: () =>
                 setState(() => _obscureNewPassword = !_obscureNewPassword),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           _passwordField(
             label: 'Konfirmasi password baru',
             controller: _confirmPasswordController,

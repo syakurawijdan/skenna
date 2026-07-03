@@ -134,13 +134,13 @@ def _send_otp_email(email: str, otp_code: str) -> None:
                 <p style="color: #213868; font-size: 13px; margin: 0 0 8px;">
                     Kode OTP kamu
                 </p>
-                <h2 style="color: #2C4A8A; font-size: 42px; margin: 0; 
-                           letter-spacing: 12px; font-weight: 700;">
+                <h2 style="color: #2C4A8A; font-size: 32px; margin: 0; 
+                           letter-spacing: 8px; font-weight: 700;">
                     {otp_code}
                 </h2>
             </div>
             
-            <p style="color: #E53935; font-size: 13px;">
+            <p style="color: #E53935; font-size: 10px;">
                 ⚠️ Jangan bagikan kode ini kepada siapapun!
             </p>
         </div>

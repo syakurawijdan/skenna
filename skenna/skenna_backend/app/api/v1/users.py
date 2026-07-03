@@ -55,13 +55,15 @@ def change_password(
 	user_id: int,
 	payload: ChangePasswordRequest,
 	db: Session = Depends(get_db),
+	current_user: User = Depends(get_current_user),
 ) -> dict:
-	user = UserRepository.get_by_id(db, user_id)
-	if user is None:
-		raise HTTPException(status_code=404, detail="User not found")
-	if not verify_password(payload.old_password, user.hashed_password):
-		raise HTTPException(status_code=401, detail="Password lama salah")
-	user.hashed_password = hash_password(payload.new_password)
+	if current_user.id != user_id:
+		raise HTTPException(status_code=403, detail="Tidak boleh mengganti password user lain")
+	if not verify_password(payload.old_password, current_user.hashed_password):
+		raise HTTPException(status_code=400, detail="Password lama salah")
+	if verify_password(payload.new_password, current_user.hashed_password):
+		raise HTTPException(status_code=400, detail="Password baru tidak boleh sama dengan password lama")
+	current_user.hashed_password = hash_password(payload.new_password)
 	db.commit()
 	return {"message": "Password changed"}
 

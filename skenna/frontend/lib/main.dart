@@ -13,6 +13,7 @@ import 'presentation/screens/onboarding_1_screen.dart';
 import 'presentation/screens/onboarding_2_screen.dart';
 import 'presentation/screens/onboarding_3_screen.dart';
 import 'presentation/screens/change_password_screen.dart';
+import 'presentation/screens/change_password_from_profile_screen.dart';
 import 'presentation/screens/edit_profile_screen.dart';
 import 'presentation/screens/consumed_today_screen.dart';
 import 'presentation/screens/auth/email_screen.dart';
@@ -237,6 +238,13 @@ class _MainAppState extends State<MainApp> {
       return _buildAnimatedRoute(
         settings,
         (_) => ChangePasswordScreen(email: email),
+      );
+    }
+
+    if (settings.name == AppRoutes.changePasswordProfile) {
+      return _buildAnimatedRoute(
+        settings,
+        (_) => const ChangePasswordFromProfileScreen(),
       );
     }
 

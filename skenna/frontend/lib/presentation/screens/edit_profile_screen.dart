@@ -463,8 +463,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 label: 'Password',
                 value: '••••••••',
                 suffixIcon: TextButton(
-                  onPressed: () =>
-                      Navigator.pushNamed(context, AppRoutes.changePassword),
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    AppRoutes.changePasswordProfile,
+                  ),
                   child: Text(
                     'Ganti',
                     style: GoogleFonts.plusJakartaSans(

@@ -554,21 +554,22 @@ class ApiClient {
   }
 
   Future<void> changePassword({
-    int? userId,
     required String oldPassword,
     required String newPassword,
   }) async {
-    final effectiveUserId = userId ?? await currentUserId;
+    final effectiveUserId = UserSession().getUserId();
+    if (effectiveUserId <= 0) {
+      throw const ApiException(401, 'Sesi berakhir, silakan login ulang.');
+    }
     final uri = Uri.parse(
       '$baseUrl/api/v1/users/$effectiveUserId/change-password',
     );
-    final res = await _post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'old_password': oldPassword,
-        'new_password': newPassword,
-      }),
+    final body = jsonEncode({
+      'old_password': oldPassword,
+      'new_password': newPassword,
+    });
+    final res = await _sendWithAuthRetry(
+      (headers) => _post(uri, headers: headers, body: body),
     );
     if (res.statusCode >= 400) {
       final body = jsonDecode(res.body);
@@ -792,7 +793,7 @@ class ApiClient {
   }
 
   Future<Map<String, String>> _authHeaders() async {
-    var token = await UserSession().getAccessToken();
+    var token = UserSession().getAccessToken();
     if (token == null || token.isEmpty) {
       token = await const FlutterSecureStorage().read(key: _secureAuthTokenKey);
       if (token != null && token.isNotEmpty) {

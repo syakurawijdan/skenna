@@ -28,6 +28,7 @@ class AppRoutes {
   static const history = '/history';
   static const editProfile = '/edit-profile';
   static const changePassword = '/change-password';
+  static const changePasswordProfile = '/change-password-profile';
   static const consumedToday = '/consumed-today';
   static const chatbot = '/chatbot';
   static const ScanConfirmationSheet = '/scan-confirmation-screen';

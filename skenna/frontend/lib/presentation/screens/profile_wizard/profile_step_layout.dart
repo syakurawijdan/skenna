@@ -146,7 +146,15 @@ class ProfileStepLayout extends StatelessWidget {
                               backgroundColor: lightBlue,
                               padding: const EdgeInsets.all(8),
                             ),
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                              if (Navigator.canPop(context)) {
+                                Navigator.pop(context);
+                              } else {
+                                debugPrint(
+                                  'Tombol back ditekan tapi tidak ada halaman sebelumnya, diabaikan',
+                                );
+                              }
+                            },
                             icon: const Icon(
                               Icons.arrow_back,
                               color: normalBlue,

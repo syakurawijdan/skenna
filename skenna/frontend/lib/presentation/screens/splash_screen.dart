@@ -137,13 +137,16 @@ class _SplashScreenState extends State<SplashScreen>
           await UserSession().clear();
           nextRoute = AppRoutes.login;
         } else {
-          nextRoute = AppRoutes.profileForm;
+          debugPrint('Gagal ambil profil, fallback ke dashboard: $e');
+          nextRoute = AppRoutes.dashboard;
         }
-      } catch (_) {
-        nextRoute = AppRoutes.profileForm;
+      } catch (e) {
+        debugPrint(
+          'Gagal ambil profil (koneksi/timeout), fallback ke dashboard: $e',
+        );
+        nextRoute = AppRoutes.dashboard;
       }
     } else {
-      // sudah pernah onboarding, tapi belum/sudah logout -> langsung login
       nextRoute = AppRoutes.login;
     }
 

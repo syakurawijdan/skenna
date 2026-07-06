@@ -69,6 +69,16 @@ class _ProfileBloodPressureScreenState
     return usia < 10 || usia > 54;
   }
 
+  double? _parseIndoDouble(String? text) {
+    if (text == null || text.trim().isEmpty) return null;
+    return double.tryParse(text.trim().replaceAll(',', '.'));
+  }
+
+  int? _parseIndoInt(String? text) {
+    final parsed = _parseIndoDouble(text);
+    return parsed?.toInt();
+  }
+
   bool get _isFormValid {
     final systolic = _systolicController.text.trim();
     final diastolic = _diastolicController.text.trim();
@@ -102,8 +112,8 @@ class _ProfileBloodPressureScreenState
   }
 
   Future<void> _goNext() async {
-    final systolic = int.tryParse(_systolicController.text.trim());
-    final diastolic = int.tryParse(_diastolicController.text.trim());
+    final systolic = _parseIndoInt(_systolicController.text.trim());
+    final diastolic = _parseIndoInt(_diastolicController.text.trim());
 
     ProfileWizardStore.instance.draft.systolicPressure = systolic;
     ProfileWizardStore.instance.draft.diastolicPressure = diastolic;

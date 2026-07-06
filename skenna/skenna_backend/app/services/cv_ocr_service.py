@@ -7,7 +7,20 @@ from app.services.gemini_service import GeminiService
 
 class CVOcrService:
     @staticmethod
-    def scan_label(image_input: str) -> tuple[str, float, Optional[int], Optional[int], str, str]:
+    def _parse_optional_float(value) -> Optional[float]:
+        if value is None:
+            return None
+        try:
+            if isinstance(value, str):
+                value = value.strip().replace(",", ".")
+                if not value:
+                    return None
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def scan_label(image_input: str) -> tuple[str, float, Optional[float], Optional[float], str, str]:
         """
         Returns: (raw_text, sodium_mg, takaran_saji, sajian_per_kemasan, satuan_takaran, nama_produk)
         takaran_saji & sajian_per_kemasan akan None jika Gemini tidak berhasil membaca nilainya.
@@ -24,10 +37,10 @@ class CVOcrService:
             sodium_mg = float(data.get("sodium_mg") or 0)
 
             raw_takaran = data.get("takaran_saji")
-            takaran_saji = int(raw_takaran) if raw_takaran is not None else None
+            takaran_saji = CVOcrService._parse_optional_float(raw_takaran)
 
             raw_sajian = data.get("sajian_per_kemasan")
-            sajian_per_kemasan = int(raw_sajian) if raw_sajian is not None else None
+            sajian_per_kemasan = CVOcrService._parse_optional_float(raw_sajian)
 
             satuan_takaran = str(data.get("satuan_takaran") or "g").lower()
             if satuan_takaran not in ("g", "ml"):

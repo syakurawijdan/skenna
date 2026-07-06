@@ -32,11 +32,11 @@ class IntakeCreateRequest(BaseModel):
     product_name2: Optional[str] = None
     sodium_mg2: Optional[float] = None
     is_consumed: bool = False
-    package_ml: int = 0
-    portions_in_package: int = 1
+    package_ml: float = 0
+    portions_in_package: float = 1
     satuan_takaran: str = "g"
-    package_ml2: int = 0
-    portions_in_package2: int = 1
+    package_ml2: float = 0
+    portions_in_package2: float = 1
     satuan_takaran2: str = "g"
     image_path: Optional[str] = None
     image_path2: Optional[str] = None
@@ -76,6 +76,6 @@ class IntakeFullUpdateRequest(BaseModel):
     sodium_mg: float
     sodium_level: str
     servings: int = 1
-    package_ml: int = 0
-    portions_in_package: int = 1
+    package_ml: float = 0
+    portions_in_package: float = 1
     satuan_takaran: str = "g"

@@ -50,12 +50,12 @@ class HasilScanAmanScreen extends StatefulWidget {
     this.kategori = 'lainnya',
     this.satuanTakaran = 'g',
     this.perPortionMg = 0,
-    this.packageMl = 0,
-    this.portionsInPackage = 1,
+    this.packageMl = 0.0,
+    this.portionsInPackage = 1.0,
     this.dailyLimitMg = 2000,
     this.isHardMaximum = true,
     this.sodiumLevel = 'medium',
-    this.initialServings = 1,
+    this.initialServings = 1.0,
     this.fromHistory = false,
     this.historyItemId,
     this.isConsumed = false,
@@ -74,12 +74,12 @@ class HasilScanAmanScreen extends StatefulWidget {
   final String kategori;
   final String satuanTakaran;
   final int perPortionMg;
-  final int packageMl;
-  final int portionsInPackage;
+  final double packageMl;
+  final double portionsInPackage;
   final int dailyLimitMg;
   final bool isHardMaximum;
   final String sodiumLevel;
-  final int initialServings;
+  final double initialServings;
   final bool fromHistory;
   final String? historyItemId;
   final bool isConsumed;
@@ -110,15 +110,16 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
   static const _colorWarn = Color(0xFFFFBF00);
   static const _colorDanger = Color(0xFFE53935);
 
-  late int _selectedSajian;
+  late double _selectedSajian;
   bool _saving = false;
   bool _deleting = false;
   bool _sudahDicatat = false;
   bool _statusDikonsumsi = false;
-  int _sajianSaatDicatat = 0;
+  double _sajianSaatDicatat = 0;
   String? _localHistoryItemId;
 
-  bool get _sajianBerubah => _selectedSajian != _sajianSaatDicatat;
+  bool get _sajianBerubah =>
+      (_selectedSajian - _sajianSaatDicatat).abs() > 0.001;
   bool get _tombolAktif {
     if (widget.readOnly) return false;
     if (!_statusDikonsumsi) return true;
@@ -281,7 +282,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
     }
   }
 
-  double _pct(int mg) => mg / widget.dailyLimitMg;
+  double _pct(num mg) => mg / widget.dailyLimitMg;
 
   Color _arcColor(double p) => p <= .50
       ? _colorSafe
@@ -329,10 +330,9 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
     final middleCircleSize = circleSize * 0.84;
     final innerCircleSize = circleSize * 0.68;
 
-    // Takaran per sajian (gram/ml per 1 sajian)
     final takaranPerSajian = widget.portionsInPackage > 0
-        ? (widget.packageMl / widget.portionsInPackage).round()
-        : 0;
+        ? widget.packageMl / widget.portionsInPackage
+        : 0.0;
     final satuan = widget.satuanTakaran;
 
     // Total natrium dari sajian yang dipilih
@@ -537,7 +537,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      '$totalNatrium mg',
+                                      '${totalNatrium.round()} mg',
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 25,
                                         fontWeight: FontWeight.w700,
@@ -583,7 +583,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                               ? [
                                   TextSpan(
                                     text:
-                                        'Per 1 takaran saji ($takaranPerSajian $satuan) mengandung ',
+                                        'Per 1 takaran saji (${_formatIndoNumber(takaranPerSajian)} $satuan) menyumbang ',
                                   ),
                                   TextSpan(
                                     text: '$pctInt%',
@@ -653,7 +653,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                         // Keterangan konteks
                         Text(
                           widget.packageMl > 0
-                              ? '1 sajian = $takaranPerSajian $satuan x ${widget.portionsInPackage} sajian per kemasan'
+                              ? 'Total kemasan ini setara ${_formatIndoNumber(widget.portionsInPackage)} kali sajian (${_formatIndoNumber(widget.packageMl)} $satuan).'
                               : '1 sajian = ${widget.perPortionMg} mg natrium',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
@@ -674,7 +674,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '$_selectedSajian Sajian  ${_labelBungkus(_selectedSajian, widget.portionsInPackage)}',
+                                '${_formatIndoNumber(_selectedSajian)} Sajian  ${_labelBungkus(_selectedSajian, widget.portionsInPackage)}',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -687,8 +687,8 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                         const SizedBox(height: 16),
                         _PortionSlider(
                           value: _selectedSajian,
-                          min: 1,
-                          max: 10,
+                          min: 1.0,
+                          max: math.max(10.0, widget.portionsInPackage),
                           onChanged: (v) => setState(() => _selectedSajian = v),
                           thumbColor: _blue,
                           enabled: !widget.readOnly,
@@ -714,12 +714,12 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                       const SizedBox(height: 8),
                       _infoCard(
                         'Isi Kemasan',
-                        '${widget.packageMl} $satuan (${widget.portionsInPackage} sajian)',
+                        '${_formatIndoNumber(widget.packageMl)} $satuan',
                       ),
                       const SizedBox(height: 8),
                       _infoCard(
                         'Takaran per Sajian',
-                        '$takaranPerSajian $satuan',
+                        '${_formatIndoNumber(takaranPerSajian)} $satuan',
                       ),
                       const SizedBox(height: 8),
                       _infoCard(
@@ -766,7 +766,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                                   ),
                                   'Jumlah Sajian\nDikonsumsi',
                                   Text(
-                                    '$_selectedSajian Sajian (${_selectedSajian * takaranPerSajian} $satuan)\n${_labelBungkus(_selectedSajian, widget.portionsInPackage)}',
+                                    '${_formatIndoNumber(_selectedSajian)} Sajian (${_formatIndoNumber(_selectedSajian * takaranPerSajian)} $satuan)\n${_labelBungkus(_selectedSajian, widget.portionsInPackage)}',
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w800,
@@ -798,7 +798,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                           productName: widget.productName,
                           sodiumPerServingMg: widget.perPortionMg,
                           servingDescription: takaranPerSajian > 0
-                              ? '1 takaran saji ($takaranPerSajian $satuan)'
+                              ? '1 takaran saji (${_formatIndoNumber(takaranPerSajian)} $satuan)'
                               : '1 takaran saji',
                         ),
                       ],
@@ -1215,7 +1215,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
       setState(() {
         _sudahDicatat = true;
         _statusDikonsumsi = false;
-        _sajianSaatDicatat = 1;
+        _sajianSaatDicatat = 1.0;
         _localHistoryItemId = response['id'].toString();
       });
     } catch (e) {
@@ -1295,13 +1295,13 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
           intakeId: intakeId,
           userId: activeUserId,
           isConsumed: akanDikonsumsi,
-          servings: _selectedSajian,
+          servings: _selectedSajian.round(),
         );
       } else {
         final response = await client.postScanHistory(
           userId: activeUserId,
           sodiumMg: widget.perPortionMg,
-          servings: _selectedSajian,
+          servings: _selectedSajian.round(),
           productName: widget.productName,
           sodiumLevel: widget.sodiumLevel,
           kategori: widget.kategori,
@@ -1411,8 +1411,9 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
     }
   }
 
-  Widget _buildNatriumGaramText(int mg) {
+  Widget _buildNatriumGaramText(num mg) {
     final gram = mg / 400;
+    final mgText = mg.round();
     final gramText = gram < 0.1
         ? '<0,1 g'
         : '${gram.toStringAsFixed(1).replaceAll('.', ',')} g';
@@ -1421,7 +1422,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '$mg mg',
+          '$mgText mg',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 16,
             fontWeight: FontWeight.w800,
@@ -1442,12 +1443,11 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
     );
   }
 
-  String _labelBungkus(int sajian, int portionsInPackage) {
+  String _labelBungkus(double sajian, double portionsInPackage) {
     if (portionsInPackage <= 0) return '';
     final ratio = sajian / portionsInPackage;
 
-    if (ratio >= 3)
-      return '= ${ratio % 1 == 0 ? ratio.toInt() : ratio.toStringAsFixed(1)} bungkus';
+    if (ratio >= 3) return '= ${_formatIndoNumber(ratio)} bungkus';
     if (ratio >= 2.5) return '= 2½ bungkus';
     if (ratio >= 2) return '= 2 bungkus';
     if (ratio >= 1.75) return '= 1¾ bungkus';
@@ -1468,6 +1468,16 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
     if (ratio >= 0.166) return '= ⅙ bungkus';
     if (ratio >= 0.125) return '= ⅛ bungkus';
     return '= sekitar ${(ratio * 100).round()}% dari kemasan';
+  }
+
+  String _formatIndoNumber(num value) {
+    final parsed = value.toDouble();
+    if (parsed == parsed.roundToDouble()) return parsed.toInt().toString();
+    return parsed
+        .toStringAsFixed(2)
+        .replaceFirst(RegExp(r'0+$'), '')
+        .replaceFirst(RegExp(r'\.$'), '')
+        .replaceAll('.', ',');
   }
 
   Widget _sectionTitle(String text) => Text(
@@ -1609,6 +1619,49 @@ class _GradientProgressBar extends StatelessWidget {
 // ════════════════════════════════════════════════════════════════════════════
 // Slider dengan kotak angka melayang
 // ════════════════════════════════════════════════════════════════════════════
+class _QuickPickButton extends StatelessWidget {
+  const _QuickPickButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    required this.color,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? color : Colors.white,
+          border: Border.all(
+            color: onTap == null ? const Color(0xFFCCCCCC) : color,
+            width: 1.5,
+          ),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: selected
+                ? Colors.white
+                : (onTap == null ? const Color(0xFFAAAAAA) : color),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _PortionSlider extends StatelessWidget {
   const _PortionSlider({
     required this.value,
@@ -1619,10 +1672,10 @@ class _PortionSlider extends StatelessWidget {
     this.enabled = true,
   });
 
-  final int value;
-  final int min;
-  final int max;
-  final ValueChanged<int> onChanged;
+  final double value;
+  final double min;
+  final double max;
+  final ValueChanged<double> onChanged;
   final Color thumbColor;
   final bool enabled;
 
@@ -1630,6 +1683,8 @@ class _PortionSlider extends StatelessWidget {
   Widget build(BuildContext context) {
     final range = max - min;
     final fraction = range <= 0 ? 0.0 : (value - min) / range;
+    final divisions = range > 0 ? (range * 2).round() : null;
+    ;
     return LayoutBuilder(
       builder: (context, constraints) {
         final trackWidth = constraints.maxWidth;
@@ -1658,7 +1713,7 @@ class _PortionSlider extends StatelessWidget {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    '$value',
+                    _formatValue(value),
                     style: GoogleFonts.plusJakartaSans(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -1694,14 +1749,11 @@ class _PortionSlider extends StatelessWidget {
                   child: IgnorePointer(
                     ignoring: !enabled,
                     child: Slider(
-                      value: value.toDouble().clamp(
-                        min.toDouble(),
-                        math.max(min, max).toDouble(),
-                      ),
-                      min: min.toDouble(),
-                      max: math.max(min, max).toDouble(),
-                      divisions: range > 0 ? range : null,
-                      onChanged: (v) => onChanged(v.round()),
+                      value: value.clamp(min, math.max(min, max)),
+                      min: min,
+                      max: math.max(min, max),
+                      divisions: divisions,
+                      onChanged: (v) => onChanged((v * 2).round() / 2),
                     ),
                   ),
                 ),
@@ -1711,6 +1763,16 @@ class _PortionSlider extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _formatValue(num number) {
+    final parsed = number.toDouble();
+    if (parsed == parsed.roundToDouble()) return parsed.toInt().toString();
+    return parsed
+        .toStringAsFixed(2)
+        .replaceFirst(RegExp(r'0+$'), '')
+        .replaceFirst(RegExp(r'\.$'), '')
+        .replaceAll('.', ',');
   }
 }
 

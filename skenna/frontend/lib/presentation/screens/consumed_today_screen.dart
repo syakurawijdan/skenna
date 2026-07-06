@@ -14,6 +14,16 @@ import '../widgets/custom_dropdown.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
 
+String _formatIndoNumber(num value) {
+  final parsed = value.toDouble();
+  if (parsed == parsed.roundToDouble()) return parsed.toInt().toString();
+  return parsed
+      .toStringAsFixed(2)
+      .replaceFirst(RegExp(r'0+$'), '')
+      .replaceFirst(RegExp(r'\.$'), '')
+      .replaceAll('.', ',');
+}
+
 class ConsumedTodayItem {
   const ConsumedTodayItem({
     required this.id,
@@ -24,8 +34,8 @@ class ConsumedTodayItem {
     required this.sodiumLevel,
     this.kategori,
     this.imagePath,
-    this.packageMl = 0,
-    this.portionsInPackage = 1,
+    this.packageMl = 0.0,
+    this.portionsInPackage = 1.0,
     this.satuanTakaran = 'g',
     this.rekomendasiJson,
     this.isConsumed = true,
@@ -39,8 +49,8 @@ class ConsumedTodayItem {
   final String sodiumLevel;
   final String? kategori;
   final String? imagePath;
-  final int packageMl;
-  final int portionsInPackage;
+  final double packageMl;
+  final double portionsInPackage;
   final String satuanTakaran;
   final Map<String, dynamic>? rekomendasiJson;
   final bool isConsumed;
@@ -57,8 +67,9 @@ class ConsumedTodayItem {
       sodiumLevel: json['sodium_level']?.toString() ?? 'low',
       kategori: json['kategori']?.toString(),
       imagePath: json['image_path']?.toString(),
-      packageMl: (json['package_ml'] as num?)?.toInt() ?? 0,
-      portionsInPackage: (json['portions_in_package'] as num?)?.toInt() ?? 1,
+      packageMl: (json['package_ml'] as num?)?.toDouble() ?? 0.0,
+      portionsInPackage:
+          (json['portions_in_package'] as num?)?.toDouble() ?? 1.0,
       satuanTakaran: json['satuan_takaran']?.toString() ?? 'g',
       rekomendasiJson: json['rekomendasi_json'] != null
           ? Map<String, dynamic>.from(
@@ -189,7 +200,7 @@ class _ConsumedTodayScreenState extends State<ConsumedTodayScreen> {
           productName: item.foodName,
           kategori: item.kategori ?? 'lainnya',
           perPortionMg: item.sodiumMg.round(),
-          initialServings: item.servings,
+          initialServings: item.servings.toDouble(),
           fromHistory: true,
           historyItemId: item.id.toString(),
           imagePath: item.imagePath,
@@ -780,17 +791,31 @@ class _EditInfoProductSheetState extends State<_EditInfoProductSheet> {
   late int _servings;
   bool _saving = false;
 
+  double? _parseIndoDouble(String? text) {
+    if (text == null || text.trim().isEmpty) return null;
+    return double.tryParse(text.trim().replaceAll(',', '.'));
+  }
+
+  int? _parseIndoInt(String? text) {
+    final parsed = _parseIndoDouble(text);
+    return parsed?.toInt();
+  }
+
   @override
   void initState() {
     super.initState();
     final item = widget.item;
-    final portions = math.max(1, item.portionsInPackage);
+    final portions = math.max(1.0, item.portionsInPackage);
     final portionSize = item.packageMl > 0
-        ? math.max(1, (item.packageMl / portions).round())
-        : 0;
+        ? math.max(1.0, item.packageMl / portions)
+        : 0.0;
     _nameController = TextEditingController(text: item.foodName);
-    _portionSizeController = TextEditingController(text: '$portionSize');
-    _portionsController = TextEditingController(text: '$portions');
+    _portionSizeController = TextEditingController(
+      text: _formatIndoNumber(portionSize),
+    );
+    _portionsController = TextEditingController(
+      text: _formatIndoNumber(portions),
+    );
     _sodiumController = TextEditingController(
       text: '${(item.sodiumMg * portions).round()}',
     );
@@ -809,9 +834,10 @@ class _EditInfoProductSheetState extends State<_EditInfoProductSheet> {
 
   Future<void> _save() async {
     final name = _nameController.text.trim();
-    final portionSize = int.tryParse(_portionSizeController.text.trim()) ?? 0;
+    final portionSize =
+        _parseIndoDouble(_portionSizeController.text.trim()) ?? 0.0;
     final portions = _portionsInPackage;
-    final sodiumPerPackage = double.tryParse(_sodiumController.text.trim());
+    final sodiumPerPackage = _parseIndoDouble(_sodiumController.text.trim());
     if (name.isEmpty || sodiumPerPackage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Lengkapi semua field wajib')),
@@ -837,8 +863,11 @@ class _EditInfoProductSheetState extends State<_EditInfoProductSheet> {
     if (mounted) Navigator.pop(context, true);
   }
 
-  int get _portionsInPackage {
-    return math.max(1, int.tryParse(_portionsController.text.trim()) ?? 1);
+  double get _portionsInPackage {
+    return math.max(
+      1.0,
+      _parseIndoDouble(_portionsController.text.trim()) ?? 1.0,
+    );
   }
 
   void _changeServing(int delta) {
@@ -856,7 +885,6 @@ class _EditInfoProductSheetState extends State<_EditInfoProductSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final portions = _portionsInPackage;
     if (_servings > 10) _servings = 10;
 
     return Padding(
@@ -922,7 +950,9 @@ class _EditInfoProductSheetState extends State<_EditInfoProductSheet> {
                     label: 'Takaran per porsi',
                     requiredField: true,
                     controller: _portionSizeController,
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     suffixText: 'ml/g',
                     onChanged: (_) => setState(() {}),
                   ),
@@ -933,7 +963,9 @@ class _EditInfoProductSheetState extends State<_EditInfoProductSheet> {
                     label: 'Porsi per kemasan',
                     requiredField: true,
                     controller: _portionsController,
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     suffixText: 'Porsi',
                     onChanged: (_) => setState(() {}),
                   ),
@@ -945,7 +977,9 @@ class _EditInfoProductSheetState extends State<_EditInfoProductSheet> {
               label: 'Jumlah natrium per kemasan',
               requiredField: true,
               controller: _sodiumController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               suffixText: 'mg',
             ),
             const SizedBox(height: 20),
@@ -1293,6 +1327,16 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
   late int _selectedServings;
   bool _saving = false;
 
+  double? _parseIndoDouble(String? text) {
+    if (text == null || text.trim().isEmpty) return null;
+    return double.tryParse(text.trim().replaceAll(',', '.'));
+  }
+
+  int? _parseIndoInt(String? text) {
+    final parsed = _parseIndoDouble(text);
+    return parsed?.toInt();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -1302,9 +1346,11 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
       text: item.sodiumMg.round().toString(),
     );
     _servingsController = TextEditingController(text: item.servings.toString());
-    _packageController = TextEditingController(text: item.packageMl.toString());
+    _packageController = TextEditingController(
+      text: _formatIndoNumber(item.packageMl),
+    );
     _portionsController = TextEditingController(
-      text: item.portionsInPackage.toString(),
+      text: _formatIndoNumber(item.portionsInPackage),
     );
     _unitController = TextEditingController(text: item.satuanTakaran);
     _kategori = item.kategori ?? 'lainnya';
@@ -1325,9 +1371,9 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
 
   Future<void> _save() async {
     final userId = UserSession().getUserId();
-    final sodium = double.tryParse(_sodiumController.text.trim());
-    final packageMl = int.tryParse(_packageController.text.trim()) ?? 0;
-    final portions = int.tryParse(_portionsController.text.trim()) ?? 1;
+    final sodium = _parseIndoDouble(_sodiumController.text.trim());
+    final packageMl = _parseIndoDouble(_packageController.text.trim()) ?? 0.0;
+    final portions = _parseIndoDouble(_portionsController.text.trim()) ?? 1.0;
     if (_nameController.text.trim().isEmpty || sodium == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Lengkapi nama dan natrium')),
@@ -1358,16 +1404,19 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
     final unit = _unitController.text.trim().isEmpty
         ? 'g'
         : _unitController.text.trim();
-    final packageMl = int.tryParse(_packageController.text.trim()) ?? 0;
+    final packageMl = _parseIndoDouble(_packageController.text.trim()) ?? 0.0;
     final portions = math.max(
-      1,
-      int.tryParse(_portionsController.text.trim()) ??
+      1.0,
+      _parseIndoDouble(_portionsController.text.trim()) ??
           widget.item.portionsInPackage,
     );
     final takaranPerSajian = packageMl > 0
-        ? math.max(1, (packageMl / portions).round())
-        : 0;
-    final sliderMax = math.max(10, math.max(portions, _selectedServings));
+        ? math.max(1.0, packageMl / portions)
+        : 0.0;
+    final sliderMax = math.max(
+      10,
+      math.max(portions.ceil(), _selectedServings),
+    );
 
     return Padding(
       padding: EdgeInsets.only(
@@ -1432,7 +1481,9 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
                 _EditField(
                   label: 'Natrium',
                   controller: _sodiumController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                 ),
               ],
             ),
@@ -1442,7 +1493,7 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
               children: [
                 Text(
                   takaranPerSajian > 0
-                      ? '1 sajian = $takaranPerSajian $unit - $portions sajian per kemasan'
+                      ? '1 sajian = ${_formatIndoNumber(takaranPerSajian)} $unit - ${_formatIndoNumber(portions)} sajian per kemasan'
                       : '1 sajian = ${_sodiumController.text.trim().isEmpty ? 0 : _sodiumController.text.trim()} mg natrium',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
@@ -1461,7 +1512,7 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
                   ),
                   child: Text(
                     takaranPerSajian > 0
-                        ? '$_selectedServings Sajian  (${_selectedServings * takaranPerSajian} $unit)'
+                        ? '$_selectedServings Sajian  (${_formatIndoNumber(_selectedServings * takaranPerSajian)} $unit)'
                         : '$_selectedServings Sajian',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
@@ -1525,13 +1576,17 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
                 _EditField(
                   label: 'Package ML',
                   controller: _packageController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   onChanged: (_) => setState(() {}),
                 ),
                 _EditField(
                   label: 'Sajian/Kemasan',
                   controller: _portionsController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   onChanged: (_) => setState(() {}),
                 ),
                 _EditField(

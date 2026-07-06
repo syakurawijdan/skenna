@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from decimal import Decimal, InvalidOperation
 from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import select
@@ -38,6 +39,18 @@ USER_PROFILE_CONTEXT_INSTRUCTION = (
 	"- Recommendations must match the scanned product category exactly\n"
 	"- Max 5 bullet points for recommendations, no unnecessary filler text"
 )
+
+
+def _format_package_number(value: object, default: str = "1") -> str:
+	if value is None:
+		return default
+	try:
+		number = Decimal(str(value).strip().replace(",", "."))
+	except (InvalidOperation, ValueError):
+		return default
+	if number == number.to_integral_value():
+		return str(int(number))
+	return format(number.normalize(), "f").rstrip("0").rstrip(".")
 
 
 class ChatbotPersonalizationService:
@@ -413,9 +426,9 @@ def _product_candidates(scans: list[FoodLabelScan], intake_items: list[IntakeHis
 		)
 
 	for item in intake_items:
-		add_candidate(item.food_name, float(item.sodium_mg or 0), f"{item.portions_in_package or 1} porsi")
+		add_candidate(item.food_name, float(item.sodium_mg or 0), f"{_format_package_number(item.portions_in_package)} porsi")
 		if item.product_name2 and item.sodium_mg2:
-			add_candidate(item.product_name2, float(item.sodium_mg2 or 0), f"{item.portions_in_package2 or 1} porsi")
+			add_candidate(item.product_name2, float(item.sodium_mg2 or 0), f"{_format_package_number(item.portions_in_package2)} porsi")
 	for scan in scans:
 		add_candidate(_product_name(scan), float(scan.sodium_mg or 0), _serving_size(scan))
 

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DECIMAL, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -28,10 +28,10 @@ class IntakeHistory(Base):
     intake_type: Mapped[str] = mapped_column("type", String(50), default="single")
     product_name2: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
     sodium_mg2: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    package_ml: Mapped[int] = mapped_column(Integer, default=0)
-    portions_in_package: Mapped[int] = mapped_column(Integer, default=1)
+    package_ml: Mapped[float] = mapped_column(DECIMAL(10, 2), default=0)
+    portions_in_package: Mapped[float] = mapped_column(DECIMAL(10, 2), default=1)
     satuan_takaran: Mapped[str] = mapped_column(String(20), default="g")
-    package_ml2: Mapped[int] = mapped_column(Integer, default=0)
-    portions_in_package2: Mapped[int] = mapped_column(Integer, default=1)
+    package_ml2: Mapped[float] = mapped_column(DECIMAL(10, 2), default=0)
+    portions_in_package2: Mapped[float] = mapped_column(DECIMAL(10, 2), default=1)
     satuan_takaran2: Mapped[str] = mapped_column(String(20), default="g")
     rekomendasi_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  

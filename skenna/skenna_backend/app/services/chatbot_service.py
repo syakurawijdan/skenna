@@ -3,6 +3,7 @@ import re
 import time
 import asyncio
 import threading
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from sqlalchemy import desc, func, or_, select
@@ -25,6 +26,18 @@ logger = logging.getLogger(__name__)
 
 def _tokens(text: str) -> set[str]:
 	return {token for token in re.findall(r"[a-z0-9]+", text.lower()) if len(token) >= 2}
+
+
+def _format_package_number(value: Any, default: str = "1") -> str:
+	if value is None:
+		return default
+	try:
+		number = Decimal(str(value).strip().replace(",", "."))
+	except (InvalidOperation, ValueError):
+		return default
+	if number == number.to_integral_value():
+		return str(int(number))
+	return format(number.normalize(), "f").rstrip("0").rstrip(".")
 
 
 class ChatIntent:
@@ -764,9 +777,9 @@ class ChatbotService:
 		return {
 			"name": ChatbotService._scan_product_name(scan),
 			"sodium_mg": float(scan.sodium_mg or 0),
-			"servings": int(scan.sajian_per_kemasan or 1),
+			"servings": _format_package_number(scan.sajian_per_kemasan),
 			"serving_size": (
-				f"{scan.takaran_saji or '-'} {scan.satuan_takaran or 'g'}"
+				f"{_format_package_number(scan.takaran_saji, default='-')} {scan.satuan_takaran or 'g'}"
 			),
 		}
 
@@ -775,9 +788,9 @@ class ChatbotService:
 		return {
 			"name": (item.food_name or "").strip(),
 			"sodium_mg": float(item.sodium_mg or 0),
-			"servings": int(item.portions_in_package or item.servings or 1),
+			"servings": _format_package_number(item.portions_in_package, default=str(item.servings or 1)),
 			"serving_size": (
-				f"{item.package_ml or '-'} {item.satuan_takaran or 'g'}"
+				f"{_format_package_number(item.package_ml, default='-')} {item.satuan_takaran or 'g'}"
 			),
 		}
 
@@ -792,8 +805,8 @@ class ChatbotService:
 				)
 				continue
 			first_serving = (
-				f"{getattr(item, 'package_ml', 0) or '-'} {getattr(item, 'satuan_takaran', 'g') or 'g'}, "
-				f"{getattr(item, 'portions_in_package', 1) or 1} porsi"
+				f"{_format_package_number(getattr(item, 'package_ml', None), default='-')} {getattr(item, 'satuan_takaran', 'g') or 'g'}, "
+				f"{_format_package_number(getattr(item, 'portions_in_package', None))} porsi"
 			)
 			product_lines.append(
 				f"{index}. {item.food_name}: {float(item.sodium_mg or 0):.0f} mg natrium, "
@@ -803,8 +816,8 @@ class ChatbotService:
 			second_sodium = getattr(item, "sodium_mg2", None)
 			if second_name and second_sodium is not None:
 				second_serving = (
-					f"{getattr(item, 'package_ml2', 0) or '-'} {getattr(item, 'satuan_takaran2', 'g') or 'g'}, "
-					f"{getattr(item, 'portions_in_package2', 1) or 1} porsi"
+					f"{_format_package_number(getattr(item, 'package_ml2', None), default='-')} {getattr(item, 'satuan_takaran2', 'g') or 'g'}, "
+					f"{_format_package_number(getattr(item, 'portions_in_package2', None))} porsi"
 				)
 				product_lines.append(
 					f"{index}. {second_name}: {float(second_sodium or 0):.0f} mg natrium, info saji {second_serving}"

@@ -208,12 +208,26 @@ class _MainAppState extends State<MainApp> {
   }
 
   static Route<dynamic> _onGenerateRoute(RouteSettings settings) {
+    double? asDouble(Object? value) {
+      if (value is num) return value.toDouble();
+      return double.tryParse(value?.toString() ?? '');
+    }
+
+    int? asInt(Object? value) {
+      if (value is num) return value.toInt();
+      return int.tryParse(value?.toString() ?? '');
+    }
+
+    bool asBool(Object? value) {
+      if (value is bool) return value;
+      if (value is num) return value != 0;
+      final text = value?.toString().toLowerCase().trim();
+      return text == 'true' || text == '1';
+    }
+
     if (settings.name == AppRoutes.registerPassword) {
       final email = settings.arguments as String? ?? '';
-      return _buildAnimatedRoute(
-        settings,
-        (_) => PasswordScreen(email: email),
-      );
+      return _buildAnimatedRoute(settings, (_) => PasswordScreen(email: email));
     }
 
     if (settings.name == AppRoutes.otpVerification) {
@@ -250,23 +264,6 @@ class _MainAppState extends State<MainApp> {
 
     if (settings.name == AppRoutes.chatbot) {
       final args = settings.arguments as Map<String, dynamic>?;
-      double? asDouble(Object? value) {
-        if (value is num) return value.toDouble();
-        return double.tryParse(value?.toString() ?? '');
-      }
-
-      int? asInt(Object? value) {
-        if (value is num) return value.toInt();
-        return int.tryParse(value?.toString() ?? '');
-      }
-
-      bool asBool(Object? value) {
-        if (value is bool) return value;
-        if (value is num) return value != 0;
-        final text = value?.toString().toLowerCase().trim();
-        return text == 'true' || text == '1';
-      }
-
       final initialQuestion = args?['initialQuestion'] as String?;
       return _buildAnimatedRoute(
         settings,
@@ -279,7 +276,7 @@ class _MainAppState extends State<MainApp> {
           scanId: asInt(args?['scanId']),
           sodiumLevel: args?['sodiumLevel'] as String?,
           packageMl: asDouble(args?['packageMl']),
-          portionsInPackage: asInt(args?['portionsInPackage']),
+          portionsInPackage: asDouble(args?['portionsInPackage']),
           satuanTakaran: args?['satuanTakaran'] as String?,
           imagePath: args?['imagePath'] as String?,
           isConsumptionRecorded: asBool(args?['isConsumptionRecorded']),
@@ -295,10 +292,9 @@ class _MainAppState extends State<MainApp> {
       final kategori = args?['kategori'] as String? ?? 'lainnya';
       final userId = args?['userId'] as int? ?? UserSession().getUserId();
       final perPortionMg = args?['sodiumMg'] as int? ?? 0;
-      final portionsInPackage = args?['porsiPerKemasan'] as int? ?? 1;
+      final portionsInPackage = asDouble(args?['porsiPerKemasan']) ?? 1.0;
       final packageMl =
-          (args?['takaranPerPorsi'] as int? ?? 250) *
-          (args?['porsiPerKemasan'] as int? ?? 1);
+          (asDouble(args?['takaranPerPorsi']) ?? 250.0) * portionsInPackage;
       final initialServings = args?['jumlahKonsumsi'] as int? ?? 1;
       final fromHistory = args?['fromHistory'] as bool? ?? false;
 
@@ -322,7 +318,7 @@ class _MainAppState extends State<MainApp> {
               dailyLimitMg: dailyLimit,
               isHardMaximum: hasil?.isHardMaximum ?? true,
               sodiumLevel: sodiumLevel,
-              initialServings: initialServings,
+              initialServings: initialServings.toDouble(),
               apiClient: ApiClient(),
               fromHistory: fromHistory,
             );

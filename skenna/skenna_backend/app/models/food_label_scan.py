@@ -1,7 +1,7 @@
 from datetime import datetime, timezone, timedelta 
 from typing import Optional
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import DECIMAL, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -19,8 +19,8 @@ class FoodLabelScan(Base):
         DateTime,
         default=lambda: datetime.now(timezone(timedelta(hours=7))).replace(tzinfo=None)  
     )
-    takaran_saji: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    sajian_per_kemasan: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    takaran_saji: Mapped[Optional[float]] = mapped_column(DECIMAL(10, 2), nullable=True)
+    sajian_per_kemasan: Mapped[Optional[float]] = mapped_column(DECIMAL(10, 2), nullable=True)
     satuan_takaran: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     nama_produk: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)  
     kategori: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)

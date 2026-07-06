@@ -108,7 +108,7 @@ class ChatbotScreen extends StatefulWidget {
   final int? scanId;
   final String? sodiumLevel;
   final double? packageMl;
-  final int? portionsInPackage;
+  final double? portionsInPackage;
   final String? satuanTakaran;
   final String? imagePath;
   final bool isConsumptionRecorded;
@@ -144,6 +144,16 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         kategori == 'bumbu' ||
         kategori.contains('saus') ||
         kategori.contains('bumbu');
+  }
+
+  double? _parseIndoDouble(String? text) {
+    if (text == null || text.trim().isEmpty) return null;
+    return double.tryParse(text.trim().replaceAll(',', '.'));
+  }
+
+  int? _parseIndoInt(String? text) {
+    final parsed = _parseIndoDouble(text);
+    return parsed?.toInt();
   }
 
   @override
@@ -461,7 +471,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           (map['nama_produk'] ?? map['food_name'] ?? map['product_name'] ?? '')
               .toString()
               .trim();
-      final sodium = double.tryParse(map['sodium_mg']?.toString() ?? '') ?? 0;
+      final sodium = _parseIndoDouble(map['sodium_mg']?.toString() ?? '') ?? 0;
       if (name.isEmpty || sodium <= 0) continue;
       byName[name.toLowerCase()] = _ComparisonProduct(
         name: name,
@@ -470,7 +480,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       );
       final secondName = map['product_name2']?.toString().trim();
       final secondSodium =
-          double.tryParse(map['sodium_mg2']?.toString() ?? '') ?? 0;
+          _parseIndoDouble(map['sodium_mg2']?.toString() ?? '') ?? 0;
       if (secondName != null && secondName.isNotEmpty && secondSodium > 0) {
         byName[secondName.toLowerCase()] = _ComparisonProduct(
           name: secondName,
@@ -644,8 +654,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         productName: productName,
         sodiumLevel: widget.sodiumLevel,
         kategori: widget.kategori,
-        packageMl: (widget.packageMl ?? 0).round(),
-        portionsInPackage: widget.portionsInPackage ?? 1,
+        packageMl: widget.packageMl ?? 0.0,
+        portionsInPackage: widget.portionsInPackage ?? 1.0,
         satuanTakaran: widget.satuanTakaran ?? 'g',
         isConsumed: true,
         imagePath: widget.imagePath,
@@ -659,9 +669,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       Navigator.pushNamed(context, AppRoutes.history);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mencatat konsumsi: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal mencatat konsumsi: $e')));
     } finally {
       if (mounted) setState(() => _savingScanConsumption = false);
     }
@@ -1691,9 +1701,7 @@ class _ScanConsumptionBanner extends StatelessWidget {
               productName,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.regular13.copyWith(
-                color: AppColors.blue800,
-              ),
+              style: AppTextStyles.regular13.copyWith(color: AppColors.blue800),
             ),
             const SizedBox(height: 12),
             Row(

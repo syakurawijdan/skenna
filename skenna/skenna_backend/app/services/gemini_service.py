@@ -282,7 +282,7 @@ class GeminiService:
 			"{\n"
 			'  "takaran_saji": <angka takaran per sajian, tanpa satuan, atau null>,\n'
 			'  "satuan_takaran": <"g" atau "ml">,\n'
-			'  "sajian_per_kemasan": <angka jumlah sajian per kemasan, atau null>,\n'
+			'  "sajian_per_kemasan": <angka jumlah sajian per kemasan, BOLEH DESIMAL seperti 1.5 atau 2.5, atau null>,\n'
 			'  "sodium_mg": <kandungan NATRIUM per sajian dalam mg, WAJIB, isi 0 jika tidak ditemukan>\n'
 			"}\n\n"
 			"ATURAN WAJIB:\n"
@@ -302,6 +302,7 @@ class GeminiService:
 			"7. Field sodium_mg tetap WAJIB diisi angka (gunakan 0 jika benar-benar tidak "
 			"ditemukan di label), karena ini bukan termasuk field yang boleh null.\n"
 			"8. Jangan tambahkan teks, komentar, atau markdown apapun selain JSON"
+			"9. sajian_per_kemasan SERING berupa angka desimal (misal 1.5, 2.5, 3.33) karena takaran saji tidak selalu membagi rata isi kemasan. JANGAN membulatkan nilai ini ke integer — salin angka desimal persis seperti tercetak di label (misal '1,5 Sajian per Kemasan' → 1.5)"
 		)
 		parts: list[dict[str, Any]] = [
 			{"text": prompt},

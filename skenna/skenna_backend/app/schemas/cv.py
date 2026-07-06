@@ -15,7 +15,7 @@ class CVScanResponse(BaseModel):
     sodium_mg: float
     sodium_level: Optional[str] = None
     scan_id: Optional[int] = None
-    takaran_saji: Optional[int] = None
-    sajian_per_kemasan: Optional[int] = None
+    takaran_saji: Optional[float] = None
+    sajian_per_kemasan: Optional[float] = None
     satuan_takaran: str
     image_path: Optional[str] = None

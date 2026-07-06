@@ -100,7 +100,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
   late TextEditingController _porsiController;
   late TextEditingController _sodiumController;
   String _kategori = '';
-  int _jumlahKonsumsi = 1;
+  double _jumlahKonsumsi = 1.0;
   bool _namaError = false;
   bool _sodiumError = false;
   bool _takaranError = false;
@@ -111,12 +111,32 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
 
   bool get _isBumbuCategory => _kategori == 'saus_bumbu';
 
+  double? _parseIndoDouble(String? text) {
+    if (text == null || text.trim().isEmpty) return null;
+    return double.tryParse(text.trim().replaceAll(',', '.'));
+  }
+
+  int? _parseIndoInt(String? text) {
+    final parsed = _parseIndoDouble(text);
+    return parsed?.toInt();
+  }
+
+  String _formatIndoNumber(dynamic value) {
+    if (value == null) return '';
+    final parsed = value is num
+        ? value.toDouble()
+        : double.tryParse(value.toString().trim().replaceAll(',', '.'));
+    if (parsed == null) return '';
+    if (parsed == parsed.roundToDouble()) return parsed.toInt().toString();
+    return parsed.toString().replaceAll('.', ',');
+  }
+
   bool get _formValid =>
       _namaController.text.trim().isNotEmpty &&
       _sodiumController.text.trim().isNotEmpty &&
       _kategori.isNotEmpty &&
-      (int.tryParse(_takaranController.text) ?? 0) > 0 &&
-      (int.tryParse(_porsiController.text) ?? 0) > 0;
+      (_parseIndoDouble(_takaranController.text) ?? 0) > 0 &&
+      (_parseIndoDouble(_porsiController.text) ?? 0) > 0;
 
   @override
   void initState() {
@@ -130,10 +150,10 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
       text: widget.dataGizi['nama_produk'] ?? '',
     );
     _takaranController = TextEditingController(
-      text: '${widget.dataGizi['takaran_saji_angka'] ?? ''}',
+      text: _formatIndoNumber(widget.dataGizi['takaran_saji_angka']),
     );
     _porsiController = TextEditingController(
-      text: '${widget.dataGizi['sajian_per_kemasan'] ?? ''}',
+      text: _formatIndoNumber(widget.dataGizi['sajian_per_kemasan']),
     );
     _sodiumController = TextEditingController(
       text: '${widget.dataGizi['sodium_mg'] ?? ''}',
@@ -157,8 +177,8 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
     setState(() {
       _namaError = _namaController.text.trim().isEmpty;
       _sodiumError = _sodiumController.text.trim().isEmpty;
-      _takaranError = (int.tryParse(_takaranController.text) ?? 0) <= 0;
-      _porsiError = (int.tryParse(_porsiController.text) ?? 0) <= 0;
+      _takaranError = (_parseIndoDouble(_takaranController.text) ?? 0) <= 0;
+      _porsiError = (_parseIndoDouble(_porsiController.text) ?? 0) <= 0;
     });
 
     if (_namaError || _sodiumError || _takaranError || _porsiError) return;
@@ -203,8 +223,8 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
 
     Navigator.of(context).pop();
 
-    final takaranPerPorsi = int.tryParse(_takaranController.text) ?? 0;
-    final porsiPerKemasan = int.tryParse(_porsiController.text) ?? 1;
+    final takaranPerPorsi = _parseIndoDouble(_takaranController.text) ?? 0.0;
+    final porsiPerKemasan = _parseIndoDouble(_porsiController.text) ?? 1.0;
 
     if (_isModePerbandingan) {
       final productB = ProductCompareData(
@@ -213,7 +233,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
             : 'Produk B',
         kategori: _kategori,
         satuanTakaran: _kategori == 'minuman_kemasan' ? 'ml' : 'g',
-        perPortionMg: double.tryParse(_sodiumController.text)?.toInt() ?? 0,
+        perPortionMg: _parseIndoDouble(_sodiumController.text)?.toInt() ?? 0,
         packageMl: takaranPerPorsi * porsiPerKemasan,
         portionsInPackage: porsiPerKemasan,
         imagePath: widget.dataGizi['image_path'] as String?,
@@ -235,7 +255,8 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
           builder: (_) => HasilScanAmanScreen(
             productName: _namaController.text,
             kategori: _kategori,
-            perPortionMg: double.tryParse(_sodiumController.text)?.toInt() ?? 0,
+            perPortionMg:
+                _parseIndoDouble(_sodiumController.text)?.toInt() ?? 0,
             dailyLimitMg: dailyLimit, // ← sudah terisi
             isHardMaximum: isHardMaximum,
             sodiumLevel: sodiumLevelLabel,
@@ -246,7 +267,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                 : (_kategori == 'minuman_kemasan' ? 'ml' : 'g'),
             packageMl: takaranPerPorsi * porsiPerKemasan,
             portionsInPackage: porsiPerKemasan,
-            initialServings: _jumlahKonsumsi,
+            initialServings: _jumlahKonsumsi.toDouble(),
             userId: widget.userId,
             apiClient: widget.apiClient,
             imagePath: widget.dataGizi['image_path'] as String?,
@@ -352,7 +373,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                 if (selected == null) return;
                 setState(() {
                   _kategori = selected;
-                  if (_isBumbuCategory) _jumlahKonsumsi = 1;
+                  if (_isBumbuCategory) _jumlahKonsumsi = 1.0;
                 });
               },
             ),
@@ -368,7 +389,9 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                       _buildLabel('Takaran per sajian'),
                       TextField(
                         controller: _takaranController,
-                        keyboardType: TextInputType.number,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         style: _inputTextStyle,
                         decoration:
                             _decoration(
@@ -394,7 +417,9 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                       _buildLabel('Sajian per kemasan'),
                       TextField(
                         controller: _porsiController,
-                        keyboardType: TextInputType.number,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         style: _inputTextStyle,
                         decoration: _decoration(suffix: 'sajian').copyWith(
                           hintText: 'contoh: 9',
@@ -416,7 +441,9 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
             _buildLabel('Jumlah natrium per sajian'),
             TextField(
               controller: _sodiumController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               style: _inputTextStyle,
               decoration: _decoration(suffix: 'mg').copyWith(
                 enabledBorder: _sodiumError ? _errorBorder : _normalBorder,
@@ -428,36 +455,36 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
               const SizedBox(height: 14),
               // ← TAMBAH header di atas preview box
               Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Estimasi Total Natrium',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: _blue,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDFE4ED),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '= ${(double.tryParse(_sodiumController.text) ?? 0).toInt() * _jumlahKonsumsi} mg natrium',
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Estimasi Total Natrium',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      color: _blue,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
+                      color: _blue,
                     ),
                   ),
-                ),
-              ],
-            ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDFE4ED),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '= ${((_parseIndoDouble(_sodiumController.text) ?? 0) * _jumlahKonsumsi).round()} mg natrium',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        color: _blue,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
             ],
 
@@ -471,15 +498,15 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                 child: Row(
                   children: [
                     IconButton(
-                      onPressed: _jumlahKonsumsi > 1
-                          ? () => setState(() => _jumlahKonsumsi--)
+                      onPressed: _jumlahKonsumsi > 0.5
+                          ? () => setState(() => _jumlahKonsumsi -= 0.5)
                           : null,
                       icon: const Icon(Icons.remove),
                       color: _blue,
                     ),
                     Expanded(
                       child: Text(
-                        '$_jumlahKonsumsi Sajian',
+                        '${_formatIndoNumber(_jumlahKonsumsi)} Sajian',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
@@ -490,10 +517,10 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                     ),
                     IconButton(
                       onPressed: _jumlahKonsumsi < 10
-                          ? () => setState(() => _jumlahKonsumsi++)
+                          ? () => setState(() => _jumlahKonsumsi += 0.5)
                           : null,
                       icon: const Icon(Icons.add),
-                      color: _jumlahKonsumsi < 9 ? _blue : Colors.grey,
+                      color: _jumlahKonsumsi < 9.5 ? _blue : Colors.grey,
                     ),
                   ],
                 ),

@@ -121,8 +121,8 @@ class _ScanScreenState extends State<ScanScreen> {
       final dataGizi = {
         "nama_produk": result['nama_produk'] ?? result['product_name'] ?? "",
         "satuan_takaran": result['satuan_takaran'] ?? "g",
-        "takaran_saji_angka": (takaranSaji as num).toInt(),
-        "sajian_per_kemasan": (sajianPerKemasan as num).toInt(),
+        "takaran_saji_angka": (takaranSaji as num).toDouble(),
+        "sajian_per_kemasan": (sajianPerKemasan as num).toDouble(),
         "sodium_mg": result['sodium_mg'] != null
             ? (result['sodium_mg'] as num).toDouble()
             : 0.0,

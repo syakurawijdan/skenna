@@ -21,11 +21,11 @@ class HistoryRepository:
 		product_name2=None, 
 		sodium_mg2=None,
 		is_consumed: bool = False,
-		package_ml: int = 0,
-		portions_in_package: int = 1,
+		package_ml: float = 0,
+		portions_in_package: float = 1,
 		satuan_takaran: str = "g",
-		package_ml2: int = 0,
-		portions_in_package2: int = 1,
+		package_ml2: float = 0,
+		portions_in_package2: float = 1,
 		satuan_takaran2: str = "g",
 	) -> IntakeHistory:
 		item = IntakeHistory(

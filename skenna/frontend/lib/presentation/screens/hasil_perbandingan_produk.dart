@@ -19,8 +19,8 @@ class ProductCompareData {
   final String kategori;
   final String satuanTakaran;
   final int perPortionMg;
-  final int packageMl;
-  final int portionsInPackage;
+  final double packageMl;
+  final double portionsInPackage;
   final String? imagePath;
 
   const ProductCompareData({
@@ -118,7 +118,8 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
   bool get _pilihanBerubah => _selectedProduct != _selectedProductSaatDicatat;
   bool get _adaPerubahanBelumDisimpan {
     if (widget.readOnly) return false;
-    if (!_statusDikonsumsi) return false;
+    if (_selectedProduct == 0) return false;
+    if (!_statusDikonsumsi) return true;
     return _pilihanBerubah;
   }
 
@@ -144,6 +145,16 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
     final hi = _loser.perPortionMg;
     if (hi == 0) return '0';
     return ((hi - lo) / hi * 100).round().toString();
+  }
+
+  String _formatIndoNumber(num value) {
+    final parsed = value.toDouble();
+    if (parsed == parsed.roundToDouble()) return parsed.toInt().toString();
+    return parsed
+        .toStringAsFixed(2)
+        .replaceFirst(RegExp(r'0+$'), '')
+        .replaceFirst(RegExp(r'\.$'), '')
+        .replaceAll('.', ',');
   }
 
   // ── BUILD ─────────────────────────────────────────────────────────────────
@@ -747,7 +758,7 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
           const SizedBox(height: 4),
           // ← tambah info per sajian
           Text(
-            'Per sajian: ${product.perPortionMg} mg (1 dari ${product.portionsInPackage} sajian per kemasan)',
+            'Per sajian: ${product.perPortionMg} mg\nTotal kemasan setara ${_formatIndoNumber(product.portionsInPackage)} kali sajian',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 11,
               color: _blue.withOpacity(0.6),
@@ -798,7 +809,7 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
                 children: [
                   const TextSpan(text: 'Jika 1 kemasan penuh: '),
                   TextSpan(
-                    text: '$totalPerKemasan mg',
+                    text: '${_formatIndoNumber(totalPerKemasan)} mg',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -872,20 +883,25 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
 
   // ── Detail tab ────────────────────────────────────────────────────────────
   Widget _buildDetailTab(ProductCompareData p) {
-    final portionSatuan = (p.packageMl / p.portionsInPackage).round();
+    final portionSatuan = p.portionsInPackage > 0
+        ? p.packageMl / p.portionsInPackage
+        : 0.0;
     return Column(
       children: [
         _infoCard('Nama Produk', p.productName),
         const SizedBox(height: 8),
         _infoCard(
           'Isi Kemasan',
-          '${p.packageMl} ${p.satuanTakaran} (${p.portionsInPackage} sajian)',
+          '${_formatIndoNumber(p.packageMl)} ${p.satuanTakaran}',
         ),
         const SizedBox(height: 8),
         _infoCard('Kategori', kategoriLabel(p.kategori)),
 
         const SizedBox(height: 8),
-        _infoCard('Takaran per Sajian', '$portionSatuan ${p.satuanTakaran}'),
+        _infoCard(
+          'Takaran per Sajian',
+          '${_formatIndoNumber(portionSatuan)} ${p.satuanTakaran}',
+        ),
         const SizedBox(height: 8),
         _infoCard('Natrium per Sajian', '${p.perPortionMg} mg per sajian'),
       ],
@@ -1075,7 +1091,6 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
       if (mounted) setState(() => _saving = false);
     }
   }
-
 }
 
 // ════════════════════════════════════════════════════════════════════════════

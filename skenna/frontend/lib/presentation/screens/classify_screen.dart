@@ -16,6 +16,16 @@ class _ClassifyScreenState extends State<ClassifyScreen> {
   String _result = 'Belum ada hasil';
   bool _loading = false;
 
+  double? _parseIndoDouble(String? text) {
+    if (text == null || text.trim().isEmpty) return null;
+    return double.tryParse(text.trim().replaceAll(',', '.'));
+  }
+
+  int? _parseIndoInt(String? text) {
+    final parsed = _parseIndoDouble(text);
+    return parsed?.toInt();
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -23,7 +33,7 @@ class _ClassifyScreenState extends State<ClassifyScreen> {
   }
 
   Future<void> _submit() async {
-    final value = double.tryParse(_controller.text.trim());
+    final value = _parseIndoDouble(_controller.text.trim());
     if (value == null) {
       setState(() => _result = 'Input harus angka (mg).');
       return;
@@ -60,7 +70,7 @@ class _ClassifyScreenState extends State<ClassifyScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: _controller,
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
               labelText: 'Natrium (mg)',
               border: OutlineInputBorder(),

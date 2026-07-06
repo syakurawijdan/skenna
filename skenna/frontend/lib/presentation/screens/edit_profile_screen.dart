@@ -87,6 +87,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   bool get _isFemale => _gender == 'perempuan';
 
+  double? _parseIndoDouble(String? text) {
+    if (text == null || text.trim().isEmpty) return null;
+    return double.tryParse(text.trim().replaceAll(',', '.'));
+  }
+
+  int? _parseIndoInt(String? text) {
+    final parsed = _parseIndoDouble(text);
+    return parsed?.toInt();
+  }
+
   DateTime? get _selectedBirthDate {
     final d = int.tryParse(_dayCtrl.text.trim());
     final m = int.tryParse(_monthCtrl.text.trim());
@@ -210,10 +220,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       // Jika user mengetik '0', kita juga bisa menganggapnya sebagai null/tidak diisi
       systolic = (systolicText.isEmpty || systolicText == '0')
           ? null
-          : int.tryParse(systolicText);
+          : _parseIndoInt(systolicText);
       diastolic = (diastolicText.isEmpty || diastolicText == '0')
           ? null
-          : int.tryParse(diastolicText);
+          : _parseIndoInt(diastolicText);
 
       // Sekarang validasi rentang HANYA berjalan jika angka > 0
       if (systolic != null && (systolic < 50 || systolic > 300)) {
@@ -298,7 +308,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   int? _parseOptionalInt(String value) {
     if (value.isEmpty) return null;
-    return int.tryParse(value);
+    return _parseIndoInt(value);
   }
 
   void _showMessage(String message) {

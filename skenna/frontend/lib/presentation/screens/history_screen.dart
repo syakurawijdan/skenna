@@ -27,11 +27,11 @@ class ScanHistoryItem {
   final String? productName2;
   final int? sodiumMg2;
   final String? imagePath2;
-  final int packageMl;
-  final int portionsInPackage;
+  final double packageMl;
+  final double portionsInPackage;
   final String satuanTakaran;
-  final int packageMl2;
-  final int portionsInPackage2;
+  final double packageMl2;
+  final double portionsInPackage2;
   final String satuanTakaran2;
   final Map<String, dynamic>? rekomendasiJson;
 
@@ -48,11 +48,11 @@ class ScanHistoryItem {
     this.productName2,
     this.sodiumMg2,
     this.imagePath2,
-    this.packageMl = 0,
-    this.portionsInPackage = 1,
+    this.packageMl = 0.0,
+    this.portionsInPackage = 1.0,
     this.satuanTakaran = 'g',
-    this.packageMl2 = 0,
-    this.portionsInPackage2 = 1,
+    this.packageMl2 = 0.0,
+    this.portionsInPackage2 = 1.0,
     this.satuanTakaran2 = 'g',
     this.rekomendasiJson,
   });
@@ -79,11 +79,13 @@ class ScanHistoryItem {
       productName2: json['product_name2'] as String?,
       sodiumMg2: (json['sodium_mg2'] as num?)?.toInt(),
       imagePath2: json['image_path2'] as String?,
-      packageMl: (json['package_ml'] as num?)?.toInt() ?? 0,
-      portionsInPackage: (json['portions_in_package'] as num?)?.toInt() ?? 1,
+      packageMl: (json['package_ml'] as num?)?.toDouble() ?? 0.0,
+      portionsInPackage:
+          (json['portions_in_package'] as num?)?.toDouble() ?? 1.0,
       satuanTakaran: json['satuan_takaran'] as String? ?? 'g',
-      packageMl2: (json['package_ml2'] as num?)?.toInt() ?? 0,
-      portionsInPackage2: (json['portions_in_package2'] as num?)?.toInt() ?? 1,
+      packageMl2: (json['package_ml2'] as num?)?.toDouble() ?? 0.0,
+      portionsInPackage2:
+          (json['portions_in_package2'] as num?)?.toDouble() ?? 1.0,
       satuanTakaran2: json['satuan_takaran2'] as String? ?? 'g',
       rekomendasiJson: json['rekomendasi_json'] != null
           ? Map<String, dynamic>.from(
@@ -729,7 +731,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           productName: item.productName,
           kategori: item.kategori,
           perPortionMg: item.sodiumMg,
-          initialServings: item.servings.toInt(),
+          initialServings: item.servings.toDouble(),
           fromHistory: true,
           historyItemId: item.id,
           imagePath: item.imagePath,

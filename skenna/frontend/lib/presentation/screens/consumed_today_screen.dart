@@ -2057,6 +2057,7 @@ class _DeleteConfirmDialog extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             // Batal — TextButton muted (tanpa fill)
+            // Batal — TextButton muted (tanpa fill)
             SizedBox(
               width: double.infinity,
               height: 52,

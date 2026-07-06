@@ -7,6 +7,7 @@ class StopNatriumDialog extends StatelessWidget {
   final String limitPhrase;
 
   static const _blue = Color(0xFF2C4A8A);
+  static const _red = Color(0xFFD32F2F);
   static const _muted = Color(0xFF9AA3B5);
 
   @override
@@ -61,17 +62,18 @@ class StopNatriumDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            // Batal sekarang di atas, style muted (text button)
             SizedBox(
               width: double.infinity,
               height: 52,
               child: TextButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () => Navigator.pop(context, false),
                 style: TextButton.styleFrom(
                   foregroundColor: _muted,
                   overlayColor: _muted.withOpacity(0.1),
                 ),
                 child: Text(
-                  'Ya, Tambahkan',
+                  'Batal',
                   style: GoogleFonts.plusJakartaSans(
                     color: _muted,
                     fontSize: 15,
@@ -81,19 +83,20 @@ class StopNatriumDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
+            // Ya, Tambahkan sekarang di bawah, jadi primary button warna merah
             SizedBox(
               width: double.infinity,
               height: 52,
               child: FilledButton(
-                onPressed: () => Navigator.pop(context, false),
+                onPressed: () => Navigator.pop(context, true),
                 style: FilledButton.styleFrom(
-                  backgroundColor: _blue,
+                  backgroundColor: _red,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(26),
                   ),
                 ),
                 child: Text(
-                  'Batal',
+                  'Ya, Tambahkan',
                   style: GoogleFonts.plusJakartaSans(
                     color: Colors.white,
                     fontSize: 15,

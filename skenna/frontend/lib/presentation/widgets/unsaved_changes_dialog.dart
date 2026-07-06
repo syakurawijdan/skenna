@@ -48,7 +48,7 @@ class UnsavedChangesDialog extends StatelessWidget {
                 children: const [
                   TextSpan(text: 'Kamu punya '),
                   TextSpan(
-                    text: 'perubahan yang belum disimpan.',
+                    text: 'perubahan yang belum disimpan,',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                   TextSpan(text: ' Simpan sebelum keluar?'),

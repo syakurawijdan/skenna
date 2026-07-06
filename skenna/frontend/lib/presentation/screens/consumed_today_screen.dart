@@ -44,7 +44,7 @@ class ConsumedTodayItem {
   final int id;
   final String foodName;
   final double sodiumMg;
-  final int servings;
+  final double servings;
   final DateTime consumedAt;
   final String sodiumLevel;
   final String? kategori;
@@ -60,7 +60,7 @@ class ConsumedTodayItem {
       id: (json['id'] as num?)?.toInt() ?? 0,
       foodName: json['food_name']?.toString() ?? 'Produk',
       sodiumMg: (json['sodium_mg'] as num?)?.toDouble() ?? 0,
-      servings: (json['servings'] as num?)?.toInt() ?? 1,
+      servings: (json['servings'] as num?)?.toDouble() ?? 1.0,
       consumedAt:
           DateTime.tryParse(json['consumed_at']?.toString() ?? '') ??
           DateTime.now(),
@@ -788,7 +788,7 @@ class _EditInfoProductSheetState extends State<_EditInfoProductSheet> {
   late final TextEditingController _portionsController;
   late final TextEditingController _sodiumController;
   late String _kategori;
-  late int _servings;
+  late double _servings;
   bool _saving = false;
 
   double? _parseIndoDouble(String? text) {
@@ -820,7 +820,7 @@ class _EditInfoProductSheetState extends State<_EditInfoProductSheet> {
       text: '${(item.sodiumMg * portions).round()}',
     );
     _kategori = item.kategori ?? 'lainnya';
-    _servings = widget.item.servings.clamp(1, 10).toInt();
+    _servings = widget.item.servings.clamp(1.0, 10.0);
   }
 
   @override
@@ -870,9 +870,9 @@ class _EditInfoProductSheetState extends State<_EditInfoProductSheet> {
     );
   }
 
-  void _changeServing(int delta) {
+  void _changeServing(double delta) {
     setState(() {
-      _servings = (_servings + delta).clamp(1, 10).toInt();
+      _servings = (_servings + delta).clamp(1.0, 10.0);
     });
   }
 
@@ -885,7 +885,7 @@ class _EditInfoProductSheetState extends State<_EditInfoProductSheet> {
 
   @override
   Widget build(BuildContext context) {
-    if (_servings > 10) _servings = 10;
+    if (_servings > 10) _servings = 10.0;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -995,9 +995,9 @@ class _EditInfoProductSheetState extends State<_EditInfoProductSheet> {
             _EditInfoStepper(
               value: _servings,
               max: 10,
-              label: '$_servings',
-              onMinus: () => _changeServing(-1),
-              onPlus: () => _changeServing(1),
+              label: _formatIndoNumber(_servings),
+              onMinus: () => _changeServing(-1.0),
+              onPlus: () => _changeServing(1.0),
             ),
             const SizedBox(height: 38),
             SizedBox(
@@ -1220,7 +1220,7 @@ class _EditInfoStepper extends StatelessWidget {
     required this.onPlus,
   });
 
-  final int value;
+  final double value;
   final int max;
   final String label;
   final VoidCallback onMinus;
@@ -1324,7 +1324,7 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
   late final TextEditingController _unitController;
   late String _kategori;
   late String _level;
-  late int _selectedServings;
+  late double _selectedServings;
   bool _saving = false;
 
   double? _parseIndoDouble(String? text) {
@@ -1345,7 +1345,9 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
     _sodiumController = TextEditingController(
       text: item.sodiumMg.round().toString(),
     );
-    _servingsController = TextEditingController(text: item.servings.toString());
+    _servingsController = TextEditingController(
+      text: _formatIndoNumber(item.servings),
+    );
     _packageController = TextEditingController(
       text: _formatIndoNumber(item.packageMl),
     );
@@ -1355,7 +1357,7 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
     _unitController = TextEditingController(text: item.satuanTakaran);
     _kategori = item.kategori ?? 'lainnya';
     _level = item.sodiumLevel;
-    _selectedServings = math.max(1, item.servings);
+    _selectedServings = math.max(1.0, item.servings);
   }
 
   @override
@@ -1414,8 +1416,8 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
         ? math.max(1.0, packageMl / portions)
         : 0.0;
     final sliderMax = math.max(
-      10,
-      math.max(portions.ceil(), _selectedServings),
+      10.0,
+      math.max(portions.ceilToDouble(), _selectedServings),
     );
 
     return Padding(
@@ -1512,8 +1514,8 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
                   ),
                   child: Text(
                     takaranPerSajian > 0
-                        ? '$_selectedServings Sajian  (${_formatIndoNumber(_selectedServings * takaranPerSajian)} $unit)'
-                        : '$_selectedServings Sajian',
+                        ? '${_formatIndoNumber(_selectedServings)} Sajian  (${_formatIndoNumber(_selectedServings * takaranPerSajian)} $unit)'
+                        : '${_formatIndoNumber(_selectedServings)} Sajian',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -1524,7 +1526,7 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
                 const SizedBox(height: 14),
                 _PortionSlider(
                   value: _selectedServings,
-                  min: 1,
+                  min: 1.0,
                   max: sliderMax,
                   thumbColor: _blue,
                   onChanged: _setServings,
@@ -1533,9 +1535,11 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
                 _EditField(
                   label: 'Porsi/Servings',
                   controller: _servingsController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   onChanged: (value) {
-                    final parsed = int.tryParse(value);
+                    final parsed = _parseIndoDouble(value);
                     if (parsed != null && parsed > 0) {
                       _setServings(parsed);
                     }
@@ -1637,11 +1641,11 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
     );
   }
 
-  void _setServings(int value) {
-    final safeValue = math.max(1, value);
+  void _setServings(double value) {
+    final safeValue = math.max(1.0, value);
     setState(() {
       _selectedServings = safeValue;
-      _servingsController.text = safeValue.toString();
+      _servingsController.text = _formatIndoNumber(safeValue);
       _servingsController.selection = TextSelection.fromPosition(
         TextPosition(offset: _servingsController.text.length),
       );
@@ -1705,16 +1709,17 @@ class _PortionSlider extends StatelessWidget {
     required this.thumbColor,
   });
 
-  final int value;
-  final int min;
-  final int max;
-  final ValueChanged<int> onChanged;
+  final double value;
+  final double min;
+  final double max;
+  final ValueChanged<double> onChanged;
   final Color thumbColor;
 
   @override
   Widget build(BuildContext context) {
     final range = max - min;
     final fraction = range <= 0 ? 0.0 : (value - min) / range;
+    final divisions = range > 0 ? (range * 2).round() : null;
     return LayoutBuilder(
       builder: (context, constraints) {
         final trackWidth = constraints.maxWidth;
@@ -1745,7 +1750,7 @@ class _PortionSlider extends StatelessWidget {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    '$value',
+                    _formatIndoNumber(value),
                     style: GoogleFonts.plusJakartaSans(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -1779,14 +1784,11 @@ class _PortionSlider extends StatelessWidget {
                     showValueIndicator: ShowValueIndicator.never,
                   ),
                   child: Slider(
-                    value: value
-                        .toDouble()
-                        .clamp(min.toDouble(), math.max(min, max).toDouble())
-                        .toDouble(),
-                    min: min.toDouble(),
-                    max: math.max(min, max).toDouble(),
-                    divisions: range > 0 ? range : null,
-                    onChanged: (v) => onChanged(v.round()),
+                    value: value.clamp(min, math.max(min, max)).toDouble(),
+                    min: min,
+                    max: math.max(min, max),
+                    divisions: divisions,
+                    onChanged: (v) => onChanged((v * 2).round() / 2),
                   ),
                 ),
               ),

@@ -1014,7 +1014,7 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
           intakeId: intakeId,
           userId: activeUserId,
           isConsumed: akanDikonsumsi,
-          servings: 1,
+          servings: 1.0,
           productName: selectedData.productName,
           sodiumMg: selectedData.perPortionMg,
           productName2: otherData.productName,
@@ -1026,7 +1026,7 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
         await client.postScanHistory(
           userId: activeUserId,
           sodiumMg: selectedData.perPortionMg,
-          servings: 1,
+          servings: 1.0,
           productName: selectedData.productName,
           sodiumLevel: widget.sodiumLevel,
           kategori: selectedData.kategori,

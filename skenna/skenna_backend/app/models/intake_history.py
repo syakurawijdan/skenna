@@ -19,7 +19,7 @@ class IntakeHistory(Base):
     image_path2: Mapped[Optional[str]] = mapped_column(String(255), nullable=True) 
     sodium_mg: Mapped[float] = mapped_column(Float)
     sodium_level: Mapped[str] = mapped_column(String(20))
-    servings: Mapped[int] = mapped_column(Integer, default=1) 
+    servings: Mapped[float] = mapped_column(DECIMAL(10, 2), default=1) 
     is_consumed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     consumed_at: Mapped[datetime] = mapped_column(
         DateTime, 

@@ -14,6 +14,16 @@ import '../../domain/kategori_label.dart';
 import '../../domain/natrium_classifier.dart';
 import '../../../data/user_session.dart';
 
+String _formatIndoNumber(num value) {
+  final parsed = value.toDouble();
+  if (parsed == parsed.roundToDouble()) return parsed.toInt().toString();
+  return parsed
+      .toStringAsFixed(2)
+      .replaceFirst(RegExp(r'0+$'), '')
+      .replaceFirst(RegExp(r'\.$'), '')
+      .replaceAll('.', ',');
+}
+
 class ScanHistoryItem {
   final String id;
   final String productName;
@@ -839,7 +849,7 @@ class _SingleItemCard extends StatelessWidget {
                       const SizedBox(height: 10),
                       _HistoryMetadataChips(
                         servingLabel:
-                            '${item.servings % 1 == 0 ? item.servings.toInt() : item.servings} Porsi',
+                            '${_formatIndoNumber(item.servings)} Porsi',
                         timeLabel: timeLabel,
                       ),
                     ],
@@ -1111,8 +1121,7 @@ class _ComparisonItemCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
             child: _HistoryMetadataChips(
-              servingLabel:
-                  '${item.servings % 1 == 0 ? item.servings.toInt() : item.servings} Porsi',
+              servingLabel: '${_formatIndoNumber(item.servings)} Porsi',
               timeLabel: timeLabel,
             ),
           ),

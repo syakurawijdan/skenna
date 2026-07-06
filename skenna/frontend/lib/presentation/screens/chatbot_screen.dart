@@ -650,7 +650,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       await widget.apiClient.postScanHistory(
         userId: userId,
         sodiumMg: (widget.perPortionMg ?? 0).round(),
-        servings: 1,
+        servings: 1.0,
         productName: productName,
         sodiumLevel: widget.sodiumLevel,
         kategori: widget.kategori,

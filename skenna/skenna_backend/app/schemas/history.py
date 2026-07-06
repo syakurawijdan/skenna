@@ -27,7 +27,7 @@ class IntakeCreateRequest(BaseModel):
     sodium_mg: float
     sodium_level: str
     scan_id: int | None = None
-    servings: int = 1
+    servings: float = 1
     type: str = 'single'
     product_name2: Optional[str] = None
     sodium_mg2: Optional[float] = None
@@ -50,7 +50,7 @@ class IntakeHistoryResponse(BaseModel):
     sodium_mg: float
     sodium_level: str
     is_consumed: bool
-    servings: int = 1 
+    servings: float = 1 
     consumed_at: datetime
     image_path: Optional[str] = None
     
@@ -60,7 +60,7 @@ class IntakeHistoryResponse(BaseModel):
 class IntakeUpdateRequest(BaseModel):
     user_id: int
     is_consumed: bool
-    servings: int | None = None
+    servings: float | None = None
     consumed_at: datetime | None = None
     food_name: str | None = None
     sodium_mg: float | None = None
@@ -75,7 +75,7 @@ class IntakeFullUpdateRequest(BaseModel):
     kategori: str | None = None
     sodium_mg: float
     sodium_level: str
-    servings: int = 1
+    servings: float = 1
     package_ml: float = 0
     portions_in_package: float = 1
     satuan_takaran: str = "g"

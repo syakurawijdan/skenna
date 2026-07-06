@@ -92,7 +92,7 @@ class HasilScanAmanScreen extends StatefulWidget {
   final DateTime? scanDate;
   final Future<Map<String, dynamic>> Function({
     required int sodiumMg,
-    required int servings,
+    required double servings,
     String? productName,
   })?
   onCatatKonsumsi;
@@ -1198,7 +1198,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
       final response = await client.postScanHistory(
         userId: activeUserId,
         sodiumMg: widget.perPortionMg,
-        servings: 1,
+        servings: 1.0,
         productName: widget.productName,
         sodiumLevel: widget.sodiumLevel,
         kategori: widget.kategori,
@@ -1295,13 +1295,13 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
           intakeId: intakeId,
           userId: activeUserId,
           isConsumed: akanDikonsumsi,
-          servings: _selectedSajian.round(),
+          servings: _selectedSajian,
         );
       } else {
         final response = await client.postScanHistory(
           userId: activeUserId,
           sodiumMg: widget.perPortionMg,
-          servings: _selectedSajian.round(),
+          servings: _selectedSajian,
           productName: widget.productName,
           sodiumLevel: widget.sodiumLevel,
           kategori: widget.kategori,

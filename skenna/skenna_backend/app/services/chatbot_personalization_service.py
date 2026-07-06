@@ -224,8 +224,8 @@ class ChatbotPersonalizationService:
 			).all()
 		)
 		consumed = [item for item in items if item.is_consumed]
-		total = sum(float(item.sodium_mg or 0) * (item.servings or 1) for item in consumed)
-		highest = max(consumed, key=lambda item: float(item.sodium_mg or 0) * (item.servings or 1), default=None)
+		total = sum(float(item.sodium_mg or 0) * float(item.servings or 1) for item in consumed)
+		highest = max(consumed, key=lambda item: float(item.sodium_mg or 0) * float(item.servings or 1), default=None)
 		limit = ChatbotPersonalizationService._daily_limit(db, user_id)
 		remaining = max(limit - total, 0)
 		percentage = (total / limit * 100) if limit else 0
@@ -235,7 +235,7 @@ class ChatbotPersonalizationService:
 		except Exception:
 			user_name = "teman"
 		product_lines = [
-			f"- {item.food_name}: {float(item.sodium_mg or 0) * (item.servings or 1):.0f} mg"
+			f"- {item.food_name}: {float(item.sodium_mg or 0) * float(item.servings or 1):.0f} mg"
 			for item in consumed[:8]
 		]
 		personal_data = (

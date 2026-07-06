@@ -34,7 +34,7 @@ def _intake_to_dict(item: IntakeHistory) -> dict:
         "image_path2": getattr(item, "image_path2", None),
         "sodium_mg": item.sodium_mg,
         "sodium_level": item.sodium_level,
-        "servings": getattr(item, "servings", 1),
+        "servings": float(getattr(item, "servings", 1) or 1),
         "is_consumed": item.is_consumed,
         "consumed_at": item.consumed_at.isoformat() if item.consumed_at else None,
         "type": item.intake_type if hasattr(item, "intake_type") else "single",
@@ -127,8 +127,8 @@ def get_scan_history(user_id: int = Query(..., gt=0), db: Session = Depends(get_
 				"food_name": scan.nama_produk,
 				"raw_text": scan.raw_text,
 				"sodium_mg": scan.sodium_mg,
-				"takaran_saji": scan.takaran_saji,
-				"sajian_per_kemasan": scan.sajian_per_kemasan,
+				"takaran_saji": float(scan.takaran_saji) if scan.takaran_saji is not None else None,
+				"sajian_per_kemasan": float(scan.sajian_per_kemasan) if scan.sajian_per_kemasan is not None else None,
 				"satuan_takaran": scan.satuan_takaran,
 				"kategori": scan.kategori,
 				"image_path": scan.image_path,
@@ -148,8 +148,8 @@ def get_scan_history(user_id: int = Query(..., gt=0), db: Session = Depends(get_
 				"food_name": item.food_name,
 				"raw_text": item.food_name,
 				"sodium_mg": item.sodium_mg,
-				"takaran_saji": item.package_ml,
-				"sajian_per_kemasan": item.portions_in_package,
+				"takaran_saji": float(item.package_ml) if item.package_ml is not None else None,
+				"sajian_per_kemasan": float(item.portions_in_package) if item.portions_in_package is not None else None,
 				"satuan_takaran": item.satuan_takaran,
 				"kategori": item.kategori,
 				"image_path": item.image_path,
@@ -191,7 +191,7 @@ def get_dashboard_stats(user_id: int = Query(..., gt=0), db: Session = Depends(g
             continue
         if not item.is_consumed:
             continue
-        servings = item.servings or 1
+        servings = float(item.servings or 1)
         total_sodium += float(item.sodium_mg or 0) * servings
         consumed_items += 1
 
@@ -340,7 +340,7 @@ def update_intake_consumed(
     return {
         "id": item.id,
         "is_consumed": item.is_consumed,
-        "servings": item.servings,
+        "servings": float(item.servings) if item.servings is not None else 1.0,
         "food_name": item.food_name,
         "consumed_at": item.consumed_at,
         "message": "ok",

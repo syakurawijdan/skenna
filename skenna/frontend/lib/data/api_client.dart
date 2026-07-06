@@ -388,7 +388,7 @@ class ApiClient {
   Future<Map<String, dynamic>> postScanHistory({
     int? userId, // Opsional
     required int sodiumMg,
-    required int servings,
+    required double servings,
     String? productName,
     String? sodiumLevel,
     String? kategori,
@@ -632,7 +632,7 @@ class ApiClient {
     required int intakeId,
     int? userId,
     required bool isConsumed,
-    int? servings,
+    double? servings,
     String? productName,
     int? sodiumMg,
     String? productName2,
@@ -673,7 +673,7 @@ class ApiClient {
     String? kategori,
     required double sodiumMg,
     required String sodiumLevel,
-    required int servings,
+    required double servings,
     required double packageMl,
     required double portionsInPackage,
     required String satuanTakaran,

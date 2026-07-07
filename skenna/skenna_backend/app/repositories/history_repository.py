@@ -67,6 +67,7 @@ class HistoryRepository:
 		servings: float | None = None,
 		food_name: str | None = None,
 		sodium_mg: float | None = None,
+		intake_type: str | None = None,
 		product_name2: str | None = None,
 		sodium_mg2: float | None = None,
 		image_path: str | None = None,      # ← TAMBAHKAN
@@ -83,6 +84,8 @@ class HistoryRepository:
 			item.food_name = food_name
 		if sodium_mg is not None:
 			item.sodium_mg = sodium_mg
+		if intake_type is not None:
+			item.intake_type = intake_type
 		if product_name2 is not None:
 			item.product_name2 = product_name2
 		if sodium_mg2 is not None:

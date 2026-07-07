@@ -265,21 +265,31 @@ class _MainAppState extends State<MainApp> {
     if (settings.name == AppRoutes.chatbot) {
       final args = settings.arguments as Map<String, dynamic>?;
       final initialQuestion = args?['initialQuestion'] as String?;
+      final selectedSajian = asDouble(args?['selectedSajian']);
       return _buildAnimatedRoute(
         settings,
-        (_) => ChatbotScreen(
-          apiClient: ApiClient(),
-          initialQuestion: initialQuestion,
-          productName: args?['productName'] as String?,
-          perPortionMg: asDouble(args?['perPortionMg']),
-          kategori: args?['kategori'] as String?,
-          scanId: asInt(args?['scanId']),
-          sodiumLevel: args?['sodiumLevel'] as String?,
-          packageMl: asDouble(args?['packageMl']),
-          portionsInPackage: asDouble(args?['portionsInPackage']),
-          satuanTakaran: args?['satuanTakaran'] as String?,
-          imagePath: args?['imagePath'] as String?,
-          isConsumptionRecorded: asBool(args?['isConsumptionRecorded']),
+        (_) => FutureBuilder<HasilKlasifikasi?>(
+          future: _getDailyClassification(),
+          builder: (context, snapshot) {
+            final hasil = snapshot.data;
+            final dailyLimit = hasil?.batasNatrium ?? 2000;
+            return ChatbotScreen(
+              apiClient: ApiClient(),
+              initialQuestion: initialQuestion,
+              productName: args?['productName'] as String?,
+              perPortionMg: asDouble(args?['perPortionMg']),
+              kategori: args?['kategori'] as String?,
+              scanId: asInt(args?['scanId']),
+              sodiumLevel: args?['sodiumLevel'] as String?,
+              packageMl: asDouble(args?['packageMl']),
+              portionsInPackage: asDouble(args?['portionsInPackage']),
+              satuanTakaran: args?['satuanTakaran'] as String?,
+              imagePath: args?['imagePath'] as String?,
+              isConsumptionRecorded: asBool(args?['isConsumptionRecorded']),
+              dailyLimitMg: dailyLimit,
+              selectedSajian: selectedSajian,
+            );
+          },
         ),
       );
     }

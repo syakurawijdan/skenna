@@ -477,7 +477,8 @@ class _ConsumedProductCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       _MetadataChips(
-                        servingLabel: '${item.servings} Porsi',
+                        servingLabel:
+                            '${_formatIndoNumber(item.servings)} Sajian',
                         timeLabel: timeLabel,
                       ),
                     ],
@@ -517,25 +518,24 @@ class _MetadataChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Flexible(
-          child: _IconChip(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _IconChip(
             iconAsset: 'assets/icons/fluent_food-24-regular.svg',
             fallbackIcon: Icons.restaurant_menu_rounded,
             label: servingLabel,
           ),
-        ),
-        const SizedBox(width: 8),
-        Flexible(
-          child: _IconChip(
+          const SizedBox(width: 8),
+          _IconChip(
             iconAsset: 'assets/icons/video-time.svg',
             fallbackIcon: Icons.access_time_rounded,
             label: timeLabel,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

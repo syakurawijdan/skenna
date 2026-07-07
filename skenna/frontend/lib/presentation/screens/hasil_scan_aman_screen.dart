@@ -1150,6 +1150,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                                 widget.fromHistory ||
                                 _sudahDicatat ||
                                 widget.isConsumed,
+                            'selectedSajian': _selectedSajian,
                           },
                         );
                       },

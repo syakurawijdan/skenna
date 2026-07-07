@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel
-from typing import Optional
+from typing import Literal, Optional
 
 class IntakeHistoryItem(BaseModel):
 	id: int
@@ -64,6 +64,7 @@ class IntakeUpdateRequest(BaseModel):
     consumed_at: datetime | None = None
     food_name: str | None = None
     sodium_mg: float | None = None
+    type: Literal["single", "comparison"] | None = None
     product_name2: str | None = None
     sodium_mg2: float | None = None
     image_path: str | None = None     

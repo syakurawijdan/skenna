@@ -329,6 +329,7 @@ def update_intake_consumed(
         servings=payload.servings,
         food_name=payload.food_name,
         sodium_mg=payload.sodium_mg,
+        intake_type=payload.type,
         product_name2=payload.product_name2,
         sodium_mg2=payload.sodium_mg2,
         image_path=payload.image_path,        

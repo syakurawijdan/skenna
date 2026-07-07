@@ -6,6 +6,8 @@ import '../../data/user_session.dart';
 import '../navigation/app_routes.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../widgets/yakin_makan_dialog.dart';
+import '../widgets/stop_natrium_dialog.dart';
 
 class _ChatItem {
   const _ChatItem({
@@ -98,6 +100,8 @@ class ChatbotScreen extends StatefulWidget {
     this.satuanTakaran,
     this.imagePath,
     this.isConsumptionRecorded = false,
+    this.dailyLimitMg,
+    this.selectedSajian,
   });
 
   final ApiClient apiClient;
@@ -112,6 +116,8 @@ class ChatbotScreen extends StatefulWidget {
   final String? satuanTakaran;
   final String? imagePath;
   final bool isConsumptionRecorded;
+  final int? dailyLimitMg;
+  final double? selectedSajian;
 
   @override
   State<ChatbotScreen> createState() => _ChatbotScreenState();
@@ -635,22 +641,57 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final productName = widget.productName?.trim();
     if (productName == null || productName.isEmpty) return;
 
+    // 1) Konfirmasi dulu, sama kayak di HasilScanAmanScreen
+    final akanDikonsumsi = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (ctx) => const YakinMakanDialog(isUpdate: false),
+    );
+    if (akanDikonsumsi == null || !akanDikonsumsi) {
+      if (akanDikonsumsi == false) _skipScanConsumption();
+      return;
+    }
+
+    // 2) Cek over-limit sebelum benar-benar nyimpen
+    final userId = UserSession().getUserId();
+    if (userId <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sesi login belum ditemukan. Silakan masuk ulang.'),
+        ),
+      );
+      return;
+    }
+
+    final dailyLimitMg = widget.dailyLimitMg ?? 2000;
+    try {
+      final stats = await widget.apiClient.getDashboardStats(userId);
+      final consumedToday =
+          (stats['total_sodium_consumed_today'] as num?)?.round() ?? 0;
+      final totalNatrium = (widget.perPortionMg ?? 0).round();
+      final totalSetelahCatat = consumedToday + totalNatrium;
+
+      if (totalSetelahCatat > dailyLimitMg) {
+        final confirm = await showDialog<bool>(
+          context: context,
+          barrierColor: Colors.black.withOpacity(0.5),
+          builder: (ctx) =>
+              const StopNatriumDialog(limitPhrase: 'batas harian'),
+        );
+        if (confirm != true) return; // user batal
+      }
+    } catch (e) {
+      debugPrint('Gagal cek limit harian di chatbot: $e');
+      // lanjut tetap nyimpen walau cek limit gagal, atau bisa kamu stop di sini
+    }
+
+    // 3) Baru simpan
     setState(() => _savingScanConsumption = true);
     try {
-      final userId = UserSession().getUserId();
-      if (userId <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sesi login belum ditemukan. Silakan masuk ulang.'),
-          ),
-        );
-        return;
-      }
-
       await widget.apiClient.postScanHistory(
         userId: userId,
         sodiumMg: (widget.perPortionMg ?? 0).round(),
-        servings: 1.0,
+        servings: widget.selectedSajian ?? 1.0,
         productName: productName,
         sodiumLevel: widget.sodiumLevel,
         kategori: widget.kategori,

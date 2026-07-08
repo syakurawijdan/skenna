@@ -639,6 +639,7 @@ class ApiClient {
     int? sodiumMg2,
     String? imagePath,
     String? imagePath2,
+    String? type,
   }) async {
     final effectiveUserId = userId ?? await currentUserId;
     debugPrint('API userId: $effectiveUserId');
@@ -654,6 +655,7 @@ class ApiClient {
       if (sodiumMg2 != null) 'sodium_mg2': sodiumMg2,
       if (imagePath != null) 'image_path': imagePath,
       if (imagePath2 != null) 'image_path2': imagePath2,
+      if (type != null) 'type': type,
     });
     debugPrint('body: $body');
     final res = await _patch(

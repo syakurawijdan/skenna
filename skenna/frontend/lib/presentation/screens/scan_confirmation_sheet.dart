@@ -22,6 +22,8 @@ class ScanConfirmationSheet extends StatefulWidget {
   final int userId;
   final dynamic apiClient;
   final ProductCompareData? compareWithProduct;
+  final String? historyItemId;
+  final bool isConsumed;
 
   const ScanConfirmationSheet({
     Key? key,
@@ -29,6 +31,8 @@ class ScanConfirmationSheet extends StatefulWidget {
     required this.userId,
     required this.apiClient,
     this.compareWithProduct,
+    this.historyItemId,
+    this.isConsumed = false,
   }) : super(key: key);
 
   @override
@@ -246,6 +250,9 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
           'productA': widget.compareWithProduct,
           'productB': productB,
           'originalProduct': widget.compareWithProduct,
+          'historyItemId': widget.historyItemId,
+          'fromHistory': widget.historyItemId != null,
+          'isConsumed': widget.isConsumed,
         },
       );
     } else {

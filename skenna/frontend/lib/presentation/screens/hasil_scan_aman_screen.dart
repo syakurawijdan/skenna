@@ -917,6 +917,10 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                               MaterialPageRoute(
                                 builder: (_) => ScanScreen(
                                   apiClient: widget.apiClient,
+                                  historyItemId:
+                                      _localHistoryItemId ??
+                                      widget.historyItemId,
+                                  isConsumed: _statusDikonsumsi,
                                   compareWithProduct: ProductCompareData(
                                     productName: widget.productName,
                                     kategori: widget.kategori,

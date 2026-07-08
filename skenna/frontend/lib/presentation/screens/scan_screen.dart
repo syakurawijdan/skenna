@@ -17,9 +17,16 @@ import 'package:skenna/presentation/widgets/ScanFailedDialog.dart';
 class ScanScreen extends StatefulWidget {
   final dynamic apiClient;
   final ProductCompareData? compareWithProduct;
+  final String? historyItemId;
+  final bool isConsumed;
 
-  const ScanScreen({Key? key, required this.apiClient, this.compareWithProduct})
-    : super(key: key);
+  const ScanScreen({
+    Key? key,
+    required this.apiClient,
+    this.compareWithProduct,
+    this.historyItemId,
+    this.isConsumed = false,
+  }) : super(key: key);
 
   @override
   State<ScanScreen> createState() => _ScanScreenState();
@@ -179,6 +186,8 @@ class _ScanScreenState extends State<ScanScreen> {
         userId: UserSession().getUserId(),
         apiClient: widget.apiClient,
         compareWithProduct: widget.compareWithProduct,
+        historyItemId: widget.historyItemId,
+        isConsumed: widget.isConsumed,
       ),
     );
 
@@ -217,6 +226,8 @@ class _ScanScreenState extends State<ScanScreen> {
         userId: UserSession().getUserId(),
         apiClient: widget.apiClient,
         compareWithProduct: widget.compareWithProduct,
+        historyItemId: widget.historyItemId,
+        isConsumed: widget.isConsumed,
       ),
     );
 

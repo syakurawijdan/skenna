@@ -338,6 +338,9 @@ class _MainAppState extends State<MainApp> {
     }
     if (settings.name == AppRoutes.hasilBandingkan) {
       final args = settings.arguments as Map<String, dynamic>;
+      final historyItemId = args['historyItemId']?.toString();
+      final fromHistory = args['fromHistory'] as bool? ?? false;
+      final isConsumed = args['isConsumed'] as bool? ?? false;
       return _buildAnimatedRoute(
         settings,
         (_) => FutureBuilder<HasilKlasifikasi?>(
@@ -355,6 +358,9 @@ class _MainAppState extends State<MainApp> {
               isHardMaximum: hasil?.isHardMaximum ?? true,
               sodiumLevel: sodiumLevel,
               apiClient: ApiClient(),
+              fromHistory: fromHistory,
+              historyItemId: historyItemId,
+              isConsumed: isConsumed,
               originalProduct:
                   args['originalProduct']
                       as ProductCompareData?, // ← tambah ini

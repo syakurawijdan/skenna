@@ -109,16 +109,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!_isFemale) return false;
     final birthDate = _selectedBirthDate;
     if (birthDate == null) return false;
-
-    // SKI 2023 defines wanita usia subur as ages 10-54 for anthropometry.
     final usia = hitungUsiaTahun(birthDate);
     return usia >= 10 && usia <= 54;
-  }
-
-  bool get _isAdult {
-    final birthDate = _selectedBirthDate;
-    if (birthDate == null) return false;
-    return hitungUsiaTahun(birthDate) >= 18;
   }
 
   int get _maxDay {
@@ -195,13 +187,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return;
     }
     final birthDate = _selectedBirthDate!;
-    final isAdult = _isAdult;
 
-    if (isAdult && _hasHypertension == null) {
+    if (_hasHypertension == null) {
       _showMessage('Pilih riwayat hipertensi');
       return;
     }
-    if (isAdult && _hasHypertension == true && _hypertensionCondition == null) {
+    if (_hasHypertension == true && _hypertensionCondition == null) {
       _showMessage('Pilih kondisi hipertensi');
       return;
     }
@@ -212,12 +203,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     int? systolic;
     int? diastolic;
-    if (isAdult && _hasHypertension == true) {
+    if (_hasHypertension == true) {
       final systolicText = _systolicController.text.trim();
       final diastolicText = _diastolicController.text.trim();
 
-      // Jika user membiarkan kosong, kita anggap null (aman)
-      // Jika user mengetik '0', kita juga bisa menganggapnya sebagai null/tidak diisi
       systolic = (systolicText.isEmpty || systolicText == '0')
           ? null
           : _parseIndoInt(systolicText);
@@ -225,7 +214,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ? null
           : _parseIndoInt(diastolicText);
 
-      // Sekarang validasi rentang HANYA berjalan jika angka > 0
       if (systolic != null && (systolic < 50 || systolic > 300)) {
         _showMessage('Sistolik harus berada di rentang 50-300');
         return;
@@ -236,16 +224,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
     }
 
-    final effectiveHasHypertension = isAdult ? _hasHypertension! : false;
-    final effectiveHypertensionCondition = isAdult && effectiveHasHypertension
+    final effectiveHasHypertension = _hasHypertension ?? false;
+    final effectiveHypertensionCondition = effectiveHasHypertension
         ? _hypertensionCondition
         : null;
-    final effectiveSystolic = isAdult && effectiveHasHypertension
-        ? systolic
-        : null;
-    final effectiveDiastolic = isAdult && effectiveHasHypertension
-        ? diastolic
-        : null;
+    final effectiveSystolic = effectiveHasHypertension ? systolic : null;
+    final effectiveDiastolic = effectiveHasHypertension ? diastolic : null;
     final effectivePregnancyStatus = _isFemale
         ? (_shouldShowPregnancyQuestion ? _pregnancyStatus : 'none')
         : null;
@@ -1074,55 +1058,53 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
 
                     // ── Hipertensi (hanya dewasa) ─────────────────────────────
-                    if (_isAdult) ...[
-                      const SizedBox(height: 22),
-                      _label('Riwayat Hipertensi'),
-                      _radioOption(
-                        selected: _hasHypertension == true,
-                        label: 'Ya, saya pernah didiagnosis hipertensi',
-                        onTap: () => setState(() {
-                          _hasHypertension = true;
-                          _hypertensionCondition ??= 'uncontrolled';
-                        }),
-                      ),
-                      _radioOption(
-                        selected: _hasHypertension == false,
-                        label:
-                            'Tidak, saya tidak pernah didiagnosis hipertensi',
-                        onTap: () => setState(() {
-                          _hasHypertension = false;
-                          _hypertensionCondition = null;
-                          _systolicController.clear();
-                          _diastolicController.clear();
-                        }),
-                      ),
-                      const SizedBox(height: 11),
-                      if (_hasHypertension == true) ...[
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _bloodPressureTextField(
-                                label: 'Sistolik',
-                                ctrl: _systolicController,
-                                focusNode: _systolicFocus,
-                                hint: 'Isi sistolik',
-                                nextFocus: _diastolicFocus,
-                              ),
+                    const SizedBox(height: 22),
+                    _label('Riwayat Hipertensi'),
+                    _radioOption(
+                      selected: _hasHypertension == true,
+                      label: 'Ya, saya pernah didiagnosis hipertensi',
+                      onTap: () => setState(() {
+                        _hasHypertension = true;
+                        _hypertensionCondition ??= 'uncontrolled';
+                      }),
+                    ),
+                    _radioOption(
+                      selected: _hasHypertension == false,
+                      label: 'Tidak, saya tidak pernah didiagnosis hipertensi',
+                      onTap: () => setState(() {
+                        _hasHypertension = false;
+                        _hypertensionCondition = null;
+                        _systolicController.clear();
+                        _diastolicController.clear();
+                      }),
+                    ),
+                    const SizedBox(height: 11),
+                    if (_hasHypertension == true) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _bloodPressureTextField(
+                              label: 'Sistolik',
+                              ctrl: _systolicController,
+                              focusNode: _systolicFocus,
+                              hint: 'Isi sistolik',
+                              nextFocus: _diastolicFocus,
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _bloodPressureTextField(
-                                label: 'Diastolik',
-                                ctrl: _diastolicController,
-                                focusNode: _diastolicFocus,
-                                hint: 'Isi diastolik',
-                              ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _bloodPressureTextField(
+                              label: 'Diastolik',
+                              ctrl: _diastolicController,
+                              focusNode: _diastolicFocus,
+                              hint: 'Isi diastolik',
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ],
+
                     // ── Kondisi hamil/menyusui (perempuan) ───────────────────
                     // ── Kondisi hamil/menyusui (perempuan) ───────────────────
                     if (_shouldShowPregnancyQuestion) ...[

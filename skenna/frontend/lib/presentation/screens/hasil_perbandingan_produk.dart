@@ -947,7 +947,7 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
         : widget.productB;
     final otherData = _selectedProduct == 1 ? widget.productB : widget.productA;
 
-    final isUpdate = widget.fromHistory;
+    final isUpdate = widget.fromHistory && widget.historyItemId != null;
 
     final akanDikonsumsi = await showDialog<bool>(
       context: context,
@@ -1021,6 +1021,7 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
           sodiumMg2: otherData.perPortionMg,
           imagePath: selectedData.imagePath,
           imagePath2: otherData.imagePath,
+          type: 'comparison',
         );
       } else {
         await client.postScanHistory(

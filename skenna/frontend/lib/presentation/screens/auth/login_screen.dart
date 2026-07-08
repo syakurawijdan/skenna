@@ -258,23 +258,36 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
-      subtitle: Text.rich(
-        textAlign: TextAlign.center,
-        TextSpan(
-          style: GoogleFonts.plusJakartaSans(
-            color: const Color(0xFF2C4A8A),
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
-            height: 1.3,
-          ),
-          children: [
-            const TextSpan(text: 'Masuk untuk '),
-            TextSpan(
-              text: 'melanjutkan pemantauan natrium harianmu',
-              style: const TextStyle(fontWeight: FontWeight.w700),
+      subtitle: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Belum punya akun? ',
+            style: GoogleFonts.plusJakartaSans(
+              color: const Color(0xFF8A94A6),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
             ),
-          ],
-        ),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pushNamed(context, AppRoutes.registerEmail),
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(0, 0),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              'Daftar',
+              style: GoogleFonts.plusJakartaSans(
+                color: const Color(0xFF2C4A8A),
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
       ),
       primaryButton: FilledButton(
         onPressed: _isFormValid && !_submitting ? _login : null,

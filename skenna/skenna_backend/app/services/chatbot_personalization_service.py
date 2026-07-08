@@ -79,13 +79,6 @@ class ChatbotPersonalizationService:
 		age_str = f"{age} tahun" if age else "Tidak diketahui"
 		daily_limit = ChatbotPersonalizationService._daily_limit(db, user_id)
 
-		if profile.has_hypertension:
-			if profile.hypertension_condition == "uncontrolled":
-				ht_status = "Ya (Tidak terkontrol)"
-			else:
-				ht_status = "Ya (Terkontrol)"
-		else:
-			ht_status = "Tidak"
 
 		if profile.systolic_pressure and profile.diastolic_pressure:
 			td_str = f"{profile.systolic_pressure}/{profile.diastolic_pressure} mmHg"
@@ -99,7 +92,7 @@ class ChatbotPersonalizationService:
 			f"Nama: {full_name}\n"
 			f"Usia: {age_str}\n"
 			f"Jenis Kelamin: {profile.gender}\n"
-			f"Status Hipertensi: {ht_status}\n"
+			f"Status Hipertensi: {'Ya' if profile.has_hypertension else 'Tidak'}\n"
 			f"Kondisi Hipertensi: {profile.hypertension_condition or 'Tidak ada'}\n"
 			f"Tekanan Darah: {td_str}\n"
 			f"Status Kehamilan: {pregnancy}\n"

@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from decimal import Decimal, InvalidOperation
 from datetime import date, datetime, timedelta, timezone
+from app.services.sodium_limit_service import compute_daily_limit_mg
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -265,19 +266,12 @@ class ChatbotPersonalizationService:
 		profile = UserRepository.get_profile(db, user_id)
 		if profile is None:
 			return 2000.0
-		age = _age_years(profile.birth_date)
-		if age < 18:
-			return 1500.0
-		if profile.hypertension_condition == "uncontrolled":
-			return 1200.0
-		limit = 2000.0
-		if profile.has_hypertension:
-			limit = min(limit, 1700.0)
-		if profile.systolic_pressure and profile.systolic_pressure >= 160:
-			limit = min(limit, 1500.0)
-		if profile.diastolic_pressure and profile.diastolic_pressure >= 100:
-			limit = min(limit, 1500.0)
-		return max(limit, 1000.0)
+		daily_limit_mg, _source = compute_daily_limit_mg(
+			birth_date=profile.birth_date,
+			gender=profile.gender,
+			has_hypertension=profile.has_hypertension,
+		)
+		return float(daily_limit_mg)
 
 
 def _base_personal_prompt(question: str, rag_context: str, personal_data: str, user_context: str = "") -> str:

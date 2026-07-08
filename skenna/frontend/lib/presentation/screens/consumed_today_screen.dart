@@ -246,11 +246,15 @@ class _ConsumedTodayScreenState extends State<ConsumedTodayScreen> {
     if (confirm != true) return;
     try {
       final userId = UserSession().getUserId();
-      await _apiClient.deleteIntake(intakeId: item.id, userId: userId);
+      await _apiClient.updateIntakeConsumed(
+        intakeId: item.id,
+        userId: userId,
+        isConsumed: false,
+      );
       await _loadItems();
-      _showSnack('Produk berhasil dihapus');
+      _showSnack('Produk ditandai tidak dikonsumsi');
     } catch (e) {
-      _showSnack('Gagal menghapus produk: $e');
+      _showSnack('Gagal memperbarui produk: $e');
     }
   }
 
@@ -2015,7 +2019,7 @@ class _DeleteConfirmDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Yakin Hapus Catatan\nKonsumsi?',
+              'Tandai Tidak\nDikonsumsi?',
               textAlign: TextAlign.center,
               style: GoogleFonts.plusJakartaSans(
                 color: _blue,
@@ -2042,22 +2046,20 @@ class _DeleteConfirmDialog extends StatelessWidget {
                   height: 1.4,
                 ),
                 children: const [
-                  TextSpan(text: 'Riwayat scan yang dipilih '),
+                  TextSpan(text: 'Produk ini '),
                   TextSpan(
-                    text: 'akan dihapus',
+                    text: 'tidak akan dihitung',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  TextSpan(text: '\ndan '),
+                  TextSpan(text: ' ke total natrium hari ini,\nnamun tetap '),
                   TextSpan(
-                    text: 'tidak dapat dipulihkan',
+                    text: 'tersimpan di Riwayat Scan',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
-            // Batal — TextButton muted (tanpa fill)
-            // Batal — TextButton muted (tanpa fill)
             SizedBox(
               width: double.infinity,
               height: 52,

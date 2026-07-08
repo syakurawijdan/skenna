@@ -23,6 +23,7 @@ class _AppShellState extends State<AppShell>
     with SingleTickerProviderStateMixin {
   late int _index;
   final ApiClient _apiClient = ApiClient();
+  final _historyScreenKey = GlobalKey<HistoryScreenState>();
 
   String? _userName;
   DashboardGender _gender = DashboardGender.male;
@@ -117,7 +118,7 @@ class _AppShellState extends State<AppShell>
         },
       ),
       ScanScreen(apiClient: _apiClient),
-      HistoryScreen(apiClient: _apiClient),
+      HistoryScreen(key: _historyScreenKey, apiClient: _apiClient),
     ];
 
     const navy = Color(0xFF2C4A8A);
@@ -220,6 +221,7 @@ class _AppShellState extends State<AppShell>
                           label: 'Riwayat',
                           onTap: () {
                             setState(() => _index = 2);
+                            _historyScreenKey.currentState?.refresh();
                             _navigationOverlayController.dismiss();
                             Future.delayed(
                               const Duration(milliseconds: 200),

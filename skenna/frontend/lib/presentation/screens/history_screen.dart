@@ -262,10 +262,10 @@ class HistoryScreen extends StatefulWidget {
   final ApiClient apiClient;
 
   @override
-  State<HistoryScreen> createState() => _HistoryScreenState();
+  State<HistoryScreen> createState() => HistoryScreenState();
 }
 
-class _HistoryScreenState extends State<HistoryScreen> {
+class HistoryScreenState extends State<HistoryScreen> {
   static const _white = Color(0xFFFFFFFF);
   static const _blue = Color(0xFF2C4A8A);
   static const _blueSoft = Color(0xFFDFE4ED);
@@ -282,6 +282,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     super.initState();
     _loadHistory();
   }
+
+  Future<void> refresh() => _loadHistory();
 
   Future<void> _loadHistory() async {
     setState(() => _loading = true);

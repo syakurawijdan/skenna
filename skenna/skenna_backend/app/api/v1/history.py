@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy import desc, select
+from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -379,6 +379,19 @@ def delete_intake(
     item = db.get(IntakeHistory, intake_id)
     if item is None or item.user_id != user_id:
         raise HTTPException(status_code=404, detail="Item tidak ditemukan")
+
+    scan_id = item.scan_id
     db.delete(item)
     db.commit()
+
+    if scan_id is not None:
+        still_used = db.scalar(
+            select(func.count()).select_from(IntakeHistory).where(IntakeHistory.scan_id == scan_id)
+        )
+        if still_used == 0:
+            scan = db.get(FoodLabelScan, scan_id)
+            if scan is not None and scan.user_id == user_id:
+                db.delete(scan)
+                db.commit()
+
     return {"id": intake_id, "message": "ok"}

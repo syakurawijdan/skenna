@@ -218,7 +218,6 @@ def _user_recommendation_context(db: Session | None, user_id: Optional[int]) -> 
         "KONTEKS PROFIL USER UNTUK REKOMENDASI:\n"
         f"- Usia: {age_text}\n"
         f"- Status hipertensi: {'Ya' if profile.has_hypertension else 'Tidak'}\n"
-        f"- Kondisi hipertensi: {profile.hypertension_condition or 'Tidak ada'}\n"
         f"- Status kehamilan: {pregnancy_status}\n"
         f"- Aturan usia: {age_rule}\n"
         f"- Aturan hipertensi: {hypertension_rule}\n"

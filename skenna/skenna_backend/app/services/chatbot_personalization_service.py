@@ -94,7 +94,6 @@ class ChatbotPersonalizationService:
 			f"Usia: {age_str}\n"
 			f"Jenis Kelamin: {profile.gender}\n"
 			f"Status Hipertensi: {'Ya' if profile.has_hypertension else 'Tidak'}\n"
-			f"Kondisi Hipertensi: {profile.hypertension_condition or 'Tidak ada'}\n"
 			f"Tekanan Darah: {td_str}\n"
 			f"Status Kehamilan: {pregnancy}\n"
 			f"Batas Natrium Harian: {int(daily_limit)} mg/hari (berdasarkan rule-based sistem Skenna)"

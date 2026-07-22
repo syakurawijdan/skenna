@@ -213,6 +213,7 @@ class _ProfileBloodPressureScreenState
     );
 
     return ProfileStepLayout(
+      showBack: true,
       progress: progress,
       illustrationAsset: 'assets/illustrations/tensi.png',
       title: 'Isi tekanan darah',

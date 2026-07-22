@@ -167,6 +167,7 @@ class _ProfileHypertensionStatusScreenState
     );
 
     return ProfileStepLayout(
+      showBack: true,
       progress: progress,
       illustrationAsset: 'assets/illustrations/tensi.png',
       title: 'Riwayat Hipertensi',

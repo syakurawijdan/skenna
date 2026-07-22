@@ -105,6 +105,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     );
 
     return ProfileStepLayout(
+      showBack: false,
       progress: progress,
       illustrationAsset: 'assets/illustrations/namauser.png',
       title: 'Yuk, kenalan',

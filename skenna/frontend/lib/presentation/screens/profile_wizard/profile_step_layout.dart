@@ -138,32 +138,33 @@ class ProfileStepLayout extends StatelessWidget {
                   if (showProgress || showBack)
                     Row(
                       children: [
-                        SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: IconButton(
-                            style: IconButton.styleFrom(
-                              backgroundColor: lightBlue,
-                              padding: const EdgeInsets.all(8),
-                            ),
-                            onPressed: () {
-                              if (Navigator.canPop(context)) {
-                                Navigator.pop(context);
-                              } else {
-                                debugPrint(
-                                  'Tombol back ditekan tapi tidak ada halaman sebelumnya, diabaikan',
-                                );
-                              }
-                            },
-                            icon: const Icon(
-                              Icons.arrow_back,
-                              color: normalBlue,
-                              size: 20,
+                        if (showBack)
+                          SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: IconButton(
+                              style: IconButton.styleFrom(
+                                backgroundColor: lightBlue,
+                                padding: const EdgeInsets.all(8),
+                              ),
+                              onPressed: () {
+                                if (Navigator.canPop(context)) {
+                                  Navigator.pop(context);
+                                } else {
+                                  debugPrint(
+                                    'Tombol back ditekan tapi tidak ada halaman sebelumnya, diabaikan',
+                                  );
+                                }
+                              },
+                              icon: const Icon(
+                                Icons.arrow_back,
+                                color: normalBlue,
+                                size: 20,
+                              ),
                             ),
                           ),
-                        ),
+                        if (showBack) const SizedBox(width: 16),
                         if (showProgress) ...[
-                          const SizedBox(width: 16),
                           Expanded(
                             child: SizedBox(
                               height: 8,

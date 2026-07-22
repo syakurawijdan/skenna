@@ -185,6 +185,7 @@ class _ProfilePregnancyScreenState extends State<ProfilePregnancyScreen> {
     );
 
     return ProfileStepLayout(
+      showBack: true,
       progress: progress,
       illustrationAsset: 'assets/illustrations/pregnant.png',
       title: 'Sedang hamil atau menyusui?',

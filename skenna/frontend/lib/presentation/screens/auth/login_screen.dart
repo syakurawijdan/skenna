@@ -127,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(
       context,
-      hasProfile ? AppRoutes.dashboard : AppRoutes.onboarding1,
+      hasProfile ? AppRoutes.dashboard : AppRoutes.profileForm,
       (route) => false,
     );
   }

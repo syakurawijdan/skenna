@@ -211,6 +211,7 @@ class _ProfileBirthDateScreenState extends State<ProfileBirthDateScreen> {
     );
 
     return ProfileStepLayout(
+      showBack: true,
       progress: progress,
       illustrationAsset: 'assets/illustrations/birthday.png',
       title: 'Tanggal lahir kamu',

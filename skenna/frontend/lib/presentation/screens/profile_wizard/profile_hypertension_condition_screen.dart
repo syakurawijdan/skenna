@@ -106,6 +106,7 @@ class _ProfileHypertensionConditionScreenState
     );
 
     return ProfileStepLayout(
+      showBack: true,
       progress: progress,
       illustrationAsset: 'assets/illustrations/tensi.png',
       title: 'Pilih Kondisi',

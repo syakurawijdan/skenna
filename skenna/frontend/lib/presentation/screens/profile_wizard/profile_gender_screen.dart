@@ -48,6 +48,7 @@ class _ProfileGenderScreenState extends State<ProfileGenderScreen> {
     };
 
     return ProfileStepLayout(
+      showBack: true,
       progress: progress,
       illustrationAsset: 'assets/illustrations/gender.png',
       title: 'Halo, $_displayName',

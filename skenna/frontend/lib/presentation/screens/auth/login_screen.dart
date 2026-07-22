@@ -91,11 +91,37 @@ class _LoginScreenState extends State<LoginScreen> {
     var hasProfile = false;
     try {
       final profile = await _apiClient.getUserProfile(userId);
+      debugPrint('=== routeAfterLogin profile raw: $profile');
       hasProfile =
           (profile['birth_date'] as String?)?.isNotEmpty == true &&
           (profile['gender'] as String?)?.isNotEmpty == true;
-    } catch (_) {
+    } on ApiException catch (e) {
+      debugPrint(
+        '=== routeAfterLogin getUserProfile ApiException: '
+        'status=${e.statusCode}, message=${e.message}, body=${e.body}',
+      );
+      if (e.statusCode != HttpStatus.notFound) {
+        if (!mounted) return;
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          e.statusCode == HttpStatus.unauthorized
+              ? AppRoutes.login
+              : AppRoutes.dashboard,
+          (route) => false,
+        );
+        return;
+      }
       hasProfile = false;
+    } catch (e, stackTrace) {
+      debugPrint('=== routeAfterLogin getUserProfile error: $e');
+      debugPrint('=== routeAfterLogin stackTrace: $stackTrace');
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.dashboard,
+        (route) => false,
+      );
+      return;
     }
 
     if (!mounted) return;

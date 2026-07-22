@@ -287,7 +287,7 @@ class GeminiService:
 			"}\n\n"
 			"ATURAN WAJIB:\n"
 			"1. sodium_mg adalah nilai NATRIUM/SODIUM dalam mg per sajian\n"
-			"2. Jika natrium ditulis dalam %AKG atau %DV, konversi: nilai% x 2000 / 100\n"
+			"2. Gunakan nilai NATRIUM/SODIUM dalam satuan mg yang tercantum langsung pada label Jangan mengonversi nilai %AKG menjadi mg.\n"
 			"3. takaran_saji adalah angka saja tanpa satuan (contoh: 100, tidak '100g')\n"
 			"4. satuan_takaran hanya boleh 'g' atau 'ml'\n"
 			"5. EVALUASI SETIAP FIELD SECARA TERPISAH. Jika SATU bagian teks pada label "

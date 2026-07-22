@@ -62,7 +62,7 @@ class _AppShellState extends State<AppShell>
     } on ApiException catch (e) {
       debugPrint('=== error: $e');
       if (e.statusCode == 401 && mounted) {
-        await ApiClient.clearCurrentUserId();
+        await ApiClient.clearLocalSession();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Sesi kamu telah berakhir, silakan login ulang.'),

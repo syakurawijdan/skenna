@@ -54,6 +54,7 @@ flutter:
     - assets/icons/timer.svg
     - assets/icons/logo_skenna.png
     - assets/icons/streamline-ultimate_seasoning-food-bold.svg 
+    - assets/icons/mage_heart-health.svg
 
 flutter_launcher_icons:
   android: true

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../data/api_client.dart';
-import '../../../data/user_session.dart';
 import '../../navigation/app_routes.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -13,11 +12,18 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
+  bool _clearingSession = true;
+
   @override
   void initState() {
     super.initState();
-    UserSession().clear();
-    ApiClient.clearCurrentUserId();
+    _clearStaleSession();
+  }
+
+  Future<void> _clearStaleSession() async {
+    await ApiClient.clearLocalSession();
+    if (!mounted) return;
+    setState(() => _clearingSession = false);
   }
 
   @override
@@ -97,8 +103,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     width: double.infinity,
                     height: 55,
                     child: FilledButton(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, AppRoutes.registerEmail),
+                      onPressed: _clearingSession
+                          ? null
+                          : () => Navigator.pushNamed(
+                                context,
+                                AppRoutes.registerEmail,
+                              ),
                       style: FilledButton.styleFrom(
                         backgroundColor: blue,
                         elevation: 4,
@@ -123,8 +133,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     width: double.infinity,
                     height: 55,
                     child: TextButton(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, AppRoutes.login),
+                      onPressed: _clearingSession
+                          ? null
+                          : () => Navigator.pushNamed(
+                                context,
+                                AppRoutes.login,
+                              ),
                       style: ButtonStyle(
                         overlayColor: WidgetStateProperty.all(
                           const Color(0xFFDFE4ED),

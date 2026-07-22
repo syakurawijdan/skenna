@@ -120,6 +120,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _dailyLimitMg = 2000;
   int _akgReferenceMg = 1500;
   bool _isHardMaximum = true;
+  int _age = 16;
+  bool _hasHypertension = false;
   int _consumedTodayMg = 0;
   int _productsScannedToday = 0;
   bool _isLoading = true;
@@ -199,6 +201,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _dailyLimitMg = hasil.batasNatrium;
         _akgReferenceMg = hasil.akgReferenceMg ?? hasil.batasNatrium;
         _isHardMaximum = hasil.isHardMaximum;
+        _age = hasil.usia;
+        _hasHypertension = hasil.hasHypertension;
         _consumedTodayMg =
             (stats['total_sodium_consumed_today'] as num?)?.round() ?? 0;
         _productsScannedToday =
@@ -394,7 +398,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     palette: palette,
                     dailyLimitMg: _dailyLimitMg,
                     akgReferenceMg: _akgReferenceMg,
-                    isHardMaximum: _isHardMaximum,
+                    age: _age,
+                    hasHypertension: _hasHypertension,
                     consumedTodayMg: _consumedTodayMg,
                     isLoading: _isLoading,
                     onTapProduct: () => _openConsumedToday(context),
@@ -488,13 +493,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
+enum _NatriumRecapVariant {
+  childNormal,
+  childHypertension,
+  adultNormal,
+  adultHypertension,
+}
+
+class _NatriumRecapCopy {
+  const _NatriumRecapCopy({
+    required this.title,
+    required this.progressLabel,
+    this.badgeLabel,
+  });
+
+  final String? badgeLabel;
+  final String title;
+  final String? progressLabel;
+
+  factory _NatriumRecapCopy.resolve({
+    required bool isChild,
+    required bool isAdult,
+    required bool hasHypertension,
+  }) {
+    final variant = switch ((isChild, isAdult, hasHypertension)) {
+      (true, false, false) => _NatriumRecapVariant.childNormal,
+      (true, false, true) => _NatriumRecapVariant.childHypertension,
+      (false, true, false) => _NatriumRecapVariant.adultNormal,
+      (false, true, true) => _NatriumRecapVariant.adultHypertension,
+      _ => throw StateError('Kelompok usia Dashboard tidak valid'),
+    };
+
+    return switch (variant) {
+      _NatriumRecapVariant.childNormal => const _NatriumRecapCopy(
+        // badgeLabel: 'Acuan Natrium Harian',
+        title: 'Acuan Natrium Harian',
+        progressLabel: 'Konsumsi Hari Ini',
+      ),
+      _NatriumRecapVariant.childHypertension => const _NatriumRecapCopy(
+        badgeLabel: 'Pantau hipertensi kamu',
+        title: 'Acuan konsumsi harian',
+        progressLabel: null,
+      ),
+      _NatriumRecapVariant.adultNormal => const _NatriumRecapCopy(
+        title: 'Batas Harianmu',
+        progressLabel: 'Kebutuhan natrium harian',
+      ),
+      _NatriumRecapVariant.adultHypertension => const _NatriumRecapCopy(
+        badgeLabel: 'Batas ketat hipertensi (AHA)',
+        title: 'Batas Natrium Harianmu',
+        progressLabel: null,
+      ),
+    };
+  }
+}
+
 class _NatriumRecapCard extends StatelessWidget {
   const _NatriumRecapCard({
     required this.onTapProduct,
     required this.palette,
     required this.dailyLimitMg,
     required this.akgReferenceMg,
-    required this.isHardMaximum,
+    required this.age,
+    required this.hasHypertension,
     required this.consumedTodayMg,
     required this.isLoading,
   });
@@ -502,7 +563,8 @@ class _NatriumRecapCard extends StatelessWidget {
   final VoidCallback onTapProduct;
   final _DashboardPalette palette;
   final int dailyLimitMg;
-  final bool isHardMaximum;
+  final int age;
+  final bool hasHypertension;
   final int consumedTodayMg;
   final bool isLoading;
   final int akgReferenceMg;
@@ -520,12 +582,13 @@ class _NatriumRecapCard extends StatelessWidget {
         ? 0.0
         : consumedTodayMg / dailyLimitMg;
     final akgPercentage = (akgProgress * 100).round();
-    final limitLabel = isHardMaximum
-        ? 'Batas Harianmu'
-        : 'Kebutuhan Natrium Harianmu';
-    final progressLabel = isHardMaximum
-        ? 'Kebutuhan natrium harian'
-        : 'Asupan natrium tercukupi';
+    final isChild = age < 16;
+    final isAdult = age >= 16;
+    final copy = _NatriumRecapCopy.resolve(
+      isChild: isChild,
+      isAdult: isAdult,
+      hasHypertension: hasHypertension,
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -612,14 +675,23 @@ class _NatriumRecapCard extends StatelessWidget {
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: copy.progressLabel != null
+                              ? MainAxisAlignment.spaceBetween
+                              : MainAxisAlignment.start,
                           children: [
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                if (copy.badgeLabel != null) ...[
+                                  _NatriumReferenceBadge(
+                                    label: copy.badgeLabel!,
+                                    compact: compact,
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
                                 Text(
-                                  limitLabel,
+                                  copy.title,
                                   style: GoogleFonts.plusJakartaSans(
                                     color: Colors.white.withAlpha(225),
                                     fontSize: compact ? 12 : 13,
@@ -643,7 +715,6 @@ class _NatriumRecapCard extends StatelessWidget {
                                               height: 1,
                                             ),
                                       ),
-
                                       TextSpan(
                                         text: '  Mg/Na',
                                         style: GoogleFonts.plusJakartaSans(
@@ -659,49 +730,52 @@ class _NatriumRecapCard extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  progressLabel,
-                                  style: textTheme.bodySmall?.copyWith(
-                                    color: Colors.white.withAlpha(230),
-                                    fontSize: compact ? 10 : 11,
-                                    fontWeight: FontWeight.w400,
-                                    height: 1,
+                            if (copy.progressLabel case final progressLabel?)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    progressLabel,
+                                    style: textTheme.bodySmall?.copyWith(
+                                      color: Colors.white.withAlpha(230),
+                                      fontSize: compact ? 10 : 11,
+                                      fontWeight: FontWeight.w400,
+                                      height: 1,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 5),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        isLoading
-                                            ? '-'
-                                            : '${formatNatriumMg(consumedTodayMg)} / ${formatNatriumMg(akgReferenceMg)} mg',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: textTheme.bodyMedium?.copyWith(
-                                          color: Colors.white,
-                                          fontSize: compact ? 12 : 13,
-                                          fontWeight: FontWeight.w700,
-                                          height: 1,
+                                  const SizedBox(height: 5),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          isLoading
+                                              ? '-'
+                                              : '${formatNatriumMg(consumedTodayMg)} / ${formatNatriumMg(akgReferenceMg)} mg',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: textTheme.bodyMedium?.copyWith(
+                                            color: Colors.white,
+                                            fontSize: compact ? 12 : 13,
+                                            fontWeight: FontWeight.w700,
+                                            height: 1,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _AkgProgressBadge(
-                                      value: isLoading
-                                          ? '-'
-                                          : '$akgPercentage%',
-                                      color: Colors.white,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                                      const SizedBox(width: 8),
+                                      _AkgProgressBadge(
+                                        value: isLoading
+                                            ? '-'
+                                            : '$akgPercentage%',
+                                        color: Colors.white,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              )
+                            else
+                              const SizedBox(height: 20),
                             SizedBox(
                               width: _buttonWidth,
                               height: _buttonHeight,
@@ -746,6 +820,46 @@ class _NatriumRecapCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _NatriumReferenceBadge extends StatelessWidget {
+  const _NatriumReferenceBadge({required this.label, required this.compact});
+
+  final String label;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 25,
+      padding: const EdgeInsets.symmetric(horizontal: 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(44),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset(
+            'assets/icons/mage_heart-health.svg',
+            width: compact ? 15 : 16,
+            height: compact ? 15 : 16,
+            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: GoogleFonts.plusJakartaSans(
+              color: Colors.white,
+              fontSize: compact ? 10 : 11,
+              fontWeight: FontWeight.w400,
+              height: 1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

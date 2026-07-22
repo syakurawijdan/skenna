@@ -29,9 +29,16 @@ class _SplashScreenState extends State<SplashScreen>
   bool _naFlashStarted = false;
   bool _hasRouted = false;
 
+  // === Tambahan untuk pengujian fungsionalitas: ukur durasi splash screen ===
+  final Stopwatch _splashStopwatch = Stopwatch();
+
   @override
   void initState() {
     super.initState();
+
+    _splashStopwatch.start();
+    debugPrint('[SplashTest] Splash screen dimulai: ${DateTime.now()}');
+
     _entranceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -95,6 +102,10 @@ class _SplashScreenState extends State<SplashScreen>
     });
     _entranceController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
+        debugPrint(
+          '[SplashTest] Animasi selesai pada: '
+          '${_splashStopwatch.elapsedMilliseconds} ms',
+        );
         Timer(const Duration(milliseconds: 500), _routeFromProfileState);
       }
     });
@@ -113,6 +124,11 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
     if (_hasRouted) return;
     _hasRouted = true;
+
+    debugPrint(
+      '[SplashTest] Mulai proses routing pada: '
+      '${_splashStopwatch.elapsedMilliseconds} ms',
+    );
 
     await UserSession().init();
     final userId = UserSession().getUserId();
@@ -134,7 +150,7 @@ class _SplashScreenState extends State<SplashScreen>
       } on ApiException catch (e) {
         if (e.statusCode == 401) {
           // token expired -> login lagi, BUKAN onboarding
-          await UserSession().clear();
+          await ApiClient.clearLocalSession();
           nextRoute = AppRoutes.login;
         } else {
           debugPrint('Gagal ambil profil, fallback ke dashboard: $e');
@@ -150,7 +166,13 @@ class _SplashScreenState extends State<SplashScreen>
       nextRoute = AppRoutes.login;
     }
 
+    _splashStopwatch.stop();
     debugPrint('Navigating: $nextRoute');
+    debugPrint(
+      '[SplashTest] Total durasi splash screen: '
+      '${_splashStopwatch.elapsedMilliseconds} ms '
+      '(${(_splashStopwatch.elapsedMilliseconds / 1000).toStringAsFixed(2)} detik)',
+    );
 
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, nextRoute);

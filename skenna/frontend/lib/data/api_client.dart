@@ -741,7 +741,7 @@ class ApiClient {
         // Local logout should still succeed when the network is unavailable.
       }
     }
-    await _clearLocalSession();
+    await clearLocalSession();
   }
 
   Future<http.Response> _sendWithAuthRetry(
@@ -754,13 +754,13 @@ class ApiClient {
 
     final refreshed = await _tryRefreshToken();
     if (!refreshed) {
-      await _clearLocalSession();
+      await clearLocalSession();
       throw const ApiException(401, 'Sesi berakhir, silakan login ulang.');
     }
 
     final retryResponse = await send(await _authHeaders());
     if (retryResponse.statusCode == HttpStatus.unauthorized) {
-      await _clearLocalSession();
+      await clearLocalSession();
     }
     return retryResponse;
   }
@@ -789,7 +789,7 @@ class ApiClient {
     }
   }
 
-  static Future<void> _clearLocalSession() async {
+  static Future<void> clearLocalSession() async {
     await clearCurrentUserId();
     await UserSession().clear();
   }

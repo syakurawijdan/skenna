@@ -140,7 +140,7 @@ class _ScanScreenState extends State<ScanScreen> {
       await _showResultSheetAfterDispose(dataGizi);
     } on ApiException catch (e) {
       if (e.statusCode == 401 && mounted) {
-        await ApiClient.clearCurrentUserId();
+        await ApiClient.clearLocalSession();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Sesi kamu telah berakhir, silakan login ulang.'),

@@ -1392,12 +1392,16 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
       if (intakeId == null) {
         throw Exception('ID konsumsi tidak valid');
       }
-      await client.deleteIntake(
+      await client.updateIntakeConsumed(
         intakeId: intakeId,
         userId: UserSession().getUserId(),
+        isConsumed: false,
       );
 
       if (!mounted) return;
+      setState(() {
+        _statusDikonsumsi = false;
+      });
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
@@ -1821,7 +1825,7 @@ class _DeleteConfirmDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Yakin Hapus Catatan\nKonsumsi?',
+              'Tandai Tidak\nDikonsumsi?',
               textAlign: TextAlign.center,
               style: GoogleFonts.plusJakartaSans(
                 color: _blue,
@@ -1848,14 +1852,14 @@ class _DeleteConfirmDialog extends StatelessWidget {
                   height: 1.4,
                 ),
                 children: const [
-                  TextSpan(text: 'Riwayat scan yang dipilih '),
+                  TextSpan(text: 'Produk ini '),
                   TextSpan(
-                    text: 'akan dihapus',
+                    text: 'tidak akan dihitung',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  TextSpan(text: '\ndan '),
+                  TextSpan(text: ' ke total natrium hari ini,\nnamun tetap '),
                   TextSpan(
-                    text: 'tidak dapat dipulihkan',
+                    text: 'tersimpan di Riwayat Scan',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ],

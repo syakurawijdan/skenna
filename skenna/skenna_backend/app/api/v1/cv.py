@@ -75,7 +75,7 @@ def scan_food_label(
 
     # ── Short-circuit: kalau OCR gagal baca takaran_saji / sajian_per_kemasan,
     # langsung return null tanpa save ke DB, biar Flutter munculin popup gagal scan ──
-    if takaran_saji is None or sajian_per_kemasan is None:
+    if takaran_saji is None and sajian_per_kemasan is None:
         logger.warning(
             "OCR gagal membaca takaran_saji/sajian_per_kemasan untuk user_id=%s",
             current_user.id,

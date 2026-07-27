@@ -33,11 +33,11 @@ def _product_name_from_raw_text(raw_text: str) -> str:
     return ""
 
 
-def _compress_image(image_bytes: bytes, max_size: int = 800) -> bytes:
+def _compress_image(image_bytes: bytes, max_size: int = 1024) -> bytes:
     img = Image.open(io.BytesIO(image_bytes))
     img.thumbnail((max_size, max_size), Image.LANCZOS)
     buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=80)
+    img.save(buf, format="JPEG", quality=90)
     return buf.getvalue()
 
 

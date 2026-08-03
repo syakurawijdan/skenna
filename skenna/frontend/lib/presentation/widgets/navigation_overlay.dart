@@ -22,18 +22,18 @@ enum NavigationOverlayType {
     };
   }
 
-  String get message {
-    return switch (this) {
-      NavigationOverlayType.home =>
-        'Pantau asupan natrium harian dan rekomendasinya di sini',
-      NavigationOverlayType.history =>
-        'Lihat riwayat konsumsi natrium dan catatan harianmu di sini',
-      NavigationOverlayType.scan =>
-        'Scan label produk makanan untuk cek kandungan natriumnya langsung',
-      NavigationOverlayType.profile =>
-        'Kelola profil dan preferensi natriummu di sini',
-    };
-  }
+  // String get message {
+  //   return switch (this) {
+  //     NavigationOverlayType.home =>
+  //       'Pantau asupan natrium harian dan rekomendasinya di sini',
+  //     NavigationOverlayType.history =>
+  //       'Lihat riwayat konsumsi natrium dan catatan harianmu di sini',
+  //     NavigationOverlayType.scan =>
+  //       'Scan label produk makanan untuk cek kandungan natriumnya langsung',
+  //     NavigationOverlayType.profile =>
+  //       'Kelola profil dan preferensi natriummu di sini',
+  //   };
+  // }
 }
 
 class NavigationOverlayController {
@@ -203,15 +203,15 @@ class NavigationOverlay extends StatelessWidget {
             child: const SizedBox.expand(),
           ),
         ),
-        Positioned(
-          left: tooltipLeft,
-          bottom: bottom,
-          width: _tooltipWidth,
-          child: _NavigationTooltip(
-            message: type.message,
-            arrowLeft: arrowLeft,
-          ),
-        ),
+        // Positioned(
+        //   left: tooltipLeft,
+        //   bottom: bottom,
+        //   width: _tooltipWidth,
+        //   // child: _NavigationTooltip(
+        //   //   message: type.message,
+        //   //   arrowLeft: arrowLeft,
+        //   // ),
+        // ),
       ],
     );
   }

@@ -11,6 +11,7 @@ import '../../data/user_session.dart';
 import '../../domain/natrium_classifier.dart';
 import 'hasil_scan_aman_screen.dart';
 import '../widgets/custom_dropdown.dart';
+import '../widgets/portion_slider.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
 
@@ -1528,7 +1529,7 @@ class _EditConsumedSheetState extends State<_EditConsumedSheet> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                _PortionSlider(
+                PortionSlider(
                   value: _selectedServings,
                   min: 1.0,
                   max: sliderMax,
@@ -1701,128 +1702,6 @@ class _FormSection extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class _PortionSlider extends StatelessWidget {
-  const _PortionSlider({
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.onChanged,
-    required this.thumbColor,
-  });
-
-  final double value;
-  final double min;
-  final double max;
-  final ValueChanged<double> onChanged;
-  final Color thumbColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final range = max - min;
-    final fraction = range <= 0 ? 0.0 : (value - min) / range;
-    final divisions = range > 0 ? (range * 2).round() : null;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final trackWidth = constraints.maxWidth;
-        const thumbRadius = 12.0;
-        const horizontalPadding = 16.0;
-        final usableWidth = trackWidth - horizontalPadding * 2;
-        final thumbX = horizontalPadding + usableWidth * fraction;
-        const boxW = 36.0;
-        const boxH = 32.0;
-        final boxLeft = (thumbX - boxW / 2)
-            .clamp(0.0, trackWidth - boxW)
-            .toDouble();
-
-        return SizedBox(
-          height: boxH + 8 + thumbRadius * 2 + 8,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(
-                left: boxLeft,
-                top: 0,
-                child: Container(
-                  width: boxW,
-                  height: boxH,
-                  decoration: BoxDecoration(
-                    color: thumbColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    _formatIndoNumber(value),
-                    style: GoogleFonts.plusJakartaSans(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: thumbX - 5,
-                top: boxH,
-                child: CustomPaint(
-                  painter: _TrianglePainter(color: thumbColor),
-                  size: const Size(10, 6),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: thumbColor,
-                    thumbColor: thumbColor,
-                    inactiveTrackColor: const Color(0xFFD7DCE8),
-                    overlayColor: thumbColor.withOpacity(0.1),
-                    trackHeight: 4,
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: thumbRadius,
-                    ),
-                    showValueIndicator: ShowValueIndicator.never,
-                  ),
-                  child: Slider(
-                    value: value.clamp(min, math.max(min, max)).toDouble(),
-                    min: min,
-                    max: math.max(min, max),
-                    divisions: divisions,
-                    onChanged: (v) => onChanged((v * 2).round() / 2),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _TrianglePainter extends CustomPainter {
-  const _TrianglePainter({required this.color});
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
-    final path = Path()
-      ..moveTo(0, 0)
-      ..lineTo(size.width, 0)
-      ..lineTo(size.width / 2, size.height)
-      ..close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _TrianglePainter oldDelegate) {
-    return oldDelegate.color != color;
   }
 }
 

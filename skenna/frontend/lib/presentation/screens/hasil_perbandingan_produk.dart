@@ -1,15 +1,18 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../app_shell.dart';
-import 'scan_screen.dart';
+import 'scan_onboarding_screen.dart';
 import '../../data/api_client.dart';
 import '../../domain/kategori_label.dart';
 import '../../../data/user_session.dart';
 import '../widgets/stop_natrium_dialog.dart';
 import '../widgets/yakin_makan_dialog.dart';
 import '../widgets/unsaved_changes_dialog.dart';
+import '../widgets/portion_slider.dart';
 
 // ════════════════════════════════════════════════════════════════════════════
 // Model data produk untuk perbandingan
@@ -49,6 +52,7 @@ class HasilBandingkanScreen extends StatefulWidget {
     this.historyItemId,
     this.isConsumed = false,
     this.selectedProductName,
+    this.initialServings = 1.0,
   });
 
   final ProductCompareData productA;
@@ -63,6 +67,7 @@ class HasilBandingkanScreen extends StatefulWidget {
   final String? historyItemId;
   final bool isConsumed;
   final String? selectedProductName;
+  final double initialServings;
 
   @override
   State<HasilBandingkanScreen> createState() => _HasilBandingkanScreenState();
@@ -79,13 +84,20 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
 
   late TabController _tabController;
   bool _saving = false;
+  bool _isExiting = false;
+  late bool _hasPersisted;
   int _selectedProduct = 0;
   int _selectedProductSaatDicatat = 0;
   bool _statusDikonsumsi = false;
+  late double _selectedSajian;
+  late double _sajianSaatDicatat;
 
   @override
   void initState() {
     super.initState();
+    _selectedSajian = widget.initialServings;
+    _sajianSaatDicatat = widget.initialServings;
+    _hasPersisted = widget.fromHistory;
     _tabController = TabController(length: 2, vsync: this);
     if (widget.fromHistory) {
       if (widget.selectedProductName == widget.productB.productName) {
@@ -116,18 +128,26 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
       _aLebihRendah ? widget.productB : widget.productA;
 
   bool get _pilihanBerubah => _selectedProduct != _selectedProductSaatDicatat;
+  bool get _sajianBerubah =>
+      (_selectedSajian - _sajianSaatDicatat).abs() > 0.001;
+  ProductCompareData get _produkTerpilih =>
+      _selectedProduct == 1 ? widget.productA : widget.productB;
+  ProductCompareData get _mainProductForPersist =>
+      _selectedProduct == 2 ? widget.productB : widget.productA;
+  ProductCompareData get _pairProductForPersist =>
+      _selectedProduct == 2 ? widget.productA : widget.productB;
   bool get _adaPerubahanBelumDisimpan {
     if (widget.readOnly) return false;
     if (_selectedProduct == 0) return false;
     if (!_statusDikonsumsi) return true;
-    return _pilihanBerubah;
+    return _pilihanBerubah || _sajianBerubah;
   }
 
   bool get _tombolAktif {
     if (widget.readOnly) return false;
     if (_selectedProduct == 0) return false;
     if (!_statusDikonsumsi) return true;
-    return _pilihanBerubah;
+    return _pilihanBerubah || _sajianBerubah;
   }
 
   double _pct(int mg) => mg / widget.dailyLimitMg;
@@ -170,20 +190,10 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
         widget.productB.perPortionMg * widget.productB.portionsInPackage;
 
     return PopScope(
-      canPop: !_adaPerubahanBelumDisimpan,
+      canPop: widget.readOnly,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final shouldSave = await showDialog<bool>(
-          context: context,
-          barrierColor: Colors.black.withOpacity(0.5),
-          builder: (ctx) => const UnsavedChangesDialog(),
-        );
-        if (shouldSave == null) return;
-        if (shouldSave) {
-          await _handleCatatKonsumsi();
-        } else {
-          if (mounted) Navigator.pop(context);
-        }
+        await _handleBack();
       },
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -296,6 +306,53 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
                   const SizedBox(height: 24),
 
                   // ── KONTRIBUSI HARIAN ─────────────────────────────────────────
+                ],
+                if (_selectedProduct != 0) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Atur jumlah sajian',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: _blue,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        PortionSlider(
+                          value: _selectedSajian,
+                          min: 1.0,
+                          max: math.max(
+                            10.0,
+                            _produkTerpilih.portionsInPackage,
+                          ),
+                          onChanged: (v) => setState(() => _selectedSajian = v),
+                          thumbColor: _blue,
+                          enabled: !widget.readOnly,
+                        ),
+                        const SizedBox(height: 4),
+                        Builder(
+                          builder: (context) {
+                            final total =
+                                _produkTerpilih.perPortionMg * _selectedSajian;
+                            final persen = total / widget.dailyLimitMg;
+                            return Text(
+                              'Total: ${_formatIndoNumber(total)} mg (${(persen * 100).round()}% $_limitPhrase)',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: _barColor(persen),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                 ],
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -420,7 +477,7 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
                         onPressed: () => Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => ScanScreen(
+                            builder: (_) => ScanEntryGate(
                               apiClient: widget.apiClient,
                               compareWithProduct:
                                   widget.originalProduct ?? widget.productA,
@@ -486,21 +543,7 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
-                    onTap: () async {
-                      if (_adaPerubahanBelumDisimpan) {
-                        final shouldSave = await showDialog<bool>(
-                          context: context,
-                          barrierColor: Colors.black.withOpacity(0.5),
-                          builder: (ctx) => const UnsavedChangesDialog(),
-                        );
-                        if (shouldSave == null) return;
-                        if (shouldSave) {
-                          await _handleCatatKonsumsi();
-                          return;
-                        }
-                      }
-                      if (mounted) Navigator.pop(context);
-                    },
+                    onTap: _handleBack,
 
                     child: Container(
                       width: 40,
@@ -939,25 +982,26 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
   );
 
   // ── Catat konsumsi ────────────────────────────────────────────────────────
-  Future<void> _handleCatatKonsumsi() async {
-    if (widget.readOnly) return;
+  Future<void> _handleCatatKonsumsi({bool skipConfirmDialog = false}) async {
+    if (widget.readOnly || _saving) return;
 
-    final selectedData = _selectedProduct == 1
-        ? widget.productA
-        : widget.productB;
-    final otherData = _selectedProduct == 1 ? widget.productB : widget.productA;
+    final selectedData = _mainProductForPersist;
 
     final isUpdate = widget.fromHistory && widget.historyItemId != null;
-
-    final akanDikonsumsi = await showDialog<bool>(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.5),
-      builder: (ctx) => YakinMakanDialog(isUpdate: _statusDikonsumsi),
-    );
-    if (akanDikonsumsi == null) return;
-
     final client = widget.apiClient ?? ApiClient();
     final activeUserId = UserSession().getUserId();
+    final bool akanDikonsumsi;
+    if (skipConfirmDialog) {
+      akanDikonsumsi = true;
+    } else {
+      final result = await showDialog<bool>(
+        context: context,
+        barrierColor: Colors.black.withOpacity(0.5),
+        builder: (ctx) => YakinMakanDialog(isUpdate: _statusDikonsumsi),
+      );
+      if (result == null) return;
+      akanDikonsumsi = result;
+    }
 
     if (akanDikonsumsi) {
       int consumedToday = 0;
@@ -973,9 +1017,9 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
           ? widget.productA
           : (_selectedProductSaatDicatat == 2 ? widget.productB : null);
       final totalNatriumLama = (isUpdate && produkLama != null)
-          ? produkLama.perPortionMg
+          ? produkLama.perPortionMg * _sajianSaatDicatat
           : 0;
-      final totalNatrium = selectedData.perPortionMg;
+      final totalNatrium = selectedData.perPortionMg * _selectedSajian;
       final totalSetelahCatat = consumedToday - totalNatriumLama + totalNatrium;
 
       if (totalSetelahCatat > widget.dailyLimitMg) {
@@ -989,68 +1033,23 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
       }
     }
 
-    setState(() => _saving = true);
-
-    try {
-      if (activeUserId == 0) return;
-
-      if (isUpdate) {
-        final intakeId = int.tryParse(widget.historyItemId ?? '');
-        if (intakeId == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('ID konsumsi tidak valid, coba scan ulang'),
-              backgroundColor: const Color(0xFFE53935),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
-          setState(() => _saving = false);
-          return;
-        }
-        await client.updateIntakeConsumed(
-          intakeId: intakeId,
-          userId: activeUserId,
-          isConsumed: akanDikonsumsi,
-          servings: 1.0,
-          productName: selectedData.productName,
-          sodiumMg: selectedData.perPortionMg,
-          productName2: otherData.productName,
-          sodiumMg2: otherData.perPortionMg,
-          imagePath: selectedData.imagePath,
-          imagePath2: otherData.imagePath,
-          type: 'comparison',
-        );
-      } else {
-        await client.postScanHistory(
-          userId: activeUserId,
-          sodiumMg: selectedData.perPortionMg,
-          servings: 1.0,
-          productName: selectedData.productName,
-          sodiumLevel: widget.sodiumLevel,
-          kategori: selectedData.kategori,
-          type: 'comparison',
-          productName2: otherData.productName,
-          sodiumMg2: otherData.perPortionMg,
-          isConsumed: akanDikonsumsi,
-          packageMl: selectedData.packageMl,
-          portionsInPackage: selectedData.portionsInPackage,
-          satuanTakaran: selectedData.satuanTakaran,
-          packageMl2: otherData.packageMl,
-          portionsInPackage2: otherData.portionsInPackage,
-          satuanTakaran2: otherData.satuanTakaran,
-          imagePath: selectedData.imagePath,
-          imagePath2: otherData.imagePath,
-        );
-      }
-
+    final ok = await _persistStatus(isConsumed: akanDikonsumsi);
+    if (!ok) {
       if (!mounted) return;
-      setState(() {
-        _statusDikonsumsi = akanDikonsumsi;
-        _selectedProductSaatDicatat = _selectedProduct; // ← tambahkan ini
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Gagal menyimpan, coba lagi.'),
+          backgroundColor: const Color(0xFFE53935),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -1076,11 +1075,191 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
         MaterialPageRoute(builder: (_) => const AppShell(initialIndex: 2)),
         (route) => false,
       );
+    }
+  }
+
+  Future<bool> _persistStatus({required bool isConsumed}) async {
+    if (widget.readOnly || _saving) return false;
+
+    setState(() => _saving = true);
+    final client = widget.apiClient ?? ApiClient();
+    final activeUserId = UserSession().getUserId();
+    final selectedData = _mainProductForPersist;
+    final otherData = _pairProductForPersist;
+    final isUpdate = widget.fromHistory && widget.historyItemId != null;
+
+    try {
+      if (activeUserId == 0) return false;
+
+      if (isUpdate) {
+        final intakeId = int.tryParse(widget.historyItemId ?? '');
+        if (intakeId == null) return false;
+        await client.updateIntakeConsumed(
+          intakeId: intakeId,
+          userId: activeUserId,
+          isConsumed: isConsumed,
+          servings: _selectedSajian,
+          productName: selectedData.productName,
+          sodiumMg: selectedData.perPortionMg,
+          productName2: otherData.productName,
+          sodiumMg2: otherData.perPortionMg,
+          imagePath: selectedData.imagePath,
+          imagePath2: otherData.imagePath,
+          type: 'comparison',
+        );
+      } else {
+        await client.postScanHistory(
+          userId: activeUserId,
+          sodiumMg: selectedData.perPortionMg,
+          servings: _selectedSajian,
+          productName: selectedData.productName,
+          sodiumLevel: widget.sodiumLevel,
+          kategori: selectedData.kategori,
+          type: 'comparison',
+          productName2: otherData.productName,
+          sodiumMg2: otherData.perPortionMg,
+          isConsumed: isConsumed,
+          packageMl: selectedData.packageMl,
+          portionsInPackage: selectedData.portionsInPackage,
+          satuanTakaran: selectedData.satuanTakaran,
+          packageMl2: otherData.packageMl,
+          portionsInPackage2: otherData.portionsInPackage,
+          satuanTakaran2: otherData.satuanTakaran,
+          imagePath: selectedData.imagePath,
+          imagePath2: otherData.imagePath,
+        );
+      }
+
+      if (!mounted) return true;
+      setState(() {
+        _statusDikonsumsi = isConsumed;
+        _selectedProductSaatDicatat = _selectedProduct == 0
+            ? 1
+            : _selectedProduct;
+        _sajianSaatDicatat = _selectedSajian;
+        _hasPersisted = true;
+      });
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      debugPrint('Gagal persist status konsumsi: $e');
+      return false;
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _handleBack() async {
+    if (widget.readOnly) {
+      if (mounted) Navigator.pop(context);
+      return;
+    }
+    if (_saving || _isExiting) return;
+
+    final sudahTersimpanTanpaPerubahan =
+        widget.fromHistory && !_pilihanBerubah && !_sajianBerubah;
+    if (sudahTersimpanTanpaPerubahan) {
+      if (mounted) Navigator.pop(context);
+      return;
+    }
+
+    setState(() => _isExiting = true);
+    final shouldSave = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (ctx) => UnsavedChangesDialog(
+        title: widget.fromHistory
+            ? 'Perubahan Belum Disimpan'
+            : 'Hasil Scan Belum Disimpan',
+        message: widget.fromHistory
+            ? Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(text: 'Perubahan yang dibuat '),
+                    TextSpan(
+                      text: 'belum disimpan',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const TextSpan(text: '.'),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+              )
+            : Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(text: 'Produk ini '),
+                    TextSpan(
+                      text: 'tidak jadi dikonsumsi',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const TextSpan(
+                      text: '? Statusnya akan dicatat ke riwayat sebagai ',
+                    ),
+                    TextSpan(
+                      text: 'tidak dikonsumsi',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const TextSpan(text: '.'),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+              ),
+        negativeLabel: widget.fromHistory
+            ? 'Buang Perubahan'
+            : 'Tidak Dikonsumsi',
+        positiveLabel: widget.fromHistory
+            ? 'Simpan Perubahan'
+            : 'Ya, Dikonsumsi',
+      ),
+    );
+
+    if (shouldSave == null) {
+      if (mounted) setState(() => _isExiting = false);
+      return;
+    }
+
+    if (shouldSave) {
+      if (mounted) setState(() => _isExiting = false);
+      if (widget.fromHistory) {
+        final ok = await _persistStatus(isConsumed: _statusDikonsumsi);
+        if (!mounted) return;
+        if (ok) {
+          Navigator.pop(context);
+        } else {
+          setState(() => _isExiting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            _persistErrorSnackBar('Gagal menyimpan perubahan. Coba lagi.'),
+          );
+        }
+      } else {
+        await _handleCatatKonsumsi(skipConfirmDialog: true);
+      }
+      return;
+    }
+
+    if (widget.fromHistory) {
+      if (mounted) {
+        setState(() => _isExiting = false);
+        Navigator.pop(context);
+      }
+      return;
+    }
+
+    final ok = await _persistStatus(isConsumed: false);
+    if (!mounted) return;
+    setState(() => _isExiting = false);
+    if (ok) {
+      Navigator.pop(context);
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal menyimpan: $e'),
+          content: const Text('Gagal menyimpan status konsumsi. Coba lagi.'),
           backgroundColor: const Color(0xFFE53935),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -1088,10 +1267,15 @@ class _HasilBandingkanScreenState extends State<HasilBandingkanScreen>
           ),
         ),
       );
-    } finally {
-      if (mounted) setState(() => _saving = false);
     }
   }
+
+  SnackBar _persistErrorSnackBar(String message) => SnackBar(
+    content: Text(message),
+    backgroundColor: const Color(0xFFE53935),
+    behavior: SnackBarBehavior.floating,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  );
 }
 
 // ════════════════════════════════════════════════════════════════════════════

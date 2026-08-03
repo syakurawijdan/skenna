@@ -729,6 +729,7 @@ class HistoryScreenState extends State<HistoryScreen> {
             historyItemId: item.id,
             isConsumed: item.isConsumed,
             selectedProductName: item.productName,
+            initialServings: item.servings,
           ),
         ),
       ).then((_) => _loadHistory());

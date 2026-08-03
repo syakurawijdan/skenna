@@ -124,6 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _hasHypertension = false;
   int _consumedTodayMg = 0;
   int _productsScannedToday = 0;
+  String? _dashboardDate;
   bool _isLoading = true;
   int? _systolicPressure;
   int? _diastolicPressure;
@@ -207,6 +208,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             (stats['total_sodium_consumed_today'] as num?)?.round() ?? 0;
         _productsScannedToday =
             (stats['products_scanned_today'] as num?)?.round() ?? 0;
+        final statsDate = stats['date'];
+        _dashboardDate = statsDate is String && statsDate.trim().isNotEmpty
+            ? statsDate.trim()
+            : null;
         _isLoading = false;
         _systolicPressure = profile['systolic_pressure'] as int?;
         _diastolicPressure = profile['diastolic_pressure'] as int?;
@@ -269,9 +274,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _checkAndShowWarning() {
-    if (_consumedTodayMg >= _dailyLimitMg && _dailyLimitMg > 0) {
+    final userSession = UserSession();
+    final dashboardDate = _dashboardDate;
+    if (_consumedTodayMg >= _dailyLimitMg &&
+        _dailyLimitMg > 0 &&
+        !userSession.hasShownWarningForDate(dashboardDate)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
+        if (userSession.hasShownWarningForDate(dashboardDate)) return;
+        if (dashboardDate != null) {
+          userSession.markSodiumWarningShown(dashboardDate);
+        }
         showDialog(
           context: context,
           barrierDismissible: false,

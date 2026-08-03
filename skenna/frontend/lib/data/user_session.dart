@@ -10,11 +10,35 @@ class UserSession {
 
   late SharedPreferences _prefs; // ← ganti dari 'late final' ke 'late'
   bool _initialized = false;
+  bool _hasShownSodiumWarningToday = false;
+  String? _sodiumWarningShownDate;
 
   UserSession._();
   static final UserSession _instance = UserSession._();
 
   factory UserSession() => _instance;
+
+  bool hasShownWarningForDate(String? backendDateIso) {
+    if (backendDateIso == null || backendDateIso.isEmpty) return false;
+    _resetSodiumWarningFlagIfNewDay(backendDateIso);
+    return _hasShownSodiumWarningToday;
+  }
+
+  void markSodiumWarningShown(String backendDateIso) {
+    _hasShownSodiumWarningToday = true;
+    _sodiumWarningShownDate = backendDateIso;
+  }
+
+  void resetSodiumWarningFlag() {
+    _hasShownSodiumWarningToday = false;
+    _sodiumWarningShownDate = null;
+  }
+
+  void _resetSodiumWarningFlagIfNewDay(String backendDateIso) {
+    final shownDate = _sodiumWarningShownDate;
+    if (shownDate == null) return;
+    if (shownDate != backendDateIso) resetSodiumWarningFlag();
+  }
 
   Future<void> init() async {
     if (_initialized) return;
@@ -34,6 +58,7 @@ class UserSession {
   }
 
   Future<void> setUserId(int userId) async {
+    resetSodiumWarningFlag();
     await _prefs.setInt(_userIdKey, userId);
     await _prefs.setInt(_apiCurrentUserIdKey, userId);
     debugPrint('UserSession.setUserId => synced user ID: $userId');
@@ -58,6 +83,7 @@ class UserSession {
   }
 
   Future<void> clear() async {
+    resetSodiumWarningFlag();
     await _prefs.remove(_userIdKey);
     await _prefs.remove(_apiCurrentUserIdKey);
     await _prefs.remove(_accessTokenKey);

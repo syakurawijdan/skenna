@@ -124,6 +124,7 @@ class _SodiumResultScreenState extends State<SodiumResultScreen> {
     final warna = entry.warna;
     final imageAsset = _imageForColor(warna);
     final boxText = _boxText(entry.box);
+    final deskripsi = entry.deskripsi;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -185,18 +186,19 @@ class _SodiumResultScreenState extends State<SodiumResultScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: contentWidth),
-                        child: _buildRichText(
-                          entry.deskripsi,
-                          entry.boldSpans,
-                          fontSize: 14,
-                          color: _blue,
-                          textAlign: TextAlign.center,
+                    if (deskripsi != null)
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: contentWidth),
+                          child: _buildRichText(
+                            deskripsi.template,
+                            deskripsi.templateBoldSpans,
+                            fontSize: 14,
+                            color: _blue,
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
-                    ),
                     if (boxText != null) ...[
                       const SizedBox(height: 12),
                       _InfoBox(
@@ -296,63 +298,18 @@ class _SodiumResultScreenState extends State<SodiumResultScreen> {
     required TextAlign textAlign,
     double height = 1.35,
   }) {
-    // substitute placeholders first
     final resolved = _substitute(text);
     final resolvedBolds = boldSpans.map(_substitute).toList();
 
-    if (resolvedBolds.isEmpty) {
-      return Text(
-        resolved,
-        textAlign: textAlign,
-        style: GoogleFonts.plusJakartaSans(
-          color: color,
-          fontSize: fontSize,
-          fontWeight: FontWeight.w500,
-          height: height,
-        ),
-      );
-    }
-
-    // Build spans
-    final spans = <TextSpan>[];
-    int cursor = 0;
-    while (cursor < resolved.length) {
-      // find earliest bold match from cursor
-      int earliestStart = resolved.length;
-      String? matchedBold;
-      for (final bold in resolvedBolds) {
-        final idx = resolved.indexOf(bold, cursor);
-        if (idx != -1 && idx < earliestStart) {
-          earliestStart = idx;
-          matchedBold = bold;
-        }
-      }
-      if (matchedBold == null) {
-        spans.add(TextSpan(text: resolved.substring(cursor)));
-        break;
-      }
-      if (earliestStart > cursor) {
-        spans.add(TextSpan(text: resolved.substring(cursor, earliestStart)));
-      }
-      spans.add(
-        TextSpan(
-          text: matchedBold,
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
-      );
-      cursor = earliestStart + matchedBold.length;
-    }
-
-    return RichText(
+    return _buildTemplateText(
+      text: resolved,
+      boldSpans: resolvedBolds,
       textAlign: textAlign,
-      text: TextSpan(
-        style: GoogleFonts.plusJakartaSans(
-          color: color,
-          fontSize: fontSize,
-          fontWeight: FontWeight.w500,
-          height: height,
-        ),
-        children: spans,
+      style: GoogleFonts.plusJakartaSans(
+        color: color,
+        fontSize: fontSize,
+        fontWeight: FontWeight.w500,
+        height: height,
       ),
     );
   }
@@ -442,42 +399,12 @@ class _InfoBox extends StatelessWidget {
       height: 1.25,
     );
 
-    Widget content;
-    if (boldSpans.isEmpty) {
-      content = Text(text, textAlign: TextAlign.center, style: baseStyle);
-    } else {
-      final spans = <TextSpan>[];
-      int cursor = 0;
-      while (cursor < text.length) {
-        int earliestStart = text.length;
-        String? matchedBold;
-        for (final bold in boldSpans) {
-          final idx = text.indexOf(bold, cursor);
-          if (idx != -1 && idx < earliestStart) {
-            earliestStart = idx;
-            matchedBold = bold;
-          }
-        }
-        if (matchedBold == null) {
-          spans.add(TextSpan(text: text.substring(cursor)));
-          break;
-        }
-        if (earliestStart > cursor) {
-          spans.add(TextSpan(text: text.substring(cursor, earliestStart)));
-        }
-        spans.add(
-          TextSpan(
-            text: matchedBold,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-        );
-        cursor = earliestStart + matchedBold.length;
-      }
-      content = RichText(
-        textAlign: TextAlign.center,
-        text: TextSpan(style: baseStyle, children: spans),
-      );
-    }
+    final content = _buildTemplateText(
+      text: text,
+      boldSpans: boldSpans,
+      textAlign: TextAlign.center,
+      style: baseStyle,
+    );
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 344),
@@ -532,28 +459,46 @@ class _UiCategory {
     required this.header,
     required this.warna,
     required this.deskripsi,
-    required this.boldSpans,
     required this.box,
   });
 
   final String header;
   final String warna;
-  final String deskripsi;
-  final List<String> boldSpans;
+  final _UiTemplate? deskripsi;
   final _UiBox? box;
 
   factory _UiCategory.fromJson(Map<String, dynamic> json) {
+    final rawDeskripsi = json['deskripsi'];
     final rawBox = json['box'];
     return _UiCategory(
       header: json['header'] as String? ?? '',
       warna: json['warna'] as String? ?? 'hijau',
-      deskripsi: json['deskripsi'] as String? ?? '',
-      boldSpans: (json['deskripsi_bold_spans'] as List<dynamic>? ?? [])
-          .map((e) => e as String)
-          .toList(),
+      deskripsi: rawDeskripsi is Map
+          ? _UiTemplate.fromJson(Map<String, dynamic>.from(rawDeskripsi))
+          : null,
       box: rawBox is Map
           ? _UiBox.fromJson(Map<String, dynamic>.from(rawBox))
           : null,
+    );
+  }
+}
+
+class _UiTemplate {
+  const _UiTemplate({
+    required this.template,
+    required this.templateBoldSpans,
+  });
+
+  final String template;
+  final List<String> templateBoldSpans;
+
+  factory _UiTemplate.fromJson(Map<String, dynamic> json) {
+    final rawBoldSpans = json['template_bold_spans'];
+    return _UiTemplate(
+      template: json['template'] as String? ?? '',
+      templateBoldSpans: rawBoldSpans is List
+          ? rawBoldSpans.whereType<String>().toList()
+          : const [],
     );
   }
 }
@@ -570,12 +515,56 @@ class _UiBox {
   final List<String> boldSpans;
 
   factory _UiBox.fromJson(Map<String, dynamic> json) {
+    final template = _UiTemplate.fromJson(json);
     return _UiBox(
       tipe: json['tipe'] as String? ?? '',
-      template: json['template'] as String? ?? '',
-      boldSpans: (json['template_bold_spans'] as List<dynamic>? ?? [])
-          .map((e) => e as String)
-          .toList(),
+      template: template.template,
+      boldSpans: template.templateBoldSpans,
     );
   }
+}
+
+Widget _buildTemplateText({
+  required String text,
+  required List<String> boldSpans,
+  required TextAlign textAlign,
+  required TextStyle style,
+}) {
+  final nonEmptyBoldSpans = boldSpans.where((span) => span.isNotEmpty).toList();
+  if (nonEmptyBoldSpans.isEmpty) {
+    return Text(text, textAlign: textAlign, style: style);
+  }
+
+  final spans = <TextSpan>[];
+  var cursor = 0;
+  while (cursor < text.length) {
+    var earliestStart = text.length;
+    String? matchedBold;
+    for (final bold in nonEmptyBoldSpans) {
+      final index = text.indexOf(bold, cursor);
+      if (index != -1 && index < earliestStart) {
+        earliestStart = index;
+        matchedBold = bold;
+      }
+    }
+    if (matchedBold == null) {
+      spans.add(TextSpan(text: text.substring(cursor)));
+      break;
+    }
+    if (earliestStart > cursor) {
+      spans.add(TextSpan(text: text.substring(cursor, earliestStart)));
+    }
+    spans.add(
+      TextSpan(
+        text: matchedBold,
+        style: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+    );
+    cursor = earliestStart + matchedBold.length;
+  }
+
+  return RichText(
+    textAlign: textAlign,
+    text: TextSpan(style: style, children: spans),
+  );
 }

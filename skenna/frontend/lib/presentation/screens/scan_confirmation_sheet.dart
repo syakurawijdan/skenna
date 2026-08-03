@@ -55,7 +55,11 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
     DropdownItem(value: 'saus_bumbu', label: 'Saus & Bumbu'),
     DropdownItem(value: 'lainnya', label: 'Lainnya'),
   ];
-
+  static const Map<String, String> _defaultUnitByCategory = {
+    'minuman_kemasan': 'ml',
+    'susu': 'ml',
+    'saus_bumbu': 'ml',
+  };
   static TextStyle get _inputTextStyle => GoogleFonts.plusJakartaSans(
     fontSize: 16,
     fontWeight: FontWeight.w500,
@@ -80,40 +84,57 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
     borderSide: const BorderSide(color: Colors.red),
   );
 
-  static InputDecoration _decoration({String? hint, String? suffix}) =>
-      InputDecoration(
-        hintText: hint,
-        hintStyle: _hintStyle,
-        suffixText: suffix,
-        suffixStyle: GoogleFonts.plusJakartaSans(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: _blue,
-        ),
-        border: _normalBorder,
-        enabledBorder: _normalBorder,
-        focusedBorder: _focusedBorder,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
-        ),
-      );
+  static InputDecoration _decoration({
+    String? hint,
+    String? suffix,
+    Widget? suffixWidget,
+  }) => InputDecoration(
+    hintText: hint,
+    hintStyle: _hintStyle,
+    suffixText: suffix,
+    suffix: suffixWidget,
+    suffixStyle: GoogleFonts.plusJakartaSans(
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      color: _blue,
+    ),
+    border: _normalBorder,
+    enabledBorder: _normalBorder,
+    focusedBorder: _focusedBorder,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+  );
 
   late TextEditingController _namaController;
   late TextEditingController _takaranController;
   late TextEditingController _porsiController;
   late TextEditingController _sodiumController;
   String _kategori = '';
+  late String _satuanTakaran;
   double _jumlahKonsumsi = 1.0;
   bool _namaError = false;
   bool _sodiumError = false;
   bool _takaranError = false;
   bool _porsiError = false;
+  late final bool _takaranGagalOcr;
+  late final bool _porsiGagalOcr;
+  bool _takaranUserEdited = false;
+  bool _porsiUserEdited = false;
 
   // ── Apakah mode perbandingan? ──
   bool get _isModePerbandingan => widget.compareWithProduct != null;
 
   bool get _isBumbuCategory => _kategori == 'saus_bumbu';
+
+  bool get _isUnitEditable =>
+      widget.dataGizi['takaran_saji_angka'] == null ||
+      widget.dataGizi['sajian_per_kemasan'] == null;
+
+  String? get _extractedUnit {
+    final value = widget.dataGizi['satuan_takaran'];
+    if (value is! String) return null;
+    final unit = value.trim();
+    return unit == 'g' || unit == 'ml' ? unit : null;
+  }
 
   double? _parseIndoDouble(String? text) {
     if (text == null || text.trim().isEmpty) return null;
@@ -150,6 +171,8 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
     if (_categoryItems.any((item) => item.value == initialKategori)) {
       _kategori = initialKategori;
     }
+    _satuanTakaran =
+        _extractedUnit ?? (_defaultUnitByCategory[_kategori] ?? 'g');
     _namaController = TextEditingController(
       text: widget.dataGizi['nama_produk'] ?? '',
     );
@@ -160,12 +183,17 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
       text: _formatIndoNumber(widget.dataGizi['sajian_per_kemasan']),
     );
     _sodiumController = TextEditingController(
-      text: '${widget.dataGizi['sodium_mg'] ?? ''}',
+      text: _formatIndoNumber(widget.dataGizi['sodium_mg']),
     );
     _namaController.addListener(() => setState(() {}));
     _sodiumController.addListener(() => setState(() {}));
     _takaranController.addListener(() => setState(() {}));
     _porsiController.addListener(() => setState(() {}));
+
+    _takaranGagalOcr = widget.dataGizi['takaran_saji_angka'] == null;
+    _porsiGagalOcr = widget.dataGizi['sajian_per_kemasan'] == null;
+    _takaranError = _takaranGagalOcr;
+    _porsiError = _porsiGagalOcr;
   }
 
   @override
@@ -236,7 +264,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
             ? _namaController.text
             : 'Produk B',
         kategori: _kategori,
-        satuanTakaran: _kategori == 'minuman_kemasan' ? 'ml' : 'g',
+        satuanTakaran: _satuanTakaran,
         perPortionMg: _parseIndoDouble(_sodiumController.text)?.toInt() ?? 0,
         packageMl: takaranPerPorsi * porsiPerKemasan,
         portionsInPackage: porsiPerKemasan,
@@ -253,6 +281,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
           'historyItemId': widget.historyItemId,
           'fromHistory': widget.historyItemId != null,
           'isConsumed': widget.isConsumed,
+          'servings': _jumlahKonsumsi,
         },
       );
     } else {
@@ -267,11 +296,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
             dailyLimitMg: dailyLimit, // ← sudah terisi
             isHardMaximum: isHardMaximum,
             sodiumLevel: sodiumLevelLabel,
-            satuanTakaran:
-                (widget.dataGizi['satuan_takaran'] as String?)?.isNotEmpty ==
-                    true
-                ? widget.dataGizi['satuan_takaran'] as String
-                : (_kategori == 'minuman_kemasan' ? 'ml' : 'g'),
+            satuanTakaran: _satuanTakaran,
             packageMl: takaranPerPorsi * porsiPerKemasan,
             portionsInPackage: porsiPerKemasan,
             initialServings: _jumlahKonsumsi.toDouble(),
@@ -357,11 +382,10 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
               style: _inputTextStyle,
               decoration: _decoration(hint: 'Masukkan nama produk').copyWith(
                 enabledBorder: _namaError ? _errorBorder : _normalBorder,
-                errorText: _namaError ? 'Nama produk wajib diisi' : null,
               ),
               onChanged: (_) => setState(() => _namaError = false),
             ),
-            const SizedBox(height: 14),
+            _buildErrorSpace(_namaError ? 'Nama produk wajib diisi' : null),
 
             // ── Kategori ──
             _buildLabel('Kategori'),
@@ -380,6 +404,9 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                 if (selected == null) return;
                 setState(() {
                   _kategori = selected;
+                  _satuanTakaran =
+                      _extractedUnit ??
+                      (_defaultUnitByCategory[_kategori] ?? 'g');
                   if (_isBumbuCategory) _jumlahKonsumsi = 1.0;
                 });
               },
@@ -402,16 +429,67 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                         style: _inputTextStyle,
                         decoration:
                             _decoration(
-                              suffix: _kategori == 'minuman_kemasan'
-                                  ? 'ml'
-                                  : 'g',
+                              suffix: _isUnitEditable ? null : _satuanTakaran,
+                              suffixWidget: _isUnitEditable
+                                  ? InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          _satuanTakaran = _satuanTakaran == 'g'
+                                              ? 'ml'
+                                              : 'g';
+                                        });
+                                      },
+                                      borderRadius: BorderRadius.circular(6),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 2,
+                                          vertical: 4,
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              _satuanTakaran,
+                                              style:
+                                                  GoogleFonts.plusJakartaSans(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: _blue,
+                                                  ),
+                                            ),
+                                            const SizedBox(width: 2),
+                                            const Icon(
+                                              Icons.swap_vert,
+                                              size: 14,
+                                              color: _blue,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  : null,
                             ).copyWith(
                               enabledBorder: _takaranError
                                   ? _errorBorder
                                   : _normalBorder,
-                              errorText: _takaranError ? 'Wajib diisi' : null,
                             ),
-                        onChanged: (_) => setState(() => _takaranError = false),
+                        onChanged: (_) => setState(() {
+                          _takaranError =
+                              (_parseIndoDouble(_takaranController.text) ??
+                                  0) <=
+                              0;
+                          _takaranUserEdited = true;
+                        }),
+                      ),
+                      _buildErrorSpace(
+                        _takaranError
+                            ? (_takaranGagalOcr && !_takaranUserEdited
+                                  ? 'Tidak terdeteksi'
+                                  : 'Wajib diisi')
+                            : null,
+                        height: 34,
+                        maxLines: 2,
+                        overflow: TextOverflow.visible,
                       ),
                     ],
                   ),
@@ -433,16 +511,29 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
                           enabledBorder: _porsiError
                               ? _errorBorder
                               : _normalBorder,
-                          errorText: _porsiError ? 'Wajib diisi' : null,
                         ),
-                        onChanged: (_) => setState(() => _porsiError = false),
+                        onChanged: (_) => setState(() {
+                          _porsiError =
+                              (_parseIndoDouble(_porsiController.text) ?? 0) <=
+                              0;
+                          _porsiUserEdited = true;
+                        }),
+                      ),
+                      _buildErrorSpace(
+                        _porsiError
+                            ? (_porsiGagalOcr && !_porsiUserEdited
+                                  ? 'Tidak terdeteksi'
+                                  : 'Wajib diisi')
+                            : null,
+                        height: 34,
+                        maxLines: 2,
+                        overflow: TextOverflow.visible,
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
 
             // ── Natrium ──
             _buildLabel('Jumlah natrium per sajian'),
@@ -454,12 +545,11 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
               style: _inputTextStyle,
               decoration: _decoration(suffix: 'mg').copyWith(
                 enabledBorder: _sodiumError ? _errorBorder : _normalBorder,
-                errorText: _sodiumError ? 'Natrium wajib diisi' : null,
               ),
               onChanged: (_) => setState(() => _sodiumError = false),
             ),
+            _buildErrorSpace(_sodiumError ? 'Natrium wajib diisi' : null),
             if (!_isBumbuCategory) ...[
-              const SizedBox(height: 14),
               // ← TAMBAH header di atas preview box
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -576,5 +666,29 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
         color: const Color(0xFFAAAAAA),
       ),
     ),
+  );
+
+  Widget _buildErrorSpace(
+    String? message, {
+    double height = 18,
+    int maxLines = 1,
+    TextOverflow overflow = TextOverflow.ellipsis,
+  }) => SizedBox(
+    height: height,
+    child: message == null
+        ? null
+        : Padding(
+            padding: const EdgeInsets.only(left: 12, top: 2),
+            child: Text(
+              message,
+              maxLines: maxLines,
+              overflow: overflow,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                color: Colors.red,
+              ),
+            ),
+          ),
   );
 }

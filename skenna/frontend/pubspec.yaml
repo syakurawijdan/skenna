@@ -21,6 +21,7 @@ dependencies:
   google_generative_ai: ^0.4.6
   image: ^4.1.7
   intl: ^0.20.2
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
@@ -55,6 +56,7 @@ flutter:
     - assets/icons/logo_skenna.png
     - assets/icons/streamline-ultimate_seasoning-food-bold.svg 
     - assets/icons/mage_heart-health.svg
+    - assets/icons/mingcute_warning-line.svg
 
 flutter_launcher_icons:
   android: true

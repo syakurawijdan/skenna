@@ -5,7 +5,7 @@ import '../data/api_client.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/profile_wizard/profile_wizard_store.dart';
-import 'screens/scan_screen.dart';
+import 'screens/scan_onboarding_screen.dart';
 import 'widgets/navigation_overlay.dart';
 import '../../../data/user_session.dart';
 import 'navigation/app_routes.dart';
@@ -117,7 +117,7 @@ class _AppShellState extends State<AppShell>
           setState(() => _dashboardRefreshToken++);
         },
       ),
-      ScanScreen(apiClient: _apiClient),
+      ScanEntryGate(apiClient: _apiClient),
       HistoryScreen(key: _historyScreenKey, apiClient: _apiClient),
     ];
 
@@ -167,21 +167,21 @@ class _AppShellState extends State<AppShell>
                               _index = 0;
                               _dashboardRefreshToken++;
                             });
-                            _navigationOverlayController.dismiss();
-                            Future.delayed(
-                              const Duration(milliseconds: 200),
-                              () {
-                                if (!mounted) return;
-                                _navigationOverlayController.showIfNeeded(
-                                  context,
-                                  NavigationOverlayType.home, // ✅
-                                  navBarWidth: navBarWidth,
-                                  navItemCenters: navItemCenters,
-                                  bottom: overlayBottom,
-                                  userId: UserSession().getUserId(),
-                                );
-                              },
-                            );
+                            // _navigationOverlayController.dismiss();
+                            // Future.delayed(
+                            //   const Duration(milliseconds: 200),
+                            //   () {
+                            //     if (!mounted) return;
+                            //     _navigationOverlayController.showIfNeeded(
+                            //       context,
+                            //       NavigationOverlayType.home, // ✅
+                            //       navBarWidth: navBarWidth,
+                            //       navItemCenters: navItemCenters,
+                            //       bottom: overlayBottom,
+                            //       userId: UserSession().getUserId(),
+                            //     );
+                            //   },
+                            // );
                           },
                         ),
                       ),
@@ -194,21 +194,21 @@ class _AppShellState extends State<AppShell>
                           label: 'Scan',
                           onTap: () {
                             setState(() => _index = 1);
-                            _navigationOverlayController.dismiss();
-                            Future.delayed(
-                              const Duration(milliseconds: 200),
-                              () {
-                                if (!mounted) return;
-                                _navigationOverlayController.showIfNeeded(
-                                  context,
-                                  NavigationOverlayType.scan, // ✅ bukan .home
-                                  navBarWidth: navBarWidth,
-                                  navItemCenters: navItemCenters,
-                                  bottom: overlayBottom,
-                                  userId: UserSession().getUserId(),
-                                );
-                              },
-                            );
+                            // _navigationOverlayController.dismiss();
+                            // Future.delayed(
+                            //   const Duration(milliseconds: 200),
+                            //   () {
+                            //     if (!mounted) return;
+                            //     _navigationOverlayController.showIfNeeded(
+                            //       context,
+                            //       NavigationOverlayType.scan, // ✅ bukan .home
+                            //       navBarWidth: navBarWidth,
+                            //       navItemCenters: navItemCenters,
+                            //       bottom: overlayBottom,
+                            //       userId: UserSession().getUserId(),
+                            //     );
+                            //   },
+                            // );
                           },
                         ),
                       ),
@@ -222,22 +222,22 @@ class _AppShellState extends State<AppShell>
                           onTap: () {
                             setState(() => _index = 2);
                             _historyScreenKey.currentState?.refresh();
-                            _navigationOverlayController.dismiss();
-                            Future.delayed(
-                              const Duration(milliseconds: 200),
-                              () {
-                                if (!mounted) return;
-                                _navigationOverlayController.showIfNeeded(
-                                  context,
-                                  NavigationOverlayType
-                                      .history, // ✅ bukan .home
-                                  navBarWidth: navBarWidth,
-                                  navItemCenters: navItemCenters,
-                                  bottom: overlayBottom,
-                                  userId: UserSession().getUserId(),
-                                );
-                              },
-                            );
+                            // _navigationOverlayController.dismiss();
+                            // Future.delayed(
+                            //   const Duration(milliseconds: 200),
+                            //   () {
+                            //     if (!mounted) return;
+                            //     _navigationOverlayController.showIfNeeded(
+                            //       context,
+                            //       NavigationOverlayType
+                            //           .history, // ✅ bukan .home
+                            //       navBarWidth: navBarWidth,
+                            //       navItemCenters: navItemCenters,
+                            //       bottom: overlayBottom,
+                            //       userId: UserSession().getUserId(),
+                            //     );
+                            //   },
+                            // );
                           },
                         ),
                       ),

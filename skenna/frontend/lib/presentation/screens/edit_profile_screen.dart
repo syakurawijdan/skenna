@@ -11,6 +11,7 @@ import '../widgets/custom_dropdown.dart';
 import '../widgets/profile_avatar_image.dart';
 import '../widgets/profile_save_result_popup.dart';
 import '../widgets/logout_confirm_dialog.dart';
+import '../widgets/profile_unsaved_changes_dialog.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -47,6 +48,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   bool _loading = true;
   bool _saving = false;
+  bool _isHandlingBack = false;
   String? _gender;
   bool? _hasHypertension;
   String? _hypertensionCondition;
@@ -663,6 +665,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return _buildSnapshot().toString() != _original.toString();
   }
 
+  Future<void> _handleBackPressed() async {
+    if (_isHandlingBack) return;
+    _isHandlingBack = true;
+    try {
+      if (!_hasChanges) {
+        Navigator.pop(context);
+        return;
+      }
+      final result = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const ProfileUnsavedChangesDialog(),
+      );
+      if (!mounted) return;
+      if (result == true) {
+        await _save();
+      } else if (result == false) {
+        Navigator.pop(context);
+      }
+      // result == null -> user menutup dialog (tap luar/back), tetap di halaman
+    } finally {
+      _isHandlingBack = false;
+    }
+  }
+
   // ── Label field ────────────────────────────────────────────────────────────
   Widget _label(String text, {bool required = true}) {
     return Padding(
@@ -908,294 +935,307 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final sectionGap = (size.height * 0.035).clamp(24.0, 38.0).toDouble();
     final avatarSize = (size.height * 0.13).clamp(84.0, 108.0).toDouble();
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: _loading
-            ? const Center(child: CircularProgressIndicator(color: _blue))
-            : SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(16, 24, 16, 40),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── App bar ──────────────────────────────────────────────
-                    Row(
-                      children: [
-                        Material(
-                          color: const Color(0xFFDFE4ED),
-                          shape: const CircleBorder(),
-                          child: InkWell(
-                            customBorder: const CircleBorder(),
-                            onTap: () => Navigator.pop(context),
-                            child: const SizedBox(
-                              width: 40,
-                              height: 40,
-                              child: Icon(
-                                Icons.arrow_back,
-                                color: _blue,
-                                size: 20,
+    return PopScope(
+      canPop: !_hasChanges,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleBackPressed();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator(color: _blue))
+              : SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(16, 24, 16, 40),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── App bar ──────────────────────────────────────────────
+                      Row(
+                        children: [
+                          Material(
+                            color: const Color(0xFFDFE4ED),
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: _handleBackPressed,
+                              child: const SizedBox(
+                                width: 40,
+                                height: 40,
+                                child: Icon(
+                                  Icons.arrow_back,
+                                  color: _blue,
+                                  size: 20,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        Expanded(
-                          child: Center(
-                            child: Text(
-                              'Edit Profile',
-                              style: GoogleFonts.plusJakartaSans(
-                                color: _blue,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                                height: 1,
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                'Edit Profile',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: _blue,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 46),
-                      ],
-                    ),
-                    SizedBox(height: sectionGap),
+                          const SizedBox(width: 46),
+                        ],
+                      ),
+                      SizedBox(height: sectionGap),
 
-                    // ── Avatar ───────────────────────────────────────────────
-                    Center(
-                      child: SizedBox(
-                        width: avatarSize,
-                        height: avatarSize,
-                        child: ProfileAvatarImage(
-                          asset: avatar,
-                          size: avatarSize,
-                          debugLabel: 'Edit profile avatar',
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: sectionGap),
-                    _accountSection(),
-                    SizedBox(height: sectionGap),
-                    _sectionTitle('Informasi Profil'),
-                    const SizedBox(height: 12),
-                    _label('Nama panggilan'),
-                    TextField(
-                      controller: _nameController,
-                      textInputAction: TextInputAction.next,
-                      style: GoogleFonts.plusJakartaSans(
-                        color: _blue,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      decoration: _fieldDecoration(hint: 'Nama panggilan'),
-                    ),
-                    const SizedBox(height: 22),
-                    _label('Jenis Kelamin'),
-                    CustomDropdownField(
-                      value: _selectedGenderLabel(),
-                      placeholder: 'Pilih Jenis Kelamin',
-                      textAlign: TextAlign.left,
-                      height: 55,
-                      fontSize: 15,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 16,
-                      ),
-                      onTap: () async {
-                        final value = await showCustomDropdown<String>(
-                          context: context,
-                          title: 'Pilih Jenis Kelamin',
-                          items: _genderItems,
-                          selectedValue: _gender,
-                        );
-                        if (value == null) return;
-                        setState(() {
-                          _gender = value;
-                          if (!_isFemale) _pregnancyStatus = null;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 22),
-
-                    // ── Tanggal Lahir ─────────────────────────────────────────
-                    _label('Tanggal lahir'),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: _dateTextField(
-                            label: 'Hari',
-                            ctrl: _dayCtrl,
-                            focusNode: _dayFocus,
-                            hint: 'DD',
-                            maxLen: 2,
-                            nextFocus: _monthFocus,
-                            errorText: _dayError(),
+                      // ── Avatar ───────────────────────────────────────────────
+                      Center(
+                        child: SizedBox(
+                          width: avatarSize,
+                          height: avatarSize,
+                          child: ProfileAvatarImage(
+                            asset: avatar,
+                            size: avatarSize,
+                            debugLabel: 'Edit profile avatar',
+                            fit: BoxFit.contain,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 2,
-                          child: _dateTextField(
-                            label: 'Bulan',
-                            ctrl: _monthCtrl,
-                            focusNode: _monthFocus,
-                            hint: 'MM',
-                            maxLen: 2,
-                            nextFocus: _yearFocus,
-                            errorText: _monthError(),
-                          ),
+                      ),
+                      SizedBox(height: sectionGap),
+                      _accountSection(),
+                      SizedBox(height: sectionGap),
+                      _sectionTitle('Informasi Profil'),
+                      const SizedBox(height: 12),
+                      _label('Nama panggilan'),
+                      TextField(
+                        controller: _nameController,
+                        textInputAction: TextInputAction.next,
+                        style: GoogleFonts.plusJakartaSans(
+                          color: _blue,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 3,
-                          child: _dateTextField(
-                            label: 'Tahun',
-                            ctrl: _yearCtrl,
-                            focusNode: _yearFocus,
-                            hint: 'YYYY',
-                            maxLen: 4,
-                          ),
+                        decoration: _fieldDecoration(hint: 'Nama panggilan'),
+                      ),
+                      const SizedBox(height: 22),
+                      _label('Jenis Kelamin'),
+                      CustomDropdownField(
+                        value: _selectedGenderLabel(),
+                        placeholder: 'Pilih Jenis Kelamin',
+                        textAlign: TextAlign.left,
+                        height: 55,
+                        fontSize: 15,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 16,
                         ),
-                      ],
-                    ),
+                        onTap: () async {
+                          final value = await showCustomDropdown<String>(
+                            context: context,
+                            title: 'Pilih Jenis Kelamin',
+                            items: _genderItems,
+                            selectedValue: _gender,
+                          );
+                          if (value == null) return;
+                          setState(() {
+                            _gender = value;
+                            if (!_isFemale) _pregnancyStatus = null;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 22),
 
-                    // ── Hipertensi (hanya dewasa) ─────────────────────────────
-                    const SizedBox(height: 22),
-                    _label('Riwayat Hipertensi'),
-                    _radioOption(
-                      selected: _hasHypertension == true,
-                      label: 'Ya, saya pernah didiagnosis hipertensi',
-                      onTap: () => setState(() {
-                        _hasHypertension = true;
-                        _hypertensionCondition ??= 'uncontrolled';
-                      }),
-                    ),
-                    _radioOption(
-                      selected: _hasHypertension == false,
-                      label: 'Tidak, saya tidak pernah didiagnosis hipertensi',
-                      onTap: () => setState(() {
-                        _hasHypertension = false;
-                        _hypertensionCondition = null;
-                        _systolicController.clear();
-                        _diastolicController.clear();
-                      }),
-                    ),
-                    const SizedBox(height: 11),
-                    if (_hasHypertension == true) ...[
+                      // ── Tanggal Lahir ─────────────────────────────────────────
+                      _label('Tanggal lahir'),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: _bloodPressureTextField(
-                              label: 'Sistolik',
-                              ctrl: _systolicController,
-                              focusNode: _systolicFocus,
-                              hint: 'Isi sistolik',
-                              nextFocus: _diastolicFocus,
+                            flex: 2,
+                            child: _dateTextField(
+                              label: 'Hari',
+                              ctrl: _dayCtrl,
+                              focusNode: _dayFocus,
+                              hint: 'DD',
+                              maxLen: 2,
+                              nextFocus: _monthFocus,
+                              errorText: _dayError(),
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: _bloodPressureTextField(
-                              label: 'Diastolik',
-                              ctrl: _diastolicController,
-                              focusNode: _diastolicFocus,
-                              hint: 'Isi diastolik',
+                            flex: 2,
+                            child: _dateTextField(
+                              label: 'Bulan',
+                              ctrl: _monthCtrl,
+                              focusNode: _monthFocus,
+                              hint: 'MM',
+                              maxLen: 2,
+                              nextFocus: _yearFocus,
+                              errorText: _monthError(),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            flex: 3,
+                            child: _dateTextField(
+                              label: 'Tahun',
+                              ctrl: _yearCtrl,
+                              focusNode: _yearFocus,
+                              hint: 'YYYY',
+                              maxLen: 4,
                             ),
                           ),
                         ],
                       ),
-                    ],
 
-                    // ── Kondisi hamil/menyusui (perempuan) ───────────────────
-                    // ── Kondisi hamil/menyusui (perempuan) ───────────────────
-                    if (_shouldShowPregnancyQuestion) ...[
+                      // ── Hipertensi (hanya dewasa) ─────────────────────────────
                       const SizedBox(height: 22),
-                      _label('Kondisi Hamil/Menyusui'),
-                      _pregnancyOption(
-                        selected: _pregnancyStatus == 'pregnant',
-                        label: 'Hamil atau Menyusui',
-                        onTap: () =>
-                            setState(() => _pregnancyStatus = 'pregnant'),
+                      _label('Riwayat Hipertensi'),
+                      _radioOption(
+                        selected: _hasHypertension == true,
+                        label: 'Ya, saya pernah didiagnosis hipertensi',
+                        onTap: () => setState(() {
+                          _hasHypertension = true;
+                          _hypertensionCondition ??= 'uncontrolled';
+                        }),
                       ),
-                      _pregnancyOption(
-                        selected: _pregnancyStatus == 'none',
-                        label: 'Tidak Keduanya',
-                        onTap: () => setState(() => _pregnancyStatus = 'none'),
+                      _radioOption(
+                        selected: _hasHypertension == false,
+                        label:
+                            'Tidak, saya tidak pernah didiagnosis hipertensi',
+                        onTap: () => setState(() {
+                          _hasHypertension = false;
+                          _hypertensionCondition = null;
+                          _systolicController.clear();
+                          _diastolicController.clear();
+                        }),
+                      ),
+                      const SizedBox(height: 11),
+                      if (_hasHypertension == true) ...[
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _bloodPressureTextField(
+                                label: 'Sistolik',
+                                ctrl: _systolicController,
+                                focusNode: _systolicFocus,
+                                hint: 'Isi sistolik',
+                                nextFocus: _diastolicFocus,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _bloodPressureTextField(
+                                label: 'Diastolik',
+                                ctrl: _diastolicController,
+                                focusNode: _diastolicFocus,
+                                hint: 'Isi diastolik',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
+                      // ── Kondisi hamil/menyusui (perempuan) ───────────────────
+                      // ── Kondisi hamil/menyusui (perempuan) ───────────────────
+                      if (_shouldShowPregnancyQuestion) ...[
+                        const SizedBox(height: 22),
+                        _label('Kondisi Hamil/Menyusui'),
+                        _pregnancyOption(
+                          selected: _pregnancyStatus == 'pregnant',
+                          label: 'Hamil atau Menyusui',
+                          onTap: () =>
+                              setState(() => _pregnancyStatus = 'pregnant'),
+                        ),
+                        _pregnancyOption(
+                          selected: _pregnancyStatus == 'none',
+                          label: 'Tidak Keduanya',
+                          onTap: () =>
+                              setState(() => _pregnancyStatus = 'none'),
+                        ),
+                      ],
+
+                      // Jarak statis yang aman antara form terakhir dengan tombol
+                      const SizedBox(height: 40),
+
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 343),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 55,
+                            child: FilledButton(
+                              onPressed: (_saving || !_hasChanges)
+                                  ? null
+                                  : _save,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF2C4A8A),
+                                disabledBackgroundColor: const Color(
+                                  0xFFD9D9D9,
+                                ),
+                                elevation: 4,
+                                shadowColor: const Color(0x40000000),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                              ),
+                              child: _saving
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Simpan Perubahan',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        height: 1,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 343),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 55,
+                            child: TextButton(
+                              onPressed: _logout,
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFFE53935),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                              ),
+                              child: Text(
+                                'Keluar',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: const Color(0xFFE53935),
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
-
-                    // Jarak statis yang aman antara form terakhir dengan tombol
-                    const SizedBox(height: 40),
-
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 343),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 55,
-                          child: FilledButton(
-                            onPressed: (_saving || !_hasChanges) ? null : _save,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF2C4A8A),
-                              disabledBackgroundColor: const Color(0xFFD9D9D9),
-                              elevation: 4,
-                              shadowColor: const Color(0x40000000),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                            ),
-                            child: _saving
-                                ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Text(
-                                    'Simpan Perubahan',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      height: 1,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 343),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 55,
-                          child: TextButton(
-                            onPressed: _logout,
-                            style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFFE53935),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                            ),
-                            child: Text(
-                              'Keluar',
-                              style: GoogleFonts.plusJakartaSans(
-                                color: const Color(0xFFE53935),
-                                fontSize: 19,
-                                fontWeight: FontWeight.w600,
-                                height: 1,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+        ),
       ),
     );
   }

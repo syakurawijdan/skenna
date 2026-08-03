@@ -46,16 +46,12 @@ class ScanFailedDialog extends StatelessWidget {
                   height: 1.4,
                 ),
                 children: const [
-                  TextSpan(text: 'Teks pada kemasan '),
+                  TextSpan(text: 'Pastikan bagian '),
                   TextSpan(
-                    text: 'tidak terdeteksi, ',
+                    text: 'informasi nilai gizi terlihat jelas, ',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  TextSpan(text: ' Coba scan dengan gambar yang '),
-                  TextSpan(
-                    text: 'lebih jelas.',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
+                  TextSpan(text: 'lalu coba scan kembali'),
                 ],
               ),
             ),

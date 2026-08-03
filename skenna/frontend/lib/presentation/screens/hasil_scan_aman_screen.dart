@@ -7,7 +7,7 @@ import 'package:skenna/presentation/screens/hasil_perbandingan_produk.dart';
 
 import '../../data/api_client.dart';
 import '../../domain/kategori_label.dart';
-import 'scan_screen.dart';
+import 'scan_onboarding_screen.dart';
 import '../app_shell.dart';
 import '../navigation/app_routes.dart';
 import '../../../data/user_session.dart';
@@ -15,6 +15,7 @@ import '../widgets/stop_natrium_dialog.dart';
 import '../widgets/yakin_makan_dialog.dart';
 import '../widgets/unsaved_changes_dialog.dart';
 import '../widgets/edukasi_info_card.dart';
+import '../widgets/portion_slider.dart';
 
 // ════════════════════════════════════════════════════════════════════════════
 // Model rekomendasi produk
@@ -115,6 +116,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
   bool _deleting = false;
   bool _sudahDicatat = false;
   bool _statusDikonsumsi = false;
+  bool _sudahMemutuskanKonsumsi = false;
   double _sajianSaatDicatat = 0;
   String? _localHistoryItemId;
 
@@ -128,6 +130,8 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
 
   bool get _adaPerubahanBelumDisimpan {
     if (widget.readOnly) return false;
+    if (_isBumbu) return false;
+    if (!_sudahMemutuskanKonsumsi) return true;
     if (!_statusDikonsumsi) return false;
     return _sajianBerubah;
   }
@@ -163,24 +167,23 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
     _statusDikonsumsi = widget.isConsumed;
     _sajianSaatDicatat = widget.initialServings;
     _localHistoryItemId = widget.historyItemId;
+    _sudahMemutuskanKonsumsi =
+        widget.fromHistory || widget.isFromHistory || widget.readOnly;
 
-    if (!widget.fromHistory && !widget.readOnly && !_isBumbu) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _cekOverLimitHarian();
-      });
-    }
+    final bisaAutoSimpan =
+        !widget.fromHistory && !widget.readOnly && !widget.isFromHistory;
 
     if (widget.rekomendasiJson != null) {
       _parseRekomendasiFromJson(widget.rekomendasiJson!);
-      if (!widget.fromHistory && !widget.readOnly && _isBumbu) {
+      if (bisaAutoSimpan) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _saveBumbuReferenceIfNeeded();
+          _simpanReferensiJikaScanBaru();
         });
       }
-    } else if (!widget.fromHistory && !widget.readOnly && _isBumbu) {
+    } else if (bisaAutoSimpan) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await _loadRekomendasi();
-        await _saveBumbuReferenceIfNeeded();
+        await _simpanReferensiJikaScanBaru();
       });
     } else {
       _loadRekomendasi();
@@ -348,11 +351,61 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
         final shouldSave = await showDialog<bool>(
           context: context,
           barrierColor: Colors.black.withOpacity(0.5),
-          builder: (ctx) => const UnsavedChangesDialog(),
+          builder: (ctx) => UnsavedChangesDialog(
+            title: widget.fromHistory
+                ? 'Perubahan Belum Disimpan'
+                : 'Hasil Scan Belum Disimpan',
+            message: widget.fromHistory
+                ? Text.rich(
+                    TextSpan(
+                      children: [
+                        const TextSpan(text: 'Perubahan yang dibuat '),
+                        TextSpan(
+                          text: 'belum disimpan',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const TextSpan(text: '.'),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  )
+                : Text.rich(
+                    TextSpan(
+                      children: [
+                        const TextSpan(text: 'Produk ini '),
+                        TextSpan(
+                          text: 'tidak jadi dikonsumsi',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const TextSpan(
+                          text: '? Statusnya akan dicatat ke riwayat sebagai ',
+                        ),
+                        TextSpan(
+                          text: 'tidak dikonsumsi',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const TextSpan(text: '.'),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+            negativeLabel: widget.fromHistory
+                ? 'Buang Perubahan'
+                : 'Tidak Dikonsumsi',
+            positiveLabel: widget.fromHistory
+                ? 'Simpan Perubahan'
+                : 'Ya, Dikonsumsi',
+          ),
         );
         if (shouldSave == null) return; // batal, tetap di halaman
         if (shouldSave) {
-          await _handleCatat();
+          await _handleCatat(skipConfirmDialog: true);
         } else {
           if (mounted) Navigator.pop(context);
         }
@@ -398,12 +451,79 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                                       barrierColor: Colors.black.withOpacity(
                                         0.5,
                                       ),
-                                      builder: (ctx) =>
-                                          const UnsavedChangesDialog(),
+                                      builder: (ctx) => UnsavedChangesDialog(
+                                        title: widget.fromHistory
+                                            ? 'Perubahan Belum Disimpan'
+                                            : 'Hasil Scan Belum Disimpan',
+                                        message: widget.fromHistory
+                                            ? Text.rich(
+                                                TextSpan(
+                                                  children: [
+                                                    const TextSpan(
+                                                      text:
+                                                          'Perubahan yang dibuat ',
+                                                    ),
+                                                    TextSpan(
+                                                      text: 'belum disimpan',
+                                                      style:
+                                                          GoogleFonts.plusJakartaSans(
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                          ),
+                                                    ),
+                                                    const TextSpan(text: '.'),
+                                                  ],
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              )
+                                            : Text.rich(
+                                                TextSpan(
+                                                  children: [
+                                                    const TextSpan(
+                                                      text: 'Produk ini ',
+                                                    ),
+                                                    TextSpan(
+                                                      text:
+                                                          'tidak jadi dikonsumsi',
+                                                      style:
+                                                          GoogleFonts.plusJakartaSans(
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                          ),
+                                                    ),
+                                                    const TextSpan(
+                                                      text:
+                                                          '? Statusnya akan dicatat ke riwayat sebagai ',
+                                                    ),
+                                                    TextSpan(
+                                                      text: 'tidak dikonsumsi',
+                                                      style:
+                                                          GoogleFonts.plusJakartaSans(
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                          ),
+                                                    ),
+                                                    const TextSpan(text: '.'),
+                                                  ],
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                        negativeLabel: widget.fromHistory
+                                            ? 'Buang Perubahan'
+                                            : 'Tidak Dikonsumsi',
+                                        positiveLabel: widget.fromHistory
+                                            ? 'Simpan Perubahan'
+                                            : 'Ya, Dikonsumsi',
+                                      ),
                                     );
                                     if (shouldSave == null) return;
                                     if (shouldSave) {
-                                      await _handleCatat();
+                                      if (shouldSave) {
+                                        await _handleCatat(
+                                          skipConfirmDialog: true,
+                                        );
+                                        return;
+                                      }
                                       return;
                                     }
                                   }
@@ -440,7 +560,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                                   onTap: () => Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => ScanScreen(
+                                      builder: (_) => ScanEntryGate(
                                         apiClient: widget.apiClient,
                                       ),
                                     ),
@@ -685,7 +805,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _PortionSlider(
+                        PortionSlider(
                           value: _selectedSajian,
                           min: 1.0,
                           max: math.max(10.0, widget.portionsInPackage),
@@ -915,7 +1035,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => ScanScreen(
+                                builder: (_) => ScanEntryGate(
                                   apiClient: widget.apiClient,
                                   historyItemId:
                                       _localHistoryItemId ??
@@ -1176,8 +1296,11 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
     );
   }
 
-  Future<void> _saveBumbuReferenceIfNeeded() async {
-    if (!_isBumbu || widget.fromHistory || widget.readOnly || _sudahDicatat) {
+  Future<void> _simpanReferensiJikaScanBaru() async {
+    if (widget.fromHistory ||
+        widget.readOnly ||
+        widget.isFromHistory ||
+        _sudahDicatat) {
       return;
     }
 
@@ -1200,14 +1323,16 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
         if (_tipsTeks != null) 'tips': _tipsTeks,
       });
 
+      final servingsAwal = _isBumbu ? 1.0 : _selectedSajian;
+
       final response = await client.postScanHistory(
         userId: activeUserId,
         sodiumMg: widget.perPortionMg,
-        servings: 1.0,
+        servings: servingsAwal,
         productName: widget.productName,
         sodiumLevel: widget.sodiumLevel,
         kategori: widget.kategori,
-        type: 'bumbu',
+        type: _isBumbu ? 'bumbu' : 'single',
         packageMl: widget.packageMl,
         portionsInPackage: widget.portionsInPackage,
         satuanTakaran: widget.satuanTakaran,
@@ -1220,25 +1345,32 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
       setState(() {
         _sudahDicatat = true;
         _statusDikonsumsi = false;
-        _sajianSaatDicatat = 1.0;
+        _sajianSaatDicatat = servingsAwal;
         _localHistoryItemId = response['id'].toString();
       });
     } catch (e) {
-      debugPrint('Gagal menyimpan bumbu ke history: $e');
+      debugPrint('Gagal menyimpan referensi scan ke history: $e');
     }
   }
 
-  Future<void> _handleCatat() async {
+  Future<void> _handleCatat({bool skipConfirmDialog = false}) async {
     if (_isBumbu) return;
     if (widget.readOnly) return;
 
     final isUpdate = _sudahDicatat;
-    final akanDikonsumsi = await showDialog<bool>(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.5),
-      builder: (ctx) => YakinMakanDialog(isUpdate: _statusDikonsumsi),
-    );
-    if (akanDikonsumsi == null) return;
+
+    bool akanDikonsumsi;
+    if (skipConfirmDialog) {
+      akanDikonsumsi = widget.fromHistory ? _statusDikonsumsi : true;
+    } else {
+      final result = await showDialog<bool>(
+        context: context,
+        barrierColor: Colors.black.withOpacity(0.5),
+        builder: (ctx) => YakinMakanDialog(isUpdate: _statusDikonsumsi),
+      );
+      if (result == null) return;
+      akanDikonsumsi = result;
+    }
 
     if (akanDikonsumsi) {
       final activeUserId = UserSession().getUserId();
@@ -1326,6 +1458,7 @@ class _HasilScanAmanScreenState extends State<HasilScanAmanScreen> {
         _sudahDicatat = true;
         _statusDikonsumsi = akanDikonsumsi;
         _sajianSaatDicatat = _selectedSajian;
+        _sudahMemutuskanKonsumsi = true;
       });
 
       // ... sisanya (snackbar + navigasi) tetap sama seperti sebelumnya
@@ -1669,139 +1802,6 @@ class _QuickPickButton extends StatelessWidget {
       ),
     );
   }
-}
-
-class _PortionSlider extends StatelessWidget {
-  const _PortionSlider({
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.onChanged,
-    required this.thumbColor,
-    this.enabled = true,
-  });
-
-  final double value;
-  final double min;
-  final double max;
-  final ValueChanged<double> onChanged;
-  final Color thumbColor;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    final range = max - min;
-    final fraction = range <= 0 ? 0.0 : (value - min) / range;
-    final divisions = range > 0 ? (range * 2).round() : null;
-    ;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final trackWidth = constraints.maxWidth;
-        const thumbRadius = 12.0;
-        const horizontalPadding = 16.0;
-        final usableWidth = trackWidth - horizontalPadding * 2;
-        final thumbX = horizontalPadding + usableWidth * fraction;
-        const boxW = 36.0;
-        const boxH = 32.0;
-        final boxLeft = (thumbX - boxW / 2).clamp(0.0, trackWidth - boxW);
-
-        return SizedBox(
-          height: boxH + 8 + thumbRadius * 2 + 8,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(
-                left: boxLeft,
-                top: 0,
-                child: Container(
-                  width: boxW,
-                  height: boxH,
-                  decoration: BoxDecoration(
-                    color: thumbColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    _formatValue(value),
-                    style: GoogleFonts.plusJakartaSans(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: thumbX - 5,
-                top: boxH,
-                child: CustomPaint(
-                  painter: _TrianglePainter(color: thumbColor),
-                  size: const Size(10, 6),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: thumbColor,
-                    thumbColor: thumbColor,
-                    inactiveTrackColor: const Color(0xFFD7DCE8),
-                    overlayColor: thumbColor.withOpacity(0.1),
-                    trackHeight: 4,
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: thumbRadius,
-                    ),
-                    showValueIndicator: ShowValueIndicator.never,
-                  ),
-                  child: IgnorePointer(
-                    ignoring: !enabled,
-                    child: Slider(
-                      value: value.clamp(min, math.max(min, max)),
-                      min: min,
-                      max: math.max(min, max),
-                      divisions: divisions,
-                      onChanged: (v) => onChanged((v * 2).round() / 2),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  String _formatValue(num number) {
-    final parsed = number.toDouble();
-    if (parsed == parsed.roundToDouble()) return parsed.toInt().toString();
-    return parsed
-        .toStringAsFixed(2)
-        .replaceFirst(RegExp(r'0+$'), '')
-        .replaceFirst(RegExp(r'\.$'), '')
-        .replaceAll('.', ',');
-  }
-}
-
-class _TrianglePainter extends CustomPainter {
-  const _TrianglePainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
-    final path = Path()
-      ..moveTo(0, 0)
-      ..lineTo(size.width, 0)
-      ..lineTo(size.width / 2, size.height)
-      ..close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(_TrianglePainter old) => old.color != color;
 }
 
 class _DeleteConfirmDialog extends StatelessWidget {

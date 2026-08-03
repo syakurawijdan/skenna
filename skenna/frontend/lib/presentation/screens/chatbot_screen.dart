@@ -8,6 +8,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/yakin_makan_dialog.dart';
 import '../widgets/stop_natrium_dialog.dart';
+import '../../domain/kategori_label.dart';
 
 class _ChatItem {
   const _ChatItem({

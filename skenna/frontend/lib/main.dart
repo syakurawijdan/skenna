@@ -351,6 +351,8 @@ class _MainAppState extends State<MainApp> {
             final sodiumLevel = hasil == null
                 ? 'medium'
                 : _sodiumLevelLabel(hasil.kategori);
+            final initialServings =
+                (args['servings'] as num?)?.toDouble() ?? 1.0;
             return HasilBandingkanScreen(
               productA: args['productA'] as ProductCompareData,
               productB: args['productB'] as ProductCompareData,
@@ -361,6 +363,7 @@ class _MainAppState extends State<MainApp> {
               fromHistory: fromHistory,
               historyItemId: historyItemId,
               isConsumed: isConsumed,
+              initialServings: initialServings,
               originalProduct:
                   args['originalProduct']
                       as ProductCompareData?, // ← tambah ini

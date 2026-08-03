@@ -13,6 +13,8 @@ import '../../data/api_client.dart';
 import '../navigation/app_routes.dart';
 import 'package:flutter/foundation.dart';
 import 'package:skenna/presentation/widgets/ScanFailedDialog.dart';
+import 'package:skenna/presentation/widgets/NoInternetDialog.dart';
+import 'package:path_provider/path_provider.dart';
 
 class ScanScreen extends StatefulWidget {
   final dynamic apiClient;
@@ -60,7 +62,8 @@ class _ScanScreenState extends State<ScanScreen> {
 
     final controller = CameraController(
       cameras.first,
-      ResolutionPreset.medium,
+      // Naikkan detail capture agar teks label lebih tajam.
+      ResolutionPreset.high,
       enableAudio: false,
     );
 
@@ -91,6 +94,7 @@ class _ScanScreenState extends State<ScanScreen> {
       _isLoading = true;
     });
 
+    File? compressedImageFile;
     try {
       final XFile image = await _cameraController!.takePicture();
       final bytes = await File(image.path).readAsBytes();
@@ -103,14 +107,25 @@ class _ScanScreenState extends State<ScanScreen> {
       ]);
       final compressedBytes = results[1];
 
-      final result = await widget.apiClient.scanLabel(image.path);
+      final temporaryDirectory = await getTemporaryDirectory();
+      compressedImageFile = File(
+        '${temporaryDirectory.path}${Platform.pathSeparator}'
+        'skenna_scan_${DateTime.now().microsecondsSinceEpoch}.jpg',
+      );
+      // Simpan hasil kompresi dan kirim file ini, bukan foto kamera berukuran besar.
+      await compressedImageFile.writeAsBytes(compressedBytes, flush: true);
+
+      final result = await widget.apiClient.scanLabel(compressedImageFile.path);
 
       // ── Validasi hasil OCR ──
       final takaranSaji = result['takaran_saji'];
       final sajianPerKemasan = result['sajian_per_kemasan'];
-      final bool scanGagal = takaranSaji == null || sajianPerKemasan == null;
+      final sodiumMg = result['sodium_mg'];
 
-      if (scanGagal) {
+      final bool ocrTotalGagal =
+          takaranSaji == null && sajianPerKemasan == null;
+
+      if (ocrTotalGagal) {
         if (mounted) {
           await showDialog(
             context: context,
@@ -128,16 +143,30 @@ class _ScanScreenState extends State<ScanScreen> {
       final dataGizi = {
         "nama_produk": result['nama_produk'] ?? result['product_name'] ?? "",
         "satuan_takaran": result['satuan_takaran'] ?? "g",
-        "takaran_saji_angka": (takaranSaji as num).toDouble(),
-        "sajian_per_kemasan": (sajianPerKemasan as num).toDouble(),
-        "sodium_mg": result['sodium_mg'] != null
-            ? (result['sodium_mg'] as num).toDouble()
-            : 0.0,
+        "takaran_saji_angka": takaranSaji != null
+            ? (takaranSaji as num).toDouble()
+            : null,
+        "sajian_per_kemasan": sajianPerKemasan != null
+            ? (sajianPerKemasan as num).toDouble()
+            : null,
+        "sodium_mg": sodiumMg != null ? (sodiumMg as num).toDouble() : 0.0,
         "image_path": result['image_path'] as String?,
         "scan_id": result['scan_id'],
       };
 
       await _showResultSheetAfterDispose(dataGizi);
+    } on SocketException catch (_) {
+      if (mounted) {
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => const NoInternetDialog(),
+        );
+        if (mounted) {
+          setState(() => _frozenFrame = null);
+          await _initializeCamera();
+        }
+      }
     } on ApiException catch (e) {
       if (e.statusCode == 401 && mounted) {
         await ApiClient.clearLocalSession();
@@ -165,6 +194,14 @@ class _ScanScreenState extends State<ScanScreen> {
         ).showSnackBar(SnackBar(content: Text("Gagal scan: $e")));
       }
     } finally {
+      // File upload hanya dibutuhkan selama request; hapus agar cache tidak menumpuk.
+      try {
+        if (compressedImageFile != null && await compressedImageFile.exists()) {
+          await compressedImageFile.delete();
+        }
+      } catch (e) {
+        debugPrint('Gagal menghapus file scan sementara: $e');
+      }
       if (mounted) {
         setState(() {
           _isProcessing = false;
@@ -209,32 +246,6 @@ class _ScanScreenState extends State<ScanScreen> {
         await controller.setFlashMode(FlashMode.off); //
       } catch (_) {}
       await controller.dispose();
-    }
-  }
-
-  Future<void> _showResultSheet(Map<String, dynamic> data) async {
-    await _disposeCamera();
-
-    if (!mounted) return;
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => ScanConfirmationSheet(
-        dataGizi: data,
-        userId: UserSession().getUserId(),
-        apiClient: widget.apiClient,
-        compareWithProduct: widget.compareWithProduct,
-        historyItemId: widget.historyItemId,
-        isConsumed: widget.isConsumed,
-      ),
-    );
-
-    // Sheet ditutup (dismiss atau navigasi) — reinit kamera jika masih mounted
-    if (mounted) {
-      setState(() => _frozenFrame = null);
-      await _initializeCamera();
     }
   }
 
@@ -501,9 +512,11 @@ Uint8List _compressImageIsolate(Uint8List bytes) {
   final decoded = img.decodeImage(bytes);
   if (decoded == null) return bytes;
 
+  // Jaga detail OCR dengan sisi terpanjang sebesar 1280 px.
   final resized = decoded.width > decoded.height
-      ? img.copyResize(decoded, width: 512)
-      : img.copyResize(decoded, height: 512);
+      ? img.copyResize(decoded, width: 1280)
+      : img.copyResize(decoded, height: 1280);
 
-  return img.encodeJpg(resized, quality: 70);
+  // Quality 85 menyeimbangkan ukuran upload dan ketajaman teks.
+  return img.encodeJpg(resized, quality: 85);
 }

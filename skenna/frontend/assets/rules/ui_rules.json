@@ -5,15 +5,21 @@
   },
   "kategori": {
     "normal_anak": {
-      "header": "Kebutuhan Natrium Harian Kamu",
+      "header": "Acuan Konsumsi Natrium Harian Kamu",
       "warna": "hijau",
-      "deskripsi": "Berdasarkan AKG, kebutuhan natrium harian adalah {nilai} mg untuk kondisi normal",
+      "deskripsi": {
+        "template": "Berdasarkan AKG, acuan konsumsi natrium harian kamu adalah {nilai} mg",
+        "template_bold_spans": ["AKG", "acuan konsumsi natrium harian", "{nilai} mg"]
+      },
       "box": null
     },
     "normal_dewasa": {
       "header": "Batas Maksimal Natrium Harian",
       "warna": "hijau",
-      "deskripsi": "Batas natrium harianmu hingga {nilai} mg per hari untuk kondisi normal",
+      "deskripsi": {
+        "template": "Batas natrium harianmu hingga {nilai} mg per hari untuk kondisi normal",
+        "template_bold_spans": ["{nilai} mg", "kondisi normal"]
+      },
       "box": {
         "tipe": "akg_referensi",
         "template": "Kebutuhan natrium harian kamu ",
@@ -23,47 +29,62 @@
     "hipertensi_dewasa": {
       "header": "Lebih Ketat Batas Natrium Harian",
       "warna": "merah",
-      "deskripsi": "Batas ini lebih rendah untuk membantu mengontrol tekanan darahmu",
+      "deskripsi": {
+        "template": "Batas ini lebih rendah untuk membantu mengontrol tekanan darahmu",
+        "template_bold_spans": ["lebih rendah", "tekanan darahmu"]
+      },
       "box": {
         "tipe": "esc",
         "template": "Tekanan darah Anda berada pada kategori\n",
-        "template_bold_spans":["{esc_kategori} ({sistol}/{diastol} mmHg)"]
+        "template_bold_spans": ["{esc_kategori} ({sistol}/{diastol} mmHg)"]
       }
     },
     "hipertensi_anak": {
-      "header": "Anjuran Natrium untuk Anak Hipertensi",
+      "header": "Acuan Natrium untuk Anak Hipertensi",
       "warna": "merah",
-      "deskripsi": "Hipertensi pada anak-anak memerlukan perhatian terhadap konsumsi natrium harian",
+      "deskripsi": {
+        "template": "Hipertensi pada anak-anak memerlukan perhatian terhadap konsumsi natrium harian",
+        "template_bold_spans": ["pada anak-anak", "perhatian terhadap konsumsi natrium harian"]
+      },
       "box": {
         "tipe": "esc",
         "template": "Tekanan darah Anda berada pada kategori\n",
-        "template_bold_spans":["{esc_kategori} ({sistol}/{diastol} mmHg)"]
+        "template_bold_spans": ["{esc_kategori} ({sistol}/{diastol} mmHg)"]
       }
     },
     "hipertensi_hamil_remaja": {
-      "header": "Anjuran Natrium Hamil dan Menyusui Remaja Hipertensi",
+      "header": "Acuan Natrium Hamil dan Menyusui Remaja Hipertensi",
       "warna": "merah",
-      "deskripsi": "Ibu hamil dan menyusui dengan hipertensi perlu memperhatikan asupan natrium harian",
+      "deskripsi": {
+        "template": "Ibu hamil dan menyusui dengan hipertensi perlu memperhatikan asupan natrium harian",
+        "template_bold_spans": ["dengan hipertensi", "memperhatikan asupan natrium harian"]
+      },
       "box": {
         "tipe": "esc",
         "template": "Tekanan darah Anda berada pada kategori\n",
-        "template_bold_spans":["{esc_kategori} ({sistol}/{diastol} mmHg)"]
+        "template_bold_spans": ["{esc_kategori} ({sistol}/{diastol} mmHg)"]
       }
     },
     "hamil_dewasa": {
       "header": "Konsumsi Natrium Kehamilan/Menyusui",
       "warna": "kuning",
-      "deskripsi": "Selama kehamilan/menyusui, perhatikan konsumsi natrium sesuai kebutuhan harian",
+      "deskripsi": {
+        "template": "Selama kehamilan/menyusui, perhatikan konsumsi natrium sesuai kebutuhan harian",
+        "template_bold_spans": ["kehamilan/menyusui", "perhatikan konsumsi natrium"]
+      },
       "box": {
         "tipe": "akg_referensi",
         "template": "Kebutuhan natrium harian kamu ",
-        "template_bold_spans":["berdasarkan AKG adalah {akg_value} mg"]
+        "template_bold_spans": ["berdasarkan AKG adalah {akg_value} mg"]
       }
     },
     "hamil_remaja": {
-      "header": "Anjuran Natrium Kehamilan/Menyusui Remaja",
+      "header": "Acuan Natrium Kehamilan/Menyusui Remaja",
       "warna": "kuning",
-      "deskripsi": "Selama kehamilan/menyusui, perhatikan konsumsi natrium sesuai kebutuhan harian",
+      "deskripsi": {
+        "template": "Selama kehamilan/menyusui, perhatikan konsumsi natrium sesuai kebutuhan harian",
+        "template_bold_spans": ["kehamilan/menyusui", "perhatikan konsumsi natrium"]
+      },
       "box": null
     }
   }

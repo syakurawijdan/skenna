@@ -2,7 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class UnsavedChangesDialog extends StatelessWidget {
-  const UnsavedChangesDialog({super.key});
+  const UnsavedChangesDialog({
+    super.key,
+    required this.title,
+    required this.message,
+    required this.negativeLabel,
+    required this.positiveLabel,
+    this.imagePath = 'assets/illustrations/yakin_makan_ini.png',
+  });
+
+  final String title;
+  final Widget message;
+  final String negativeLabel;
+  final String positiveLabel;
+  final String? imagePath;
 
   static const _blue = Color(0xFF2C4A8A);
   static const _muted = Color(0xFF9AA3B5);
@@ -19,7 +32,7 @@ class UnsavedChangesDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Perubahan Belum\nDisimpan',
+              title,
               textAlign: TextAlign.center,
               style: GoogleFonts.plusJakartaSans(
                 color: _blue,
@@ -29,33 +42,30 @@ class UnsavedChangesDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Image.asset(
-              'assets/illustrations/yakin_makan_ini.png',
-              width: 200,
-              height: 200,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(height: 20),
-            RichText(
-              textAlign: TextAlign.center,
-              text: TextSpan(
-                style: GoogleFonts.plusJakartaSans(
-                  color: _blue,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  height: 1.4,
-                ),
-                children: const [
-                  TextSpan(text: 'Kamu punya '),
-                  TextSpan(
-                    text: 'perubahan yang belum disimpan,',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  TextSpan(text: ' Simpan sebelum keluar?'),
-                ],
+
+            if (imagePath != null)
+              Image.asset(
+                imagePath!,
+                width: 200,
+                height: 200,
+                fit: BoxFit.contain,
               ),
+
+            const SizedBox(height: 20),
+
+            DefaultTextStyle(
+              style: GoogleFonts.plusJakartaSans(
+                color: _blue,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+              child: message,
             ),
+
             const SizedBox(height: 24),
+
             SizedBox(
               width: double.infinity,
               height: 52,
@@ -66,7 +76,7 @@ class UnsavedChangesDialog extends StatelessWidget {
                   overlayColor: _muted.withOpacity(0.1),
                 ),
                 child: Text(
-                  'Keluar Tanpa Simpan',
+                  negativeLabel,
                   style: GoogleFonts.plusJakartaSans(
                     color: _muted,
                     fontSize: 15,
@@ -75,7 +85,9 @@ class UnsavedChangesDialog extends StatelessWidget {
                 ),
               ),
             ),
+
             const SizedBox(height: 12),
+
             SizedBox(
               width: double.infinity,
               height: 52,
@@ -88,7 +100,7 @@ class UnsavedChangesDialog extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Simpan',
+                  positiveLabel,
                   style: GoogleFonts.plusJakartaSans(
                     color: Colors.white,
                     fontSize: 15,

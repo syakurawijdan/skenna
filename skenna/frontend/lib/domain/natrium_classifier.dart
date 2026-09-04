@@ -42,6 +42,7 @@ class HasilKlasifikasi {
     this.isPregnantOrBreastfeeding = false,
     this.hasHypertension = false,
     this.isHardMaximum = true,
+    this.statusKehamilan = 'tidak_hamil',
   });
 
   final int batasNatrium;
@@ -56,6 +57,7 @@ class HasilKlasifikasi {
   final bool isPregnantOrBreastfeeding;
   final bool hasHypertension;
   final bool isHardMaximum;
+  final String statusKehamilan;
 }
 
 @immutable
@@ -453,6 +455,9 @@ Future<HasilKlasifikasi> klasifikasiNatriumDariAsset({
       statusKehamilan != null && statusKehamilan.isNotEmpty
       ? statusKehamilan
       : status_kehamilan;
+  final normalizedStatusKehamilan = _normalizeStatusKehamilan(
+    resolvedStatusKehamilan,
+  );
   final normalizedGender = _normalizeGender(gender);
   final normalizedRiwayatHt = _normalizeRiwayatHT(riwayat_ht);
   final pregnantOrBreastfeeding =
@@ -486,6 +491,9 @@ Future<HasilKlasifikasi> klasifikasiNatriumDariAsset({
     isPregnantOrBreastfeeding: pregnantOrBreastfeeding,
     hasHypertension: hasHypertension,
     isHardMaximum: usia >= 16,
+    statusKehamilan: pregnantOrBreastfeeding
+        ? normalizedStatusKehamilan
+        : 'tidak_hamil',
   );
 }
 

@@ -56,6 +56,7 @@ class _ScanScreenState extends State<ScanScreen> {
     );
   }
 
+  //inisialisasi kamera
   Future<void> _initializeCamera() async {
     final cameras = await availableCameras();
     if (cameras.isEmpty) return;
@@ -115,7 +116,18 @@ class _ScanScreenState extends State<ScanScreen> {
       // Simpan hasil kompresi dan kirim file ini, bukan foto kamera berukuran besar.
       await compressedImageFile.writeAsBytes(compressedBytes, flush: true);
 
+      // Mulai pengukuran latensi
+      final stopwatch = Stopwatch()..start();
+
       final result = await widget.apiClient.scanLabel(compressedImageFile.path);
+
+      // Selesai pengukuran latensi
+      stopwatch.stop();
+
+      debugPrint(
+        'LATENSI SCAN: ${stopwatch.elapsedMilliseconds} ms '
+        '(${(stopwatch.elapsedMilliseconds / 1000).toStringAsFixed(3)} detik)',
+      );
 
       // ── Validasi hasil OCR ──
       final takaranSaji = result['takaran_saji'];
@@ -508,6 +520,7 @@ class _CornerPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+//Konpres pada bagian frontend
 Uint8List _compressImageIsolate(Uint8List bytes) {
   final decoded = img.decodeImage(bytes);
   if (decoded == null) return bytes;

@@ -578,6 +578,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
       await ApiClient.setCurrentUserId(userId);
       debugPrint('[DEBUG] chatbot sending user_id=$userId');
+
+      // Mulai pengukuran latensi
+      final stopwatch = Stopwatch()..start();
+
       final data = await widget.apiClient.askChatbot(
         userId: userId,
         question: question,
@@ -587,6 +591,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         sodiumPerPortionMg: widget.perPortionMg,
         scanId: widget.scanId,
       );
+
+      // Selesai pengukuran latensi
+      stopwatch.stop();
+
+      debugPrint(
+        'LATENSI CHATBOT: ${stopwatch.elapsedMilliseconds} ms '
+        '(${(stopwatch.elapsedMilliseconds / 1000).toStringAsFixed(3)} detik)',
+      );
+
       final answer = data['answer']?.toString() ?? '-';
       final parts = answer.split('||FOLLOWUP||');
       final mainAnswer = parts[0].trim();

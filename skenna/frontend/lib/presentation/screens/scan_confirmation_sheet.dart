@@ -119,6 +119,8 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
   late final bool _porsiGagalOcr;
   bool _takaranUserEdited = false;
   bool _porsiUserEdited = false;
+  late final bool _sodiumGagalOcr;
+  bool _sodiumUserEdited = false;
 
   // ── Apakah mode perbandingan? ──
   bool get _isModePerbandingan => widget.compareWithProduct != null;
@@ -194,6 +196,9 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
     _porsiGagalOcr = widget.dataGizi['sajian_per_kemasan'] == null;
     _takaranError = _takaranGagalOcr;
     _porsiError = _porsiGagalOcr;
+
+    _sodiumGagalOcr = widget.dataGizi['sodium_mg'] == null;
+    _sodiumError = _sodiumGagalOcr;
   }
 
   @override
@@ -293,7 +298,7 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
             kategori: _kategori,
             perPortionMg:
                 _parseIndoDouble(_sodiumController.text)?.toInt() ?? 0,
-            dailyLimitMg: dailyLimit, // ← sudah terisi
+            dailyLimitMg: dailyLimit,
             isHardMaximum: isHardMaximum,
             sodiumLevel: sodiumLevelLabel,
             satuanTakaran: _satuanTakaran,
@@ -546,9 +551,18 @@ class _ScanConfirmationSheetState extends State<ScanConfirmationSheet> {
               decoration: _decoration(suffix: 'mg').copyWith(
                 enabledBorder: _sodiumError ? _errorBorder : _normalBorder,
               ),
-              onChanged: (_) => setState(() => _sodiumError = false),
+              onChanged: (_) => setState(() {
+                _sodiumError = false;
+                _sodiumUserEdited = true;
+              }),
             ),
-            _buildErrorSpace(_sodiumError ? 'Natrium wajib diisi' : null),
+            _buildErrorSpace(
+              _sodiumError
+                  ? (_sodiumGagalOcr && !_sodiumUserEdited
+                        ? 'Tidak terdeteksi'
+                        : 'Natrium wajib diisi')
+                  : null,
+            ),
             if (!_isBumbuCategory) ...[
               // ← TAMBAH header di atas preview box
               Row(

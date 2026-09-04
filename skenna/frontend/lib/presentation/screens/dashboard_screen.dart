@@ -127,6 +127,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String? _dashboardDate;
   bool _isLoading = true;
   int? _systolicPressure;
+  String _statusKehamilan = 'tidak_hamil';
   int? _diastolicPressure;
   String? _escKategori;
 
@@ -153,6 +154,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   _DashboardPalette get _palette {
     return _gender == DashboardGender.female ? _femalePalette : _malePalette;
   }
+
+  bool get _hamilDenganHT =>
+      _hasHypertension &&
+      (_statusKehamilan == 'hamil_normal' || _statusKehamilan == 'menyusui');
 
   String _displayName(_DashboardPalette palette) {
     final trimmed = _userName?.trim();
@@ -195,6 +200,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       debugPrint('=== profile birth_date: ${profile['birth_date']}');
       debugPrint('=== profile systolic: ${profile['systolic_pressure']}');
       debugPrint('=== profile diastolic: ${profile['diastolic_pressure']}');
+      debugPrint(
+        '=== profile pregnancy_status: ${profile['pregnancy_status']}',
+      );
+      debugPrint('=== hasil.statusKehamilan: ${hasil.statusKehamilan}');
+      debugPrint('=== hasil.hamilDenganHT: ${hasil.hamilDenganHT}');
       if (!mounted) return;
       setState(() {
         _userName = profile['full_name'] as String?;
@@ -204,6 +214,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _isHardMaximum = hasil.isHardMaximum;
         _age = hasil.usia;
         _hasHypertension = hasil.hasHypertension;
+        _statusKehamilan = hasil.statusKehamilan;
         _consumedTodayMg =
             (stats['total_sodium_consumed_today'] as num?)?.round() ?? 0;
         _productsScannedToday =
@@ -454,6 +465,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
+                  if (_hamilDenganHT) ...[
+                    const _PregnancyHypertensionAlertCard(),
+                    const SizedBox(height: 24),
+                  ],
                   if (_systolicPressure != null &&
                       _diastolicPressure != null &&
                       _escKategori != null) ...[
@@ -1492,6 +1507,75 @@ class _HypertensionStatusCard extends StatelessWidget {
                   height: 1,
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PregnancyHypertensionAlertCard extends StatelessWidget {
+  const _PregnancyHypertensionAlertCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF4E5),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFFFB74D)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x140F172A),
+            blurRadius: 14,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFE0B2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.warning_rounded,
+              color: Color(0xFFE65100),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Kondisi Memerlukan Perhatian Khusus',
+                  style: GoogleFonts.plusJakartaSans(
+                    color: const Color(0xFFE65100),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Kamu sedang hamil/menyusui dan memiliki hipertensi. Batas natrium umum pada aplikasi ini mungkin tidak cukup akurat untuk kondisimu segera konsultasikan ke dokter kandungan atau dokter spesialis untuk pemantauan lebih lanjut.',
+                  style: GoogleFonts.plusJakartaSans(
+                    color: const Color(0xFF8A4B00),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w400,
+                    height: 1.4,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

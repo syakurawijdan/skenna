@@ -1,1 +1,3 @@
 .codex/
+.codex-temp-appdata/ 
+.codex-temp-localappdata/ 

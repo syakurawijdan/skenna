@@ -192,6 +192,7 @@ class ApiClient {
     return result;
   }
 
+//fungsi yang menerima setelah di scan
   Future<Map<String, dynamic>> scanLabel(String imagePath) async {
     debugPrint('=== BASE URL: $baseUrl');
     debugPrint('=== ENV URL: $_apiBaseUrlFromEnv');

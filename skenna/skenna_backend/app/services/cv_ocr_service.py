@@ -20,7 +20,7 @@ class CVOcrService:
             return None
 
     @staticmethod
-    def scan_label(image_input: str) -> tuple[str, float, Optional[float], Optional[float], str, str]:
+    def scan_label(image_input: str) -> tuple[str, Optional[float], Optional[float], Optional[float], str, str]:
         """
         Returns: (raw_text, sodium_mg, takaran_saji, sajian_per_kemasan, satuan_takaran, nama_produk)
         takaran_saji & sajian_per_kemasan akan None jika Gemini tidak berhasil membaca nilainya.
@@ -34,7 +34,7 @@ class CVOcrService:
             clean = re.sub(r"```json|```", "", raw_text).strip()
             data = json.loads(clean)
 
-            sodium_mg = float(data.get("sodium_mg") or 0)
+            sodium_mg = CVOcrService._parse_optional_float(data.get("sodium_mg"))
 
             raw_takaran = data.get("takaran_saji")
             takaran_saji = CVOcrService._parse_optional_float(raw_takaran)
@@ -50,7 +50,7 @@ class CVOcrService:
             match = re.search(r"sodium\s*(\d+(?:\.\d+)?)\s*mg", raw_text, re.IGNORECASE)
             if not match:
                 match = re.search(r"natrium\s*(\d+(?:\.\d+)?)\s*mg", raw_text, re.IGNORECASE)
-            sodium_mg = float(match.group(1)) if match else 0.0
+            sodium_mg = float(match.group(1)) if match else None
             takaran_saji = None
             sajian_per_kemasan = None
             satuan_takaran = "g"

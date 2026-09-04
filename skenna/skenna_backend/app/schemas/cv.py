@@ -12,7 +12,7 @@ class CVScanRequest(BaseModel):
 
 class CVScanResponse(BaseModel):
     raw_text: str
-    sodium_mg: float
+    sodium_mg: Optional[float] = None
     sodium_level: Optional[str] = None
     scan_id: Optional[int] = None
     takaran_saji: Optional[float] = None

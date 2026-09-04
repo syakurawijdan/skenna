@@ -14,7 +14,7 @@ class FoodLabelScan(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     image_path: Mapped[str] = mapped_column(Text)
     raw_text: Mapped[str] = mapped_column(Text)
-    sodium_mg: Mapped[float] = mapped_column(Float)
+    sodium_mg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     scanned_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=lambda: datetime.now(timezone(timedelta(hours=7))).replace(tzinfo=None)  

@@ -283,7 +283,7 @@ class GeminiService:
 			'  "takaran_saji": <angka takaran per sajian, tanpa satuan, atau null>,\n'
 			'  "satuan_takaran": <"g" atau "ml">,\n'
 			'  "sajian_per_kemasan": <angka jumlah sajian per kemasan, BOLEH DESIMAL seperti 1.5 atau 2.5, atau null>,\n'
-			'  "sodium_mg": <kandungan NATRIUM per sajian dalam mg, WAJIB, isi 0 jika tidak ditemukan>\n'
+			'  "sodium_mg": <kandungan NATRIUM per sajian dalam mg, atau null jika tidak ditemukan>\n'
 			"}\n\n"
 			"ATURAN WAJIB:\n"
 			"1. sodium_mg adalah nilai NATRIUM/SODIUM dalam mg per sajian\n"
@@ -299,8 +299,8 @@ class GeminiService:
 			"nilai dari field lain untuk mengisi field yang tidak terbaca (contoh: jangan "
 			"memakai angka 'sajian_per_kemasan' untuk mengisi 'takaran_saji' atau "
 			"sebaliknya, meskipun angkanya kebetulan sama).\n"
-			"7. Field sodium_mg tetap WAJIB diisi angka (gunakan 0 jika benar-benar tidak "
-			"ditemukan di label), karena ini bukan termasuk field yang boleh null.\n"
+			"7. Jika nilai natrium/sodium benar-benar tidak ditemukan atau tidak terbaca, "
+			"isi sodium_mg dengan null.\n"
 			"8. Jangan tambahkan teks, komentar, atau markdown apapun selain JSON"
 			"9. sajian_per_kemasan SERING berupa angka desimal (misal 1.5, 2.5, 3.33) karena takaran saji tidak selalu membagi rata isi kemasan. JANGAN membulatkan nilai ini ke integer — salin angka desimal persis seperti tercetak di label (misal '1,5 Sajian per Kemasan' → 1.5)"
 		)
@@ -347,14 +347,14 @@ class GeminiService:
 			'  "takaran_saji": <angka takaran per sajian, tanpa satuan>,\n'
 			'  "satuan_takaran": <"g" atau "ml">,\n'
 			'  "sajian_per_kemasan": <angka jumlah sajian per kemasan>,\n'
-			'  "sodium_mg": <kandungan NATRIUM per sajian dalam mg, WAJIB, isi 0 jika tidak ditemukan>\n'
+			'  "sodium_mg": <kandungan NATRIUM per sajian dalam mg, atau null jika tidak ditemukan>\n'
 			"}\n\n"
 			"ATURAN WAJIB:\n"
 			"1. sodium_mg adalah nilai NATRIUM/SODIUM dalam mg per sajian\n"
 			"2. Jika natrium ditulis dalam %AKG atau %DV, konversi: nilai% x 2000 / 100\n"
 			"3. takaran_saji adalah angka saja tanpa satuan (contoh: 100, tidak '100g')\n"
 			"4. satuan_takaran hanya boleh 'g' atau 'ml'\n"
-			"5. Jika label tidak terbaca, kembalikan semua nilai 0 atau null\n"
+			"5. Jika nilai natrium/sodium tidak terbaca atau tidak ditemukan, kembalikan sodium_mg sebagai null; jangan gunakan 0 sebagai pengganti nilai yang tidak terbaca.\n"
 			"6. Jangan tambahkan teks, komentar, atau markdown apapun selain JSON"
 		)
 		parts: list[dict[str, Any]] = [{"text": prompt}]

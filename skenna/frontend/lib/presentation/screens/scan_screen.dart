@@ -161,7 +161,7 @@ class _ScanScreenState extends State<ScanScreen> {
         "sajian_per_kemasan": sajianPerKemasan != null
             ? (sajianPerKemasan as num).toDouble()
             : null,
-        "sodium_mg": sodiumMg != null ? (sodiumMg as num).toDouble() : 0.0,
+        "sodium_mg": sodiumMg != null ? (sodiumMg as num).toDouble() : null,
         "image_path": result['image_path'] as String?,
         "scan_id": result['scan_id'],
       };
